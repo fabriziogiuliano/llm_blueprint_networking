@@ -15,8 +15,24 @@ mongodb_database_hostname = "<mongodb database hostname>" #"10.8.9.27"
 mongodb_port = 27017
 api_token = "<API token Here>"
 # Set the radius (in kilometers) within which to distribute the gateways
-radius = 5.0
+radius = 1.0
 blueprint_id=0
+
+from geopy.distance import geodesic
+import random
+import math
+
+def generate_random_coordinates(lat, lon, radius):
+    # Generate random angle and distance
+    angle = random.uniform(0, 2 * math.pi)
+    distance = random.uniform(0, radius)
+
+    # Calculate new latitude and longitude
+    new_coordinates = geodesic(kilometers=distance).destination((lat, lon), angle * 180 / math.pi)
+
+    return new_coordinates.latitude, new_coordinates.longitude
+
+
 for nDevices in [5, 10, 20, 50, 100, 300, 400, 500 , 1000, 2000]:
     for nGateways in [5, 10, 20, 30]:
         for rand_id in range(0,50):
@@ -77,17 +93,7 @@ for nDevices in [5, 10, 20, 50, 100, 300, 400, 500 , 1000, 2000]:
 
             # Generate the gateways
             for i in range(1, nGateways + 1):
-                # Generate random angle and distance within the radius
-                angle = random.uniform(0, 2 * 3.14159)
-                distance = random.uniform(0, radius)
-
-                # Convert distance to latitude and longitude offsets
-                lat_offset = distance * 0.00900900900900901 * math.cos(angle)
-                lon_offset = distance * 0.00900900900900901 / math.cos(unipa_lat * 3.14159 / 180)
-
-                # Calculate the latitude and longitude of the gateway
-                lat = unipa_lat + lat_offset
-                lon = unipa_lon + lon_offset
+                lat, lon = generate_random_coordinates(unipa_lat,unipa_lon,radius)
 
                 # Add the gateway to the JSON object
                 config["network"]["gateways"].append({
@@ -102,9 +108,7 @@ for nDevices in [5, 10, 20, 50, 100, 300, 400, 500 , 1000, 2000]:
 
             # Generate the devices
             for i in range(1, nDevices + 1):
-                # Generate random latitude and longitude values near UNIPA
-                lat = unipa_lat + random.uniform(-radius, radius)
-                lon = unipa_lon + random.uniform(-radius, radius)
+                lat, lon = generate_random_coordinates(unipa_lat,unipa_lon,radius)
 
                 # Generate random dev_eui value as EUI64
                 dev_eui = format(random.randint(0, 2**64 - 1), "016X")
