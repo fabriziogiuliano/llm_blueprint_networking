@@ -118,11 +118,12 @@ for nDevices in [5, 10, 20, 50, 100, 300, 400, 500 , 1000, 2000]:
 
                 # Set app_key value to a random 128-bit hexadecimal value
                 app_key = format(random.randint(0, 2**128 - 1), "032X")
-
+                sf = 7 #ALL DEVICES WITH SAME SF, TODO: add ADR or SF Planning
                 # Add the device to the JSON object
                 config["network"]["devices"].append({
                     "id": f"device-{i}",
                     "name": f"LoRa Device {i}",
+                    "DR":sf,
                     "dev_eui": dev_eui,
                     "app_eui": app_eui,
                     "app_key": app_key,
