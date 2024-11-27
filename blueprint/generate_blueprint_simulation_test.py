@@ -15,7 +15,6 @@ mongodb_database_hostname = "<mongodb database hostname>" #"10.8.9.27"
 mongodb_port = 27017
 api_token = "<API token Here>"
 # Set the radius (in kilometers) within which to distribute the gateways
-radius = 1.0
 blueprint_id=0
 
 from geopy.distance import geodesic
