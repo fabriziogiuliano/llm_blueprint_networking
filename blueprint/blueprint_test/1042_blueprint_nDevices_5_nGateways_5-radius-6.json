@@ -1,0 +1,141 @@
+{
+  "type": "configuration",
+  "version": "1.0",
+  "mqtt": {
+    "broker": "<mqtt broker hostname>",
+    "port": 8883,
+    "client_id": "mqtt-db-logger",
+    "username": "<username here>",
+    "password": "<passowrd here>",
+    "topics": [
+      "application/+/device/+/event/#"
+    ]
+  },
+  "mongodb": {
+    "host": "<mongodb database hostname>",
+    "port": 27017,
+    "database": "Chirpstack-Supernova"
+  },
+  "network": {
+    "id": "lorawan-network",
+    "name": "LoRaWAN Network",
+    "network_server": {
+      "id": "network-server-1",
+      "name": "ChirpStack Network Server",
+      "address": "<network server addr>",
+      "api_token": "<API token Here>"
+    },
+    "coverage": {
+      "radius": 6
+    },
+    "gateways": [
+      {
+        "id": "gateway-1",
+        "name": "LoRa Gateway 1",
+        "address": "192.168.1.101",
+        "latitude": 38.102072920693566,
+        "longitude": 13.350335478871349,
+        "frequency_band": "EU868",
+        "model": "gateway-model-1"
+      },
+      {
+        "id": "gateway-2",
+        "name": "LoRa Gateway 2",
+        "address": "192.168.1.102",
+        "latitude": 38.11564917641539,
+        "longitude": 13.360961871371607,
+        "frequency_band": "EU868",
+        "model": "gateway-model-2"
+      },
+      {
+        "id": "gateway-3",
+        "name": "LoRa Gateway 3",
+        "address": "192.168.1.103",
+        "latitude": 38.07608651834955,
+        "longitude": 13.388952305270134,
+        "frequency_band": "EU868",
+        "model": "gateway-model-3"
+      },
+      {
+        "id": "gateway-4",
+        "name": "LoRa Gateway 4",
+        "address": "192.168.1.104",
+        "latitude": 38.05447318516274,
+        "longitude": 13.322423449173192,
+        "frequency_band": "EU868",
+        "model": "gateway-model-4"
+      },
+      {
+        "id": "gateway-5",
+        "name": "LoRa Gateway 5",
+        "address": "192.168.1.105",
+        "latitude": 38.10679349136167,
+        "longitude": 13.290026356844319,
+        "frequency_band": "EU868",
+        "model": "gateway-model-5"
+      }
+    ],
+    "devices": [
+      {
+        "id": "device-1",
+        "name": "Wind Speed Sensor",
+        "description": "Monitors wind speed in urban areas or along coastlines.",
+        "DR": 7,
+        "dev_eui": "3CFB7CBEB25A554C",
+        "app_eui": "0000000000000000",
+        "app_key": "DBA1147DB7CF258EDA33A53E9D009949",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.10495599997252,
+        "longitude": 13.344423688472215
+      },
+      {
+        "id": "device-2",
+        "name": "Smart Flood Risk Prediction",
+        "description": "Predicts flood risks by monitoring rainfall and water levels in rivers.",
+        "DR": 7,
+        "dev_eui": "20A5AB246B160DFA",
+        "app_eui": "0000000000000000",
+        "app_key": "9A617551D3215C627D34A3D388790806",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.100848880097196,
+        "longitude": 13.379065795709716
+      },
+      {
+        "id": "device-3",
+        "name": "Smart Floodgate Controller",
+        "description": "Adjusts floodgates in flood-prone areas based on water levels.",
+        "DR": 7,
+        "dev_eui": "B577DF25EC8EE849",
+        "app_eui": "0000000000000000",
+        "app_key": "2620DEC8CB013377EB69AB7C5476F6EE",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.11965767286329,
+        "longitude": 13.3339975239289
+      },
+      {
+        "id": "device-4",
+        "name": "Seismic Activity Sensor",
+        "description": "Monitors seismic activity to ensure safety in case of earthquakes.",
+        "DR": 7,
+        "dev_eui": "62F39E4C84E03DBC",
+        "app_eui": "0000000000000000",
+        "app_key": "086B80F5CB95A28021B366EBD46FAA49",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.10818020434371,
+        "longitude": 13.331962226334786
+      },
+      {
+        "id": "device-5",
+        "name": "Smart Fire Detection",
+        "description": "Detects fire hazards using smoke and temperature sensors, sending alerts in real-time.",
+        "DR": 7,
+        "dev_eui": "7497D80392008B05",
+        "app_eui": "0000000000000000",
+        "app_key": "A7F360AD0FD00D63B74DEFDFECC833F0",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.068493615436,
+        "longitude": 13.29748270815661
+      }
+    ]
+  }
+}

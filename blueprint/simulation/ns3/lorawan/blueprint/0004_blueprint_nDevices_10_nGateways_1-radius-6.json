@@ -1,0 +1,165 @@
+{
+  "type": "configuration",
+  "version": "1.0",
+  "mqtt": {
+    "broker": "<mqtt broker hostname>",
+    "port": 8883,
+    "client_id": "mqtt-db-logger",
+    "username": "<username here>",
+    "password": "<passowrd here>",
+    "topics": [
+      "application/+/device/+/event/#"
+    ]
+  },
+  "mongodb": {
+    "host": "<mongodb database hostname>",
+    "port": 27017,
+    "database": "Chirpstack-Supernova"
+  },
+  "network": {
+    "id": "lorawan-network",
+    "name": "LoRaWAN Network",
+    "network_server": {
+      "id": "network-server-1",
+      "name": "ChirpStack Network Server",
+      "address": "<network server addr>",
+      "api_token": "<API token Here>"
+    },
+    "coverage": {
+      "radius": 6
+    },
+    "gateways": [
+      {
+        "id": "gateway-1",
+        "name": "LoRa Gateway 1",
+        "address": "192.168.1.101",
+        "latitude": 38.104146760347994,
+        "longitude": 13.346114007005706,
+        "frequency_band": "EU868",
+        "model": "gateway-model-1"
+      }
+    ],
+    "devices": [
+      {
+        "id": "device-1",
+        "name": "Traffic Flow Sensor",
+        "description": "Monitors traffic flow and congestion in real-time.",
+        "DR": 7,
+        "dev_eui": "F46962772D0D3742",
+        "app_eui": "0000000000000000",
+        "app_key": "90E1E5EF68C6B5CC9DAF97DDBFB66F90",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.14213668294261,
+        "longitude": 13.305413041353095
+      },
+      {
+        "id": "device-2",
+        "name": "Smart Urban Light Control",
+        "description": "Monitors and adjusts street lighting in real-time for efficiency and safety.",
+        "DR": 7,
+        "dev_eui": "6ACEE92A1CC5CC72",
+        "app_eui": "0000000000000000",
+        "app_key": "5C7F27BA672F785CD70AF4C7B65B0314",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.08228616574169,
+        "longitude": 13.3566426063403
+      },
+      {
+        "id": "device-3",
+        "name": "Smart Green Space Maintenance",
+        "description": "Monitors and maintains urban parks and green spaces for better public use.",
+        "DR": 7,
+        "dev_eui": "1D905E789452ADEF",
+        "app_eui": "0000000000000000",
+        "app_key": "5EEA362CB19FE30D5CF942C5B50DA7F1",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.10651673432791,
+        "longitude": 13.301021699715239
+      },
+      {
+        "id": "device-4",
+        "name": "Smart Signage",
+        "description": "Displays real-time information on traffic, events, or emergencies on digital signs.",
+        "DR": 7,
+        "dev_eui": "BF1D651B25CCE73A",
+        "app_eui": "0000000000000000",
+        "app_key": "5690802C70D52B4506DC1AEED18E4455",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.14657150516404,
+        "longitude": 13.356800886927333
+      },
+      {
+        "id": "device-5",
+        "name": "Smart Evacuation System",
+        "description": "Monitors and manages public evacuations during natural disasters or emergencies.",
+        "DR": 7,
+        "dev_eui": "F43314984FDFF804",
+        "app_eui": "0000000000000000",
+        "app_key": "A37EA1CDB0BFF2AFB1BD85B5E1DFE2A6",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.0898982440476,
+        "longitude": 13.40781008492302
+      },
+      {
+        "id": "device-6",
+        "name": "Smart Street Light Power Control",
+        "description": "Optimizes streetlight energy consumption based on traffic and weather.",
+        "DR": 7,
+        "dev_eui": "ED66F3C12DF6009C",
+        "app_eui": "0000000000000000",
+        "app_key": "56693944C010A0C41CE29AB4239A565B",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.08878355003119,
+        "longitude": 13.324692623408
+      },
+      {
+        "id": "device-7",
+        "name": "Smart Flood Management",
+        "description": "Monitors and manages flood risks in urban environments.",
+        "DR": 7,
+        "dev_eui": "50B6C0AAB277A0BF",
+        "app_eui": "0000000000000000",
+        "app_key": "554580C8039BFEAAA6A3921BA70CE92F",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.07900048881266,
+        "longitude": 13.29600012345489
+      },
+      {
+        "id": "device-8",
+        "name": "Smart Solar Energy Monitoring",
+        "description": "Monitors the output and efficiency of solar energy systems.",
+        "DR": 7,
+        "dev_eui": "3C50249AD03CCFD8",
+        "app_eui": "0000000000000000",
+        "app_key": "EE1507A41FE60BD2B11302D964C6E295",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.13909978019328,
+        "longitude": 13.316549007182962
+      },
+      {
+        "id": "device-9",
+        "name": "Smart Air Ventilation",
+        "description": "Optimizes ventilation systems in public buildings to ensure indoor air quality.",
+        "DR": 7,
+        "dev_eui": "6707C010E1CAD0A0",
+        "app_eui": "0000000000000000",
+        "app_key": "09F2FEAF77B7CE3F44138D35B41B22DF",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.090733938543785,
+        "longitude": 13.340782396805395
+      },
+      {
+        "id": "device-10",
+        "name": "Smart Flood Risk Prediction",
+        "description": "Predicts flood risks by monitoring rainfall and water levels in rivers.",
+        "DR": 7,
+        "dev_eui": "642F2D2328BB7009",
+        "app_eui": "0000000000000000",
+        "app_key": "BABE81DF6F6A4875CA43C5BE22AF542A",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.09646451018763,
+        "longitude": 13.30059691020092
+      }
+    ]
+  }
+}

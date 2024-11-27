@@ -21,6 +21,35 @@ from geopy.distance import geodesic
 import random
 import math
 
+
+import pandas as pd
+
+
+nDevices_list=[5, 10, 20, 50, 100]
+nGateways_list=[5, 10, 20, 30]
+radius_list=[1,6]
+output_path="blueprint_test/"
+randList = range(0,50)
+
+generate_samples_few_shot_simulation=True
+
+if generate_samples_few_shot_simulation:
+    nDevices_list=[10,100]
+    nGateways_list=[1,10]
+    radius_list=[1,6]
+    output_path="simulation/ns3/lorawan/blueprint/"
+    randList = range(0,1)
+
+
+
+
+# Step 1: Read the CSV file into a DataFrame
+deviceNames = pd.read_csv('smart_cities_devices.csv')
+
+# Step 2: Shuffle the rows of the DataFrame
+#deviceNames = deviceNames.sample(frac=1).reset_index(drop=True)  # frac=1 means shuffle all rows, reset_index to reset the index after shuffle
+
+
 def generate_random_coordinates(lat, lon, radius):
     # Generate random angle and distance
     angle = random.uniform(0, 2 * math.pi)
@@ -31,10 +60,12 @@ def generate_random_coordinates(lat, lon, radius):
 
     return new_coordinates.latitude, new_coordinates.longitude
 
-for radius in [1,6]:
-    for nDevices in [5, 10, 20, 50, 100, 300, 400, 500 , 1000, 2000]:
-        for nGateways in [5, 10, 20, 30]:
-            for rand_id in range(0,50):
+for radius in radius_list: 
+    for nDevices in nDevices_list:
+        for nGateways in nGateways_list:
+            #shuffle devices names
+            deviceNames = deviceNames.sample(frac=1).reset_index(drop=True)  # frac=1 means shuffle all rows, reset_index to reset the index after shuffle
+            for rand_id in randList:
                 print(f"[{blueprint_id}] nDevices={nDevices} nGateways={nGateways}")
                 # Create the JSON object
                 mqtt_config={
@@ -124,7 +155,9 @@ for radius in [1,6]:
                     # Add the device to the JSON object
                     config["network"]["devices"].append({
                         "id": f"device-{i}",
-                        "name": f"LoRa Device {i}",
+                        #"name": f"LoRa Device {i}",
+                        "name": f"{deviceNames.iloc[i%len(deviceNames)]['Device Name']}",
+                        "description":f"{deviceNames.iloc[i%len(deviceNames)]['Description']}",
                         "DR":sf,
                         "dev_eui": dev_eui,
                         "app_eui": app_eui,
@@ -135,7 +168,6 @@ for radius in [1,6]:
                     })    
                 # Write the JSON object to a file
                 id = format(blueprint_id, "04d")
-                with open(f"blueprint_test/{id}_blueprint_nDevices_{nDevices}_nGateways_{nGateways}-radius-{radius}.json", "w") as f:
+                with open(f"{output_path}{id}_blueprint_nDevices_{nDevices}_nGateways_{nGateways}-radius-{radius}.json", "w") as f:
                     json.dump(config, f, indent=2)
                 blueprint_id+=1
-

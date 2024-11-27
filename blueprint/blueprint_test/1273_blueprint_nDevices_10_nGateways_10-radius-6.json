@@ -1,0 +1,246 @@
+{
+  "type": "configuration",
+  "version": "1.0",
+  "mqtt": {
+    "broker": "<mqtt broker hostname>",
+    "port": 8883,
+    "client_id": "mqtt-db-logger",
+    "username": "<username here>",
+    "password": "<passowrd here>",
+    "topics": [
+      "application/+/device/+/event/#"
+    ]
+  },
+  "mongodb": {
+    "host": "<mongodb database hostname>",
+    "port": 27017,
+    "database": "Chirpstack-Supernova"
+  },
+  "network": {
+    "id": "lorawan-network",
+    "name": "LoRaWAN Network",
+    "network_server": {
+      "id": "network-server-1",
+      "name": "ChirpStack Network Server",
+      "address": "<network server addr>",
+      "api_token": "<API token Here>"
+    },
+    "coverage": {
+      "radius": 6
+    },
+    "gateways": [
+      {
+        "id": "gateway-1",
+        "name": "LoRa Gateway 1",
+        "address": "192.168.1.101",
+        "latitude": 38.07221077525944,
+        "longitude": 13.327311092105386,
+        "frequency_band": "EU868",
+        "model": "gateway-model-1"
+      },
+      {
+        "id": "gateway-2",
+        "name": "LoRa Gateway 2",
+        "address": "192.168.1.102",
+        "latitude": 38.10188891764091,
+        "longitude": 13.311233244666594,
+        "frequency_band": "EU868",
+        "model": "gateway-model-2"
+      },
+      {
+        "id": "gateway-3",
+        "name": "LoRa Gateway 3",
+        "address": "192.168.1.103",
+        "latitude": 38.13776243309573,
+        "longitude": 13.35941254764101,
+        "frequency_band": "EU868",
+        "model": "gateway-model-3"
+      },
+      {
+        "id": "gateway-4",
+        "name": "LoRa Gateway 4",
+        "address": "192.168.1.104",
+        "latitude": 38.07341499277099,
+        "longitude": 13.34523825751732,
+        "frequency_band": "EU868",
+        "model": "gateway-model-4"
+      },
+      {
+        "id": "gateway-5",
+        "name": "LoRa Gateway 5",
+        "address": "192.168.1.105",
+        "latitude": 38.0788571820126,
+        "longitude": 13.319368992474468,
+        "frequency_band": "EU868",
+        "model": "gateway-model-5"
+      },
+      {
+        "id": "gateway-6",
+        "name": "LoRa Gateway 6",
+        "address": "192.168.1.106",
+        "latitude": 38.10251579338192,
+        "longitude": 13.32183187946298,
+        "frequency_band": "EU868",
+        "model": "gateway-model-6"
+      },
+      {
+        "id": "gateway-7",
+        "name": "LoRa Gateway 7",
+        "address": "192.168.1.107",
+        "latitude": 38.09484580181809,
+        "longitude": 13.35674492753823,
+        "frequency_band": "EU868",
+        "model": "gateway-model-7"
+      },
+      {
+        "id": "gateway-8",
+        "name": "LoRa Gateway 8",
+        "address": "192.168.1.108",
+        "latitude": 38.06148368468014,
+        "longitude": 13.382941309105648,
+        "frequency_band": "EU868",
+        "model": "gateway-model-8"
+      },
+      {
+        "id": "gateway-9",
+        "name": "LoRa Gateway 9",
+        "address": "192.168.1.109",
+        "latitude": 38.11935845771745,
+        "longitude": 13.34230785522126,
+        "frequency_band": "EU868",
+        "model": "gateway-model-9"
+      },
+      {
+        "id": "gateway-10",
+        "name": "LoRa Gateway 10",
+        "address": "192.168.1.110",
+        "latitude": 38.13084694458079,
+        "longitude": 13.31637754366673,
+        "frequency_band": "EU868",
+        "model": "gateway-model-10"
+      }
+    ],
+    "devices": [
+      {
+        "id": "device-1",
+        "name": "Smart Urban Water Saving",
+        "description": "Monitors and promotes water-saving measures in urban households and businesses.",
+        "DR": 7,
+        "dev_eui": "C9BE1A363D9AF3CF",
+        "app_eui": "0000000000000000",
+        "app_key": "C9213D8CC00721DEF8BF8EA0E76C3DCE",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.115950156606885,
+        "longitude": 13.337859895660674
+      },
+      {
+        "id": "device-2",
+        "name": "Smart Traffic Flow Optimization",
+        "description": "Collects data to optimize traffic signals and traffic flow in real-time.",
+        "DR": 7,
+        "dev_eui": "F531A7A25192C386",
+        "app_eui": "0000000000000000",
+        "app_key": "1187EF19A7D6466B7692E1767E43BFA6",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.12176632160342,
+        "longitude": 13.341534983216913
+      },
+      {
+        "id": "device-3",
+        "name": "Noise Pollution Sensor",
+        "description": "Monitors noise levels in different city areas to ensure compliance with noise regulations.",
+        "DR": 7,
+        "dev_eui": "27D528D824E9119B",
+        "app_eui": "0000000000000000",
+        "app_key": "E057906490223316D2A8D5B6BDD59531",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.08899116709054,
+        "longitude": 13.330248375077954
+      },
+      {
+        "id": "device-4",
+        "name": "Smart Pavement Monitoring",
+        "description": "Monitors the health of urban pavements and alerts for maintenance needs.",
+        "DR": 7,
+        "dev_eui": "0391782B32AA8A70",
+        "app_eui": "0000000000000000",
+        "app_key": "5A4159E3D02F5E56C16C36B83C4FD7EA",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.09068321372496,
+        "longitude": 13.33983974827136
+      },
+      {
+        "id": "device-5",
+        "name": "Smart Urban Garden",
+        "description": "Monitors soil conditions, weather, and plant health in urban gardens.",
+        "DR": 7,
+        "dev_eui": "6A8CEEE294482EC4",
+        "app_eui": "0000000000000000",
+        "app_key": "83093F63D46BDF347072F59BE3B8BFDF",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.144928737310806,
+        "longitude": 13.325905183834456
+      },
+      {
+        "id": "device-6",
+        "name": "Smart Temperature Control",
+        "description": "Monitors and optimizes indoor temperatures in public buildings.",
+        "DR": 7,
+        "dev_eui": "D53DF54FE8503156",
+        "app_eui": "0000000000000000",
+        "app_key": "231CB8B717731EAA30E392A24F6667BC",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.11352689253848,
+        "longitude": 13.320277626287684
+      },
+      {
+        "id": "device-7",
+        "name": "Smart Urban Wildlife Monitoring",
+        "description": "Monitors wildlife activity and urban biodiversity.",
+        "DR": 7,
+        "dev_eui": "E498EE1EAB25FB87",
+        "app_eui": "0000000000000000",
+        "app_key": "F1274991BFB30F5C5FE1034BB7DD7C64",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.10846545144438,
+        "longitude": 13.345931414922262
+      },
+      {
+        "id": "device-8",
+        "name": "Weather Station",
+        "description": "Monitors weather conditions such as temperature, humidity, wind, rain, and atmospheric pressure.",
+        "DR": 7,
+        "dev_eui": "631017B01A5F2571",
+        "app_eui": "0000000000000000",
+        "app_key": "D82DA764D9F15583A7FC5A0781E28E26",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.10668120270578,
+        "longitude": 13.333326958974117
+      },
+      {
+        "id": "device-9",
+        "name": "Smart Data Collection Hub",
+        "description": "Centralizes data from various IoT devices across the city for analysis and decision-making.",
+        "DR": 7,
+        "dev_eui": "90544B1D9794AD31",
+        "app_eui": "0000000000000000",
+        "app_key": "75030FF18431351FB689B463A2CE821D",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.134699266067244,
+        "longitude": 13.336013579310984
+      },
+      {
+        "id": "device-10",
+        "name": "UV Index Sensor",
+        "description": "Monitors UV index to inform the population about sun exposure risks.",
+        "DR": 7,
+        "dev_eui": "B463C000F82B900E",
+        "app_eui": "0000000000000000",
+        "app_key": "04FBE8227C1E0A6A70ACF9D5E2761E82",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.09230184041552,
+        "longitude": 13.358041276772855
+      }
+    ]
+  }
+}

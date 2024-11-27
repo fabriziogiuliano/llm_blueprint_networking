@@ -1,0 +1,186 @@
+{
+  "type": "configuration",
+  "version": "1.0",
+  "mqtt": {
+    "broker": "<mqtt broker hostname>",
+    "port": 8883,
+    "client_id": "mqtt-db-logger",
+    "username": "<username here>",
+    "password": "<passowrd here>",
+    "topics": [
+      "application/+/device/+/event/#"
+    ]
+  },
+  "mongodb": {
+    "host": "<mongodb database hostname>",
+    "port": 27017,
+    "database": "Chirpstack-Supernova"
+  },
+  "network": {
+    "id": "lorawan-network",
+    "name": "LoRaWAN Network",
+    "network_server": {
+      "id": "network-server-1",
+      "name": "ChirpStack Network Server",
+      "address": "<network server addr>",
+      "api_token": "<API token Here>"
+    },
+    "coverage": {
+      "radius": 6
+    },
+    "gateways": [
+      {
+        "id": "gateway-1",
+        "name": "LoRa Gateway 1",
+        "address": "192.168.1.101",
+        "latitude": 38.05677284233867,
+        "longitude": 13.314342151226066,
+        "frequency_band": "EU868",
+        "model": "gateway-model-1"
+      },
+      {
+        "id": "gateway-2",
+        "name": "LoRa Gateway 2",
+        "address": "192.168.1.102",
+        "latitude": 38.08388593550675,
+        "longitude": 13.34144904189425,
+        "frequency_band": "EU868",
+        "model": "gateway-model-2"
+      },
+      {
+        "id": "gateway-3",
+        "name": "LoRa Gateway 3",
+        "address": "192.168.1.103",
+        "latitude": 38.09381845654637,
+        "longitude": 13.341583967131163,
+        "frequency_band": "EU868",
+        "model": "gateway-model-3"
+      },
+      {
+        "id": "gateway-4",
+        "name": "LoRa Gateway 4",
+        "address": "192.168.1.104",
+        "latitude": 38.10538613172553,
+        "longitude": 13.345665383941762,
+        "frequency_band": "EU868",
+        "model": "gateway-model-4"
+      },
+      {
+        "id": "gateway-5",
+        "name": "LoRa Gateway 5",
+        "address": "192.168.1.105",
+        "latitude": 38.1030849123981,
+        "longitude": 13.349718291527484,
+        "frequency_band": "EU868",
+        "model": "gateway-model-5"
+      },
+      {
+        "id": "gateway-6",
+        "name": "LoRa Gateway 6",
+        "address": "192.168.1.106",
+        "latitude": 38.09525489492501,
+        "longitude": 13.332510190995993,
+        "frequency_band": "EU868",
+        "model": "gateway-model-6"
+      },
+      {
+        "id": "gateway-7",
+        "name": "LoRa Gateway 7",
+        "address": "192.168.1.107",
+        "latitude": 38.11273598177079,
+        "longitude": 13.323230875628337,
+        "frequency_band": "EU868",
+        "model": "gateway-model-7"
+      },
+      {
+        "id": "gateway-8",
+        "name": "LoRa Gateway 8",
+        "address": "192.168.1.108",
+        "latitude": 38.12753855619721,
+        "longitude": 13.393784665278407,
+        "frequency_band": "EU868",
+        "model": "gateway-model-8"
+      },
+      {
+        "id": "gateway-9",
+        "name": "LoRa Gateway 9",
+        "address": "192.168.1.109",
+        "latitude": 38.124269137212316,
+        "longitude": 13.327448126072344,
+        "frequency_band": "EU868",
+        "model": "gateway-model-9"
+      },
+      {
+        "id": "gateway-10",
+        "name": "LoRa Gateway 10",
+        "address": "192.168.1.110",
+        "latitude": 38.11723546863002,
+        "longitude": 13.350140123460207,
+        "frequency_band": "EU868",
+        "model": "gateway-model-10"
+      }
+    ],
+    "devices": [
+      {
+        "id": "device-1",
+        "name": "Smart City Management Hub",
+        "description": "Coordinates and optimizes the functioning of smart city devices and systems.",
+        "DR": 7,
+        "dev_eui": "9F052811716BE843",
+        "app_eui": "0000000000000000",
+        "app_key": "DF1542CDBD9F24114878DB877623C08C",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.1116479795602,
+        "longitude": 13.337105534758479
+      },
+      {
+        "id": "device-2",
+        "name": "Smart Noise Pollution Detection",
+        "description": "Monitors areas with excessive noise pollution and adjusts mitigation strategies.",
+        "DR": 7,
+        "dev_eui": "DD7EF4C6AC77ACE2",
+        "app_eui": "0000000000000000",
+        "app_key": "C030C629D1D7438AE967CB9D3CD6AFD6",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.15519998430741,
+        "longitude": 13.350887411723479
+      },
+      {
+        "id": "device-3",
+        "name": "Smart Water Pump",
+        "description": "Controls water flow in distribution networks based on demand.",
+        "DR": 7,
+        "dev_eui": "390B16CC0121A299",
+        "app_eui": "0000000000000000",
+        "app_key": "BC5A90BCC18DD02577A09277FDEBE97B",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.080386682939,
+        "longitude": 13.340996198103328
+      },
+      {
+        "id": "device-4",
+        "name": "Smart Heatmap Sensor",
+        "description": "Creates heatmaps of temperature variations to detect areas of high heat.",
+        "DR": 7,
+        "dev_eui": "75A0D9631B74243D",
+        "app_eui": "0000000000000000",
+        "app_key": "8ECC67298CA057C617ED804A062DD014",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.10427798504289,
+        "longitude": 13.362707838173712
+      },
+      {
+        "id": "device-5",
+        "name": "Smart Waste Management",
+        "description": "Monitors waste bins, optimizing trash collection and reducing carbon footprint.",
+        "DR": 7,
+        "dev_eui": "6F03919CDD93063F",
+        "app_eui": "0000000000000000",
+        "app_key": "85FBDBD5BA03FACFF632C2393923C816",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.124569312693396,
+        "longitude": 13.352970823495866
+      }
+    ]
+  }
+}

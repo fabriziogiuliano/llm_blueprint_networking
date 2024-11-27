@@ -1,0 +1,201 @@
+{
+  "type": "configuration",
+  "version": "1.0",
+  "mqtt": {
+    "broker": "<mqtt broker hostname>",
+    "port": 8883,
+    "client_id": "mqtt-db-logger",
+    "username": "<username here>",
+    "password": "<passowrd here>",
+    "topics": [
+      "application/+/device/+/event/#"
+    ]
+  },
+  "mongodb": {
+    "host": "<mongodb database hostname>",
+    "port": 27017,
+    "database": "Chirpstack-Supernova"
+  },
+  "network": {
+    "id": "lorawan-network",
+    "name": "LoRaWAN Network",
+    "network_server": {
+      "id": "network-server-1",
+      "name": "ChirpStack Network Server",
+      "address": "<network server addr>",
+      "api_token": "<API token Here>"
+    },
+    "coverage": {
+      "radius": 6
+    },
+    "gateways": [
+      {
+        "id": "gateway-1",
+        "name": "LoRa Gateway 1",
+        "address": "192.168.1.101",
+        "latitude": 38.08722461785205,
+        "longitude": 13.406401710663829,
+        "frequency_band": "EU868",
+        "model": "gateway-model-1"
+      },
+      {
+        "id": "gateway-2",
+        "name": "LoRa Gateway 2",
+        "address": "192.168.1.102",
+        "latitude": 38.09645262715783,
+        "longitude": 13.356301063486416,
+        "frequency_band": "EU868",
+        "model": "gateway-model-2"
+      },
+      {
+        "id": "gateway-3",
+        "name": "LoRa Gateway 3",
+        "address": "192.168.1.103",
+        "latitude": 38.1037534745136,
+        "longitude": 13.345872278734854,
+        "frequency_band": "EU868",
+        "model": "gateway-model-3"
+      },
+      {
+        "id": "gateway-4",
+        "name": "LoRa Gateway 4",
+        "address": "192.168.1.104",
+        "latitude": 38.10492452661588,
+        "longitude": 13.346453212618336,
+        "frequency_band": "EU868",
+        "model": "gateway-model-4"
+      },
+      {
+        "id": "gateway-5",
+        "name": "LoRa Gateway 5",
+        "address": "192.168.1.105",
+        "latitude": 38.10508373340202,
+        "longitude": 13.352149445320586,
+        "frequency_band": "EU868",
+        "model": "gateway-model-5"
+      }
+    ],
+    "devices": [
+      {
+        "id": "device-1",
+        "name": "Smart Citizen Feedback System",
+        "description": "Gathers real-time feedback from citizens to improve public services.",
+        "DR": 7,
+        "dev_eui": "508808B8A250937A",
+        "app_eui": "0000000000000000",
+        "app_key": "16A58C46AD6053C0BCFFF87E85862B9D",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.068511100338426,
+        "longitude": 13.320681313710748
+      },
+      {
+        "id": "device-2",
+        "name": "Wind Speed Sensor",
+        "description": "Monitors wind speed in urban areas or along coastlines.",
+        "DR": 7,
+        "dev_eui": "34508D12CDE5136C",
+        "app_eui": "0000000000000000",
+        "app_key": "5F7B291F8C3C344D56240D9B3A260B11",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.08118832137061,
+        "longitude": 13.33821616598453
+      },
+      {
+        "id": "device-3",
+        "name": "Smart Agricultural Optimization",
+        "description": "Monitors urban farming conditions and optimizes crop yield in cities.",
+        "DR": 7,
+        "dev_eui": "484BC2F523648C73",
+        "app_eui": "0000000000000000",
+        "app_key": "45E4C3186F5DE4135775B047099F6259",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.0678528294577,
+        "longitude": 13.346034434364922
+      },
+      {
+        "id": "device-4",
+        "name": "Smart Rainfall Detection",
+        "description": "Detects rainfall levels in real-time to predict potential flooding.",
+        "DR": 7,
+        "dev_eui": "66222281611D1732",
+        "app_eui": "0000000000000000",
+        "app_key": "56228FC469B854737F36E28533E89EA5",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.066012701958485,
+        "longitude": 13.356551658205742
+      },
+      {
+        "id": "device-5",
+        "name": "Smart Flood Management",
+        "description": "Monitors and manages flood risks in urban environments.",
+        "DR": 7,
+        "dev_eui": "7878DA52FE9B53A3",
+        "app_eui": "0000000000000000",
+        "app_key": "0BBF3E71FEC5B03CA6E0F269A763D2DC",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.1212747793014,
+        "longitude": 13.344743067734202
+      },
+      {
+        "id": "device-6",
+        "name": "Smart Greenhouse",
+        "description": "Optimizes environmental conditions for urban agriculture using smart sensors.",
+        "DR": 7,
+        "dev_eui": "57E6F030494A0817",
+        "app_eui": "0000000000000000",
+        "app_key": "C18265861249603924B06C285A91A8FA",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.08643285040618,
+        "longitude": 13.335837868406982
+      },
+      {
+        "id": "device-7",
+        "name": "Smart Energy Storage Optimization",
+        "description": "Optimizes the use of energy storage in the city for better efficiency.",
+        "DR": 7,
+        "dev_eui": "6AE3D67EF4AE1D26",
+        "app_eui": "0000000000000000",
+        "app_key": "8FDC51F5AA11314D6495A488FEB93550",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.06295478327163,
+        "longitude": 13.381918232881244
+      },
+      {
+        "id": "device-8",
+        "name": "Flood Detection Sensor",
+        "description": "Monitors water levels in flood-prone areas.",
+        "DR": 7,
+        "dev_eui": "DA261FAA7F296716",
+        "app_eui": "0000000000000000",
+        "app_key": "3D192850A9EE8D55836E0866C1851C85",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.14135124746884,
+        "longitude": 13.302348805282232
+      },
+      {
+        "id": "device-9",
+        "name": "Smart Wastewater Monitoring",
+        "description": "Monitors the quality of wastewater in urban systems to ensure safe disposal.",
+        "DR": 7,
+        "dev_eui": "0C24D4608DDA1806",
+        "app_eui": "0000000000000000",
+        "app_key": "C76127620C9D893B4230BBB44537A329",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.133819499309716,
+        "longitude": 13.387719936548148
+      },
+      {
+        "id": "device-10",
+        "name": "Smart Urban Wind Turbine",
+        "description": "Generates renewable energy using wind power in urban environments.",
+        "DR": 7,
+        "dev_eui": "904B92645D9CE408",
+        "app_eui": "0000000000000000",
+        "app_key": "265D9BEA692BC23F5390A91B082BB996",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.10542271303098,
+        "longitude": 13.332523036122426
+      }
+    ]
+  }
+}
