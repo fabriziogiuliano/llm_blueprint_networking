@@ -86,6 +86,9 @@ for nDevices in [5, 10, 20, 50, 100, 300, 400, 500 , 1000, 2000]:
                         "address": network_server_addr,
                         "api_token": api_token
                     },
+                    "coverage":{
+                        "radius":radius
+                    },
                     "gateways": [],
                     "devices": []
                 }
