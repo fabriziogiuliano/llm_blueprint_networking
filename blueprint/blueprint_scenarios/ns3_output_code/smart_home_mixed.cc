@@ -35,11 +35,13 @@
 using namespace ns3;
 using namespace lorawan;
 
-NS_LOG_COMPONENT_DEFINE("SmallSmartCityExample");
+NS_LOG_COMPONENT_DEFINE("SmartHomeExample");
 
 // Network settings
-int nDevices = 2;                 //!< Number of end device nodes to create
+int nDevices = 1;                 //!< Number of end device nodes to create
 int nGateways = 1;                  //!< Number of gateway nodes to create
+int nWiFiAPNodes=1;
+int nWiFiStaNodes = 4;
 double radiusMeters = 1000;         //!< Radius (m) of the deployment
 double simulationTimeSeconds = 600; //!< Scenario duration (s) in simulated time
 
@@ -66,7 +68,7 @@ main(int argc, char* argv[])
     cmd.Parse(argc, argv);
 
     // Set up logging
-    LogComponentEnable("SmallSmartCityExample", LOG_LEVEL_ALL);
+    LogComponentEnable("SmartHomeExample", LOG_LEVEL_ALL);
 
     /***********
      *  Setup  *
@@ -191,7 +193,7 @@ main(int argc, char* argv[])
 
     Ptr<ListPositionAllocator> allocator = CreateObject<ListPositionAllocator>();
     // Make it so that nodes are at a certain height > 0
-    allocator->Add(Vector(38.10351066811096, 13.3459399220741, 15.0));
+    allocator->Add(Vector(38.10863528672477, 13.34050633101244, 15.0));
     loramobility.SetPositionAllocator(allocator);
     loramobility.Install(gateways);
 
@@ -312,10 +314,10 @@ main(int argc, char* argv[])
     NS_LOG_DEBUG("Create WiFi Nodes...");
 
     NodeContainer wifiStaNodes;
-    wifiStaNodes.Create (1);
+    wifiStaNodes.Create (nWiFiStaNodes);
 
     NodeContainer wifiApNode;
-    wifiApNode.Create (1);
+    wifiApNode.Create (nWiFiAPNodes);
 
     YansWifiChannelHelper wifichannel = YansWifiChannelHelper::Default ();
     YansWifiPhyHelper phy;
@@ -345,12 +347,15 @@ main(int argc, char* argv[])
     wifimobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 
     Ptr<ListPositionAllocator> allocatorAPWiFi = CreateObject<ListPositionAllocator>();
-    allocatorAPWiFi->Add(Vector(38.10351066811096, 13.3459399220741, 1.5));
+    allocatorAPWiFi->Add(Vector(38.10351066811091, 13.3459399220741, 1.5));
     wifimobility.SetPositionAllocator(allocatorAPWiFi);
     wifimobility.Install(wifiApNode);
 
     Ptr<ListPositionAllocator> allocatorStaWiFi = CreateObject<ListPositionAllocator>();
-    allocatorStaWiFi->Add(Vector(38.10863528672466, 13.34050633101243, 1.5));
+    allocatorStaWiFi->Add(Vector(38.10863528672426, 13.34050633101243, 1.5));
+    allocatorStaWiFi->Add(Vector(38.10863528672436, 13.34050633101243, 1.5));
+    allocatorStaWiFi->Add(Vector(38.10863528672446, 13.34050633101243, 1.5));
+    allocatorStaWiFi->Add(Vector(38.10863528672456, 13.34050633101243, 1.5));
     wifimobility.SetPositionAllocator(allocatorStaWiFi);
     wifimobility.Install(wifiStaNodes);
 
@@ -385,7 +390,7 @@ main(int argc, char* argv[])
                         InetSocketAddress (Ipv4Address ("192.168.1.1"), sinkPort));
     onoff.SetConstantRate (DataRate ("1Mbps"));
     onoff.SetAttribute ("PacketSize", UintegerValue (1024));
-    ApplicationContainer clientApps = onoff.Install (wifiStaNodes.Get (0));
+    ApplicationContainer clientApps = onoff.Install (wifiStaNodes.Get (1));
     clientApps.Start (Seconds (1.0));
     clientApps.Stop (Seconds (10.0));
 

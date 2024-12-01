@@ -1,4 +1,3 @@
-
 #include "ns3/building-allocator.h"
 #include "ns3/building-penetration-loss.h"
 #include "ns3/buildings-helper.h"
@@ -21,13 +20,6 @@
 #include "ns3/position-allocator.h"
 #include "ns3/random-variable-stream.h"
 #include "ns3/simulator.h"
-#include "ns3/yans-wifi-helper.h"
-#include "ns3/on-off-helper.h"
-#include "ns3/inet-socket-address.h"
-#include "ns3/packet-sink-helper.h"
-#include "ns3/ssid.h"
-#include "ns3/internet-stack-helper.h"
-#include "ns3/ipv4-address-helper.h"
 
 #include <algorithm>
 #include <ctime>
@@ -35,11 +27,11 @@
 using namespace ns3;
 using namespace lorawan;
 
-NS_LOG_COMPONENT_DEFINE("SmallSmartCityExample");
+NS_LOG_COMPONENT_DEFINE("ComplexLorawanNetworkExample");
 
 // Network settings
-int nDevices = 2;                 //!< Number of end device nodes to create
-int nGateways = 1;                  //!< Number of gateway nodes to create
+int nDevices = 10;                 //!< Number of end device nodes to create
+int nGateways = 1 ;                  //!< Number of gateway nodes to create
 double radiusMeters = 1000;         //!< Radius (m) of the deployment
 double simulationTimeSeconds = 600; //!< Scenario duration (s) in simulated time
 
@@ -47,7 +39,7 @@ double simulationTimeSeconds = 600; //!< Scenario duration (s) in simulated time
 bool realisticChannelModel = false; //!< Whether to use a more realistic channel model with
                                     //!< Buildings and correlated shadowing
 
-int appPeriodSeconds = 60; //!< Duration (s) of the inter-transmission time of end devices
+int appPeriodSeconds = 600; //!< Duration (s) of the inter-transmission time of end devices
 
 // Output control
 bool printBuildingInfo = true; //!< Whether to print building information
@@ -66,30 +58,31 @@ main(int argc, char* argv[])
     cmd.Parse(argc, argv);
 
     // Set up logging
-    LogComponentEnable("SmallSmartCityExample", LOG_LEVEL_ALL);
+    LogComponentEnable("ComplexLorawanNetworkExample", LOG_LEVEL_ALL);
+
 
     /***********
      *  Setup  *
      ***********/
-    NS_LOG_DEBUG("Setup...");
+
     // Create the time value from the period
     Time appPeriod = Seconds(appPeriodSeconds);
 
     // Mobility
-    MobilityHelper loramobility;
-    loramobility.SetPositionAllocator("ns3::UniformDiscPositionAllocator",
+    MobilityHelper mobility;
+    mobility.SetPositionAllocator("ns3::UniformDiscPositionAllocator",
                                   "rho",
                                   DoubleValue(radiusMeters),
                                   "X",
                                   DoubleValue(0.0),
                                   "Y",
                                   DoubleValue(0.0));
-    loramobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
+    mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
 
     /************************
-     *  LoRA -Create the channel  *
+     *  Create the channel  *
      ************************/
-    NS_LOG_DEBUG("LoRa - Create the channel...");
+
     // Create the lora channel object
     Ptr<LogDistancePropagationLossModel> loss = CreateObject<LogDistancePropagationLossModel>();
     loss->SetPathLossExponent(3.76);
@@ -117,7 +110,6 @@ main(int argc, char* argv[])
     /************************
      *  Create the helpers  *
      ************************/
-    NS_LOG_DEBUG("LoRa - Create the helpers...");
 
     // Create the LoraPhyHelper
     LoraPhyHelper phyHelper = LoraPhyHelper();
@@ -140,14 +132,13 @@ main(int argc, char* argv[])
     /************************
      *  Create End Devices  *
      ************************/
-    NS_LOG_DEBUG("LoRa - Create End Devices...");
 
     // Create a set of nodes
     NodeContainer endDevices;
     endDevices.Create(nDevices);
 
     // Assign a mobility model to each node
-    loramobility.Install(endDevices);
+    mobility.Install(endDevices);
 
     // Make it so that nodes are at a certain height > 0
     for (auto j = endDevices.Begin(); j != endDevices.End(); ++j)
@@ -183,7 +174,6 @@ main(int argc, char* argv[])
     /*********************
      *  Create Gateways  *
      *********************/
-    NS_LOG_DEBUG("LoRa - Create Gateways...");
 
     // Create the gateway nodes (allocate them uniformly on the disc)
     NodeContainer gateways;
@@ -191,9 +181,9 @@ main(int argc, char* argv[])
 
     Ptr<ListPositionAllocator> allocator = CreateObject<ListPositionAllocator>();
     // Make it so that nodes are at a certain height > 0
-    allocator->Add(Vector(38.10351066811096, 13.3459399220741, 15.0));
-    loramobility.SetPositionAllocator(allocator);
-    loramobility.Install(gateways);
+    allocator->Add(Vector(0.0, 0.0, 15.0));
+    mobility.SetPositionAllocator(allocator);
+    mobility.Install(gateways);
 
     // Create a netdevice for each gateway
     phyHelper.SetDeviceType(LoraPhyHelper::GW);
@@ -203,7 +193,6 @@ main(int argc, char* argv[])
     /**********************
      *  Handle buildings  *
      **********************/
-    NS_LOG_DEBUG("LoRa - Handle buildings...");
 
     double xLength = 130;
     double deltaX = 32;
@@ -258,7 +247,6 @@ main(int argc, char* argv[])
     /**********************************************
      *  Set up the end device's spreading factor  *
      **********************************************/
-    NS_LOG_DEBUG("LoRa - Set up the end device's spreading factor...");
 
     LorawanMacHelper::SetSpreadingFactorsUp(endDevices, gateways, channel);
 
@@ -272,6 +260,11 @@ main(int argc, char* argv[])
     PeriodicSenderHelper appHelper = PeriodicSenderHelper();
     appHelper.SetPeriod(Seconds(appPeriodSeconds));
     appHelper.SetPacketSize(23);
+    Ptr<RandomVariableStream> rv =
+        CreateObjectWithAttributes<UniformRandomVariable>("Min",
+                                                          DoubleValue(0),
+                                                          "Max",
+                                                          DoubleValue(10));
     ApplicationContainer appContainer = appHelper.Install(endDevices);
 
     appContainer.Start(Seconds(0));
@@ -280,7 +273,6 @@ main(int argc, char* argv[])
     /**************************
      *  Create network server  *
      ***************************/
-    NS_LOG_DEBUG("LoRa - Create network server...");
 
     // Create the network server node
     Ptr<Node> networkServer = CreateObject<Node>();
@@ -306,100 +298,13 @@ main(int argc, char* argv[])
     // Create a forwarder for each gateway
     forHelper.Install(gateways);
 
-    /************************
-     *  Create WiFi Nodes  *
-     ************************/
-    NS_LOG_DEBUG("Create WiFi Nodes...");
-
-    NodeContainer wifiStaNodes;
-    wifiStaNodes.Create (1);
-
-    NodeContainer wifiApNode;
-    wifiApNode.Create (1);
-
-    YansWifiChannelHelper wifichannel = YansWifiChannelHelper::Default ();
-    YansWifiPhyHelper phy;
-    phy.SetChannel (wifichannel.Create ());
-
-    WifiHelper wifi;
-    wifi.SetStandard (WIFI_STANDARD_80211a);
-    wifi.SetRemoteStationManager ("ns3::AarfWifiManager");
-
-    WifiMacHelper mac;
-    Ssid ssid = Ssid ("ns-3-ssid");
-
-    mac.SetType ("ns3::StaWifiMac",
-                "Ssid", SsidValue (ssid),
-                "ActiveProbing", BooleanValue (false));
-
-    NetDeviceContainer staDevices;
-    staDevices = wifi.Install (phy, mac, wifiStaNodes);
-
-    mac.SetType ("ns3::ApWifiMac",
-                "Ssid", SsidValue (ssid));
-
-    NetDeviceContainer apDevices;
-    apDevices = wifi.Install (phy, mac, wifiApNode);
-
-    MobilityHelper wifimobility;
-    wifimobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
-
-    Ptr<ListPositionAllocator> allocatorAPWiFi = CreateObject<ListPositionAllocator>();
-    allocatorAPWiFi->Add(Vector(38.10351066811096, 13.3459399220741, 1.5));
-    wifimobility.SetPositionAllocator(allocatorAPWiFi);
-    wifimobility.Install(wifiApNode);
-
-    Ptr<ListPositionAllocator> allocatorStaWiFi = CreateObject<ListPositionAllocator>();
-    allocatorStaWiFi->Add(Vector(38.10863528672466, 13.34050633101243, 1.5));
-    wifimobility.SetPositionAllocator(allocatorStaWiFi);
-    wifimobility.Install(wifiStaNodes);
-
-    InternetStackHelper stack;
-    stack.Install (wifiApNode);
-    stack.Install (wifiStaNodes);
-
-    Ipv4AddressHelper address;
-    address.SetBase ("192.168.1.0", "255.255.255.0");
-
-    Ipv4InterfaceContainer staNodeInterfaces;
-    staNodeInterfaces = address.Assign (staDevices);
-    Ipv4InterfaceContainer apNodeInterface;
-    apNodeInterface = address.Assign (apDevices);
-
-    // Print the IP addresses of the WiFi STA nodes
-    for (uint32_t i = 0; i < staNodeInterfaces.GetN(); ++i)
-    {
-        Ipv4Address addr = staNodeInterfaces.GetAddress (i);
-        std::cout << "IP address of wifiStaNode " << i << ": " << addr << std::endl;
-    }
-    NS_LOG_DEBUG("WiFi - Setup Udp");
-
-    uint16_t sinkPort = 8080;
-    Address sinkAddress (InetSocketAddress (Ipv4Address::GetAny (), sinkPort));
-    PacketSinkHelper packetSinkHelper ("ns3::UdpSocketFactory", sinkAddress);
-    ApplicationContainer sinkApps = packetSinkHelper.Install (wifiStaNodes.Get (0));
-    sinkApps.Start (Seconds (0.0));
-    sinkApps.Stop (Seconds (10.0));
-
-    OnOffHelper onoff ("ns3::UdpSocketFactory",
-                        InetSocketAddress (Ipv4Address ("192.168.1.1"), sinkPort));
-    onoff.SetConstantRate (DataRate ("1Mbps"));
-    onoff.SetAttribute ("PacketSize", UintegerValue (1024));
-    ApplicationContainer clientApps = onoff.Install (wifiStaNodes.Get (0));
-    clientApps.Start (Seconds (1.0));
-    clientApps.Stop (Seconds (10.0));
-
-    //Tracing
-    phy.EnablePcap ("wifi-ap", apDevices);
-    phy.EnablePcap ("wifi-sta", staDevices);
-
-    /**********
-     *  Run    *
-     **********/
+    ////////////////
+    // Simulation //
+    ////////////////
 
     Simulator::Stop(appStopTime + Hours(1));
 
-    NS_LOG_INFO("*** Running simulation...");
+    NS_LOG_INFO("Running simulation...");
     Simulator::Run();
 
     Simulator::Destroy();

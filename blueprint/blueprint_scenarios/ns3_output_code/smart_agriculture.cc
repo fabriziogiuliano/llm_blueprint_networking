@@ -28,10 +28,10 @@
 using namespace ns3;
 using namespace lorawan;
 
-NS_LOG_COMPONENT_DEFINE("SmartAgricultureNetworkExample");
+NS_LOG_COMPONENT_DEFINE("SmartAgricultureExample");
 
 // Network settings
-int nDevices = 4;                 //!< Number of end device nodes to create
+int nDevices = 3;                 //!< Number of end device nodes to create
 int nGateways = 1;                  //!< Number of gateway nodes to create
 double radiusMeters = 1000;         //!< Radius (m) of the deployment
 double simulationTimeSeconds = 600; //!< Scenario duration (s) in simulated time
@@ -40,7 +40,7 @@ double simulationTimeSeconds = 600; //!< Scenario duration (s) in simulated time
 bool realisticChannelModel = false; //!< Whether to use a more realistic channel model with
                                     //!< Buildings and correlated shadowing
 
-int appPeriodSeconds = 600; //!< Duration (s) of the inter-transmission time of end devices
+int appPeriodSeconds = 60; //!< Duration (s) of the inter-transmission time of end devices
 
 // Output control
 bool printBuildingInfo = true; //!< Whether to print building information
@@ -59,30 +59,30 @@ main(int argc, char* argv[])
     cmd.Parse(argc, argv);
 
     // Set up logging
-    LogComponentEnable("SmartAgricultureNetworkExample", LOG_LEVEL_ALL);
+    LogComponentEnable("SmartAgricultureExample", LOG_LEVEL_ALL);
 
     /***********
      *  Setup  *
      ***********/
-
+    NS_LOG_DEBUG("Setup...");
     // Create the time value from the period
     Time appPeriod = Seconds(appPeriodSeconds);
 
     // Mobility
-    MobilityHelper mobility;
-    mobility.SetPositionAllocator("ns3::UniformDiscPositionAllocator",
+    MobilityHelper loramobility;
+    loramobility.SetPositionAllocator("ns3::UniformDiscPositionAllocator",
                                   "rho",
                                   DoubleValue(radiusMeters),
                                   "X",
                                   DoubleValue(0.0),
                                   "Y",
                                   DoubleValue(0.0));
-    mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
+    loramobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
 
     /************************
-     *  Create the channel  *
+     *  LoRA -Create the channel  *
      ************************/
-
+    NS_LOG_DEBUG("LoRa - Create the channel...");
     // Create the lora channel object
     Ptr<LogDistancePropagationLossModel> loss = CreateObject<LogDistancePropagationLossModel>();
     loss->SetPathLossExponent(3.76);
@@ -110,6 +110,7 @@ main(int argc, char* argv[])
     /************************
      *  Create the helpers  *
      ************************/
+    NS_LOG_DEBUG("LoRa - Create the helpers...");
 
     // Create the LoraPhyHelper
     LoraPhyHelper phyHelper = LoraPhyHelper();
@@ -132,13 +133,14 @@ main(int argc, char* argv[])
     /************************
      *  Create End Devices  *
      ************************/
+    NS_LOG_DEBUG("LoRa - Create End Devices...");
 
     // Create a set of nodes
     NodeContainer endDevices;
     endDevices.Create(nDevices);
 
     // Assign a mobility model to each node
-    mobility.Install(endDevices);
+    loramobility.Install(endDevices);
 
     // Make it so that nodes are at a certain height > 0
     for (auto j = endDevices.Begin(); j != endDevices.End(); ++j)
@@ -174,6 +176,7 @@ main(int argc, char* argv[])
     /*********************
      *  Create Gateways  *
      *********************/
+    NS_LOG_DEBUG("LoRa - Create Gateways...");
 
     // Create the gateway nodes (allocate them uniformly on the disc)
     NodeContainer gateways;
@@ -182,8 +185,8 @@ main(int argc, char* argv[])
     Ptr<ListPositionAllocator> allocator = CreateObject<ListPositionAllocator>();
     // Make it so that nodes are at a certain height > 0
     allocator->Add(Vector(0.0, 0.0, 15.0));
-    mobility.SetPositionAllocator(allocator);
-    mobility.Install(gateways);
+    loramobility.SetPositionAllocator(allocator);
+    loramobility.Install(gateways);
 
     // Create a netdevice for each gateway
     phyHelper.SetDeviceType(LoraPhyHelper::GW);
@@ -193,6 +196,7 @@ main(int argc, char* argv[])
     /**********************
      *  Handle buildings  *
      **********************/
+    NS_LOG_DEBUG("LoRa - Handle buildings...");
 
     double xLength = 130;
     double deltaX = 32;
@@ -247,6 +251,7 @@ main(int argc, char* argv[])
     /**********************************************
      *  Set up the end device's spreading factor  *
      **********************************************/
+    NS_LOG_DEBUG("LoRa - Set up the end device's spreading factor...");
 
     LorawanMacHelper::SetSpreadingFactorsUp(endDevices, gateways, channel);
 
@@ -260,11 +265,6 @@ main(int argc, char* argv[])
     PeriodicSenderHelper appHelper = PeriodicSenderHelper();
     appHelper.SetPeriod(Seconds(appPeriodSeconds));
     appHelper.SetPacketSize(23);
-    Ptr<RandomVariableStream> rv =
-        CreateObjectWithAttributes<UniformRandomVariable>("Min",
-                                                          DoubleValue(0),
-                                                          "Max",
-                                                          DoubleValue(10));
     ApplicationContainer appContainer = appHelper.Install(endDevices);
 
     appContainer.Start(Seconds(0));
@@ -273,6 +273,7 @@ main(int argc, char* argv[])
     /**************************
      *  Create network server  *
      ***************************/
+    NS_LOG_DEBUG("LoRa - Create network server...");
 
     // Create the network server node
     Ptr<Node> networkServer = CreateObject<Node>();
@@ -298,13 +299,13 @@ main(int argc, char* argv[])
     // Create a forwarder for each gateway
     forHelper.Install(gateways);
 
-    ////////////////
-    // Simulation //
-    ////////////////
+    /**********
+     *  Run    *
+     **********/
 
     Simulator::Stop(appStopTime + Hours(1));
 
-    NS_LOG_INFO("Running simulation...");
+    NS_LOG_INFO("*** Running simulation...");
     Simulator::Run();
 
     Simulator::Destroy();
@@ -316,6 +317,10 @@ main(int argc, char* argv[])
 
     LoraPacketTracker& tracker = helper.GetPacketTracker();
     std::cout << tracker.CountMacPacketsGlobally(Seconds(0), appStopTime + Hours(1)) << std::endl;
+    std::ofstream myfile;
+    myfile.open ("lora-packet-tracker.txt");
+    myfile << "Total MAC packets: " << tracker.CountMacPacketsGlobally (Seconds (0), appStopTime + Hours (1)) << std::endl;
+    myfile.close ();
 
     return 0;
 }
