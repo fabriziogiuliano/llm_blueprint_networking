@@ -40,8 +40,10 @@ NS_LOG_COMPONENT_DEFINE("SmallSmartCityExample");
 // Network settings
 int nDevices = 2;                 //!< Number of end device nodes to create
 int nGateways = 1;                  //!< Number of gateway nodes to create
+int nWiFiAPNodes=1;
+int nWiFiStaNodes = 1;
 double radiusMeters = 1000;         //!< Radius (m) of the deployment
-double simulationTimeSeconds = 600; //!< Scenario duration (s) in simulated time
+double simulationTimeSeconds = 3600; //!< Scenario duration (s) in simulated time
 
 // Channel model
 bool realisticChannelModel = false; //!< Whether to use a more realistic channel model with
@@ -312,10 +314,10 @@ main(int argc, char* argv[])
     NS_LOG_DEBUG("Create WiFi Nodes...");
 
     NodeContainer wifiStaNodes;
-    wifiStaNodes.Create (1);
+    wifiStaNodes.Create (nWiFiStaNodes);
 
     NodeContainer wifiApNode;
-    wifiApNode.Create (1);
+    wifiApNode.Create (nWiFiAPNodes);
 
     YansWifiChannelHelper wifichannel = YansWifiChannelHelper::Default ();
     YansWifiPhyHelper phy;
@@ -350,7 +352,7 @@ main(int argc, char* argv[])
     wifimobility.Install(wifiApNode);
 
     Ptr<ListPositionAllocator> allocatorStaWiFi = CreateObject<ListPositionAllocator>();
-    allocatorStaWiFi->Add(Vector(38.10863528672466, 13.34050633101243, 1.5));
+    allocatorStaWiFi->Add(Vector(38.10351066811096, 13.3459399220741, 1.5));
     wifimobility.SetPositionAllocator(allocatorStaWiFi);
     wifimobility.Install(wifiStaNodes);
 

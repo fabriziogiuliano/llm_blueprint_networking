@@ -1,165 +1,60 @@
 {
-  "type": "configuration",
-  "version": "1.0",
-  "mqtt": {
-    "broker": "<mqtt broker hostname>",
-    "port": 8883,
-    "client_id": "mqtt-db-logger",
-    "username": "<username here>",
-    "password": "<passowrd here>",
-    "topics": [
-      "application/+/device/+/event/#"
-    ]
-  },
-  "mongodb": {
-    "host": "<mongodb database hostname>",
-    "port": 27017,
-    "database": "Chirpstack-Supernova"
-  },
-  "network": {
-    "id": "lorawan-network",
-    "name": "LoRaWAN Network",
-    "network_server": {
-      "id": "network-server-1",
-      "name": "ChirpStack Network Server",
-      "address": "<network server addr>",
-      "api_token": "<API token Here>"
+  "name": "Smart Home",
+  "description": "A network blueprint for a smart home with various automated devices.",
+  "components": [
+
+    {"type": "WiFi AP",
+      "id": "AP-001",
+      "application": "WiFi Access Point",
+      "location": "City Hall",      
+      "protocol": "WiFi",
+      "ip_address":"192.168.1.1",        
+      "latitude": 38.10351066811091,
+      "longitude": 13.3459399220741
     },
-    "coverage": {
-      "radius": 1
+    {
+      "type": "Smart Thermostat",
+      "id": "ST-001",
+      "location": "Hallway",
+      "temperature_range": "18-25°C",
+      "energy_efficiency": "A+" ,     
+      "protocol":"Wi-Fi",
+      "latitude": 38.10863528672426,
+      "longitude": 13.34050633101243,
+      "ip_address":"192.168.1.2"
     },
-    "gateways": [
-      {
-        "id": "gateway-1",
-        "name": "LoRa Gateway 1",
-        "address": "192.168.1.101",
-        "latitude": 38.105651699713405,
-        "longitude": 13.353524210111177,
-        "frequency_band": "EU868",
-        "model": "gateway-model-1"
-      }
-    ],
-    "devices": [
-      {
-        "id": "device-1",
-        "name": "Smart Street Camera",
-        "description": "Monitors streets with high-definition cameras to enhance security.",
-        "DR": 7,
-        "dev_eui": "0C1931794A499755",
-        "app_eui": "0000000000000000",
-        "app_key": "0DF79328D7C27F34F17F3E8A60E0E751",
-        "profile": "sensor-profile-xyz",
-        "latitude": 38.09558757638996,
-        "longitude": 13.344872333904199
-      },
-      {
-        "id": "device-2",
-        "name": "Smart Building Air Ventilation",
-        "description": "Monitors air quality and optimizes ventilation in urban buildings.",
-        "DR": 7,
-        "dev_eui": "9AC63F80098E7E66",
-        "app_eui": "0000000000000000",
-        "app_key": "DE83290DDAE4CE71A9BE7837CE2CC05B",
-        "profile": "sensor-profile-xyz",
-        "latitude": 38.10467773682981,
-        "longitude": 13.337410283994172
-      },
-      {
-        "id": "device-3",
-        "name": "Smart Public Transport Station",
-        "description": "Monitors real-time data from public transport stations to optimize scheduling.",
-        "DR": 7,
-        "dev_eui": "BDB2A6C2E81C0044",
-        "app_eui": "0000000000000000",
-        "app_key": "4B91DBE01C071AC6A50A82FEDA1DC259",
-        "profile": "sensor-profile-xyz",
-        "latitude": 38.105643362148854,
-        "longitude": 13.338444048231255
-      },
-      {
-        "id": "device-4",
-        "name": "Smart City Waste Tracking",
-        "description": "Tracks waste generation and collection throughout the city for efficiency.",
-        "DR": 7,
-        "dev_eui": "312C8F3653CEFB02",
-        "app_eui": "0000000000000000",
-        "app_key": "45D0FD43D570A8B757364A098FC2DB17",
-        "profile": "sensor-profile-xyz",
-        "latitude": 38.101142953658616,
-        "longitude": 13.340646450274694
-      },
-      {
-        "id": "device-5",
-        "name": "Smart Smart Home Integration",
-        "description": "Integrates IoT devices in homes with city infrastructure for energy efficiency.",
-        "DR": 7,
-        "dev_eui": "071F2AFC5ECA8ADD",
-        "app_eui": "0000000000000000",
-        "app_key": "047ABD1D6B2DB8D20AB28F13B6A7DFBB",
-        "profile": "sensor-profile-xyz",
-        "latitude": 38.10613531065095,
-        "longitude": 13.351730704547185
-      },
-      {
-        "id": "device-6",
-        "name": "Pedestrian Counting Sensor",
-        "description": "Counts the number of pedestrians passing a specific point in the city.",
-        "DR": 7,
-        "dev_eui": "130796DF13446917",
-        "app_eui": "0000000000000000",
-        "app_key": "249567B1869652F47FD14C323009ED7F",
-        "profile": "sensor-profile-xyz",
-        "latitude": 38.10321685431712,
-        "longitude": 13.344228568701704
-      },
-      {
-        "id": "device-7",
-        "name": "Smart Energy Storage Optimization",
-        "description": "Optimizes the use of energy storage in the city for better efficiency.",
-        "DR": 7,
-        "dev_eui": "F50978627BDB2F99",
-        "app_eui": "0000000000000000",
-        "app_key": "A40A71D93636AC3764A5768CC10D8A11",
-        "profile": "sensor-profile-xyz",
-        "latitude": 38.10329583014676,
-        "longitude": 13.340317785688955
-      },
-      {
-        "id": "device-8",
-        "name": "Soil Moisture Sensor",
-        "description": "Measures soil moisture content to optimize irrigation in urban areas.",
-        "DR": 7,
-        "dev_eui": "F8F21F24264BC05B",
-        "app_eui": "0000000000000000",
-        "app_key": "B0B0C53637DEAE4144CA3340B21E936E",
-        "profile": "sensor-profile-xyz",
-        "latitude": 38.10309141097758,
-        "longitude": 13.350369664619478
-      },
-      {
-        "id": "device-9",
-        "name": "Smart Air Quality Monitoring",
-        "description": "Monitors fine particulate matter, ozone, and carbon monoxide in urban air.",
-        "DR": 7,
-        "dev_eui": "1DC3BF59B1F0FC6E",
-        "app_eui": "0000000000000000",
-        "app_key": "5FFA5CEAADA792B53AD883374E57566C",
-        "profile": "sensor-profile-xyz",
-        "latitude": 38.10438699302078,
-        "longitude": 13.350258624579066
-      },
-      {
-        "id": "device-10",
-        "name": "Parking Occupancy Sensor",
-        "description": "Monitors parking space availability in real-time.",
-        "DR": 7,
-        "dev_eui": "1B02BBDD8426F001",
-        "app_eui": "0000000000000000",
-        "app_key": "304B8DE044980B3932917DF1D7117E11",
-        "profile": "sensor-profile-xyz",
-        "latitude": 38.103284586142394,
-        "longitude": 13.350254574051915
-      }
-    ]
-  }
+    {
+      "type": "Smart Light Bulb",
+      "id": "SLB-001",
+      "location": "Kitchen",
+      "brightness": "Adjustable",
+      "color_temperature": "2700K-6500K", 
+      "protocol":"Wi-Fi",
+      "latitude": 38.10863528672436,
+      "longitude": 13.34050633101243,     
+      "ip_address":"192.168.1.3"
+    },
+    {
+      "type": "LoRaWAN Gateway",
+      "id": "GW-001",
+      "description":"WiFi device for with LoRa GW",
+      "ip_address":"192.168.1.110",
+      "latitude": 38.10863528672477,
+      "longitude": 13.34050633101244
+    },  
+    {
+      "type": "IoT Sensor",
+      "id": "WM-001",
+      "application": "Water meter",
+      "location": "Intersection A",
+      "sensor_type": "Water sensor",
+      "protocol": "LoRaWAN",
+      "SF": 7,
+      "latitude": 38.10863528672466,
+      "longitude": 13.34050633101243,
+      "data_flow":"constant transmission each 1 hour"
+    }
+  ],
+  "network_type": "Heterogeneous",
+  "protocols": ["Wi-Fi","LoRaWAN"]
 }
