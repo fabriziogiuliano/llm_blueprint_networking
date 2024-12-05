@@ -41,7 +41,7 @@ NS_LOG_COMPONENT_DEFINE("SmartHomeExample");
 int nDevices = 1;                 //!< Number of end device nodes to create
 int nGateways = 1;                  //!< Number of gateway nodes to create
 int nWiFiAPNodes=1;
-int nWiFiStaNodes 2;
+int nWiFiStaNodes=2;
 double radiusMeters = 1000;         //!< Radius (m) of the deployment
 double simulationTimeSeconds = 600; //!< Scenario duration (s) in simulated time
 
