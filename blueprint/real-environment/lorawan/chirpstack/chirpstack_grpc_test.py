@@ -7,9 +7,16 @@ import random
 
 #URL API CHIRPSTACK: https://www.chirpstack.io/docs/chirpstack/api/api.html
 
-server = "<url of Chirpstack server here>"  # Adjust this to your ChirpStack instance
-api_token = "<fill here the code>"  # Obtain from ChirpStack
-tenant_id = '<tenant identifier here>' #this is a tenant ID for fabrizio.giuliano@unipa.it
+
+
+from dotenv import load_dotenv
+load_dotenv()
+model = "mistral-large-latest"
+
+
+server = os.getenv('CHIRPSTACK_URL')  # Adjust this to your ChirpStack instance
+api_token = os.getenv('CHIRPSTACK_API_TOKEN')  # Obtain from ChirpStack
+tenant_id = os.getenv('CHIRPSTACK_TENANT_ID') #this is a tenant ID for fabrizio.giuliano@unipa.it
 
 channel = grpc.insecure_channel(server)
 auth_token = [("authorization", "Bearer %s" % api_token)]
@@ -58,6 +65,18 @@ def CreateApplication(name, tenant_id):
   #resp = None
   return resp
 
+def GetApplicationID(name, tenant_id):
+  client = api.ApplicationServiceStub(channel)
+  req = api.CreateApplicationRequest()
+  req = api.GetApp
+  req.i
+  req.application.name = name
+  req.application.tenant_id = tenant_id
+  resp = client.Create(req, metadata=auth_token)
+  #resp = None
+  return resp
+
+
 def CreateDeviceProfile(name, tenant_id, region="EU868", mac_version="LORAWAN_1_0_3", revision ="RP002_1_0_3", supports_otaa=True):  
   client = api.DeviceProfileServiceStub(channel)
   
@@ -80,7 +99,12 @@ def CreateDeviceProfile(name, tenant_id, region="EU868", mac_version="LORAWAN_1_
   req.device_profile.supports_otaa = supports_otaa
   resp = client.Create(req, metadata=auth_token)
   return resp
-
+def DeleteDviceProfile(id):
+  client = api.DeviceProfileServiceStub(channel)
+  req = api.DeleteDeviceProfileRequest()
+  req.id = id #"5f80f68b-0655-495f-94be-c7d72fa4b755"
+  resp = client.Delete(req, metadata=auth_token)
+  return resp
 def CreateDevice(
   dev_eui,
   name,
@@ -93,22 +117,16 @@ def CreateDevice(
   
   client = api.DeviceServiceStub(channel)
   
-  
-  en_create_device = True
-  #CREATE DEVICE
-  if en_create_device:
-    req = api.CreateDeviceRequest()
-    req.device.dev_eui = dev_eui
-    req.device.name = name
-    req.device.description = "prova prova sa sa prova"
-    req.device.application_id = application_id
-    req.device.device_profile_id = device_profile_id
-    req.device.skip_fcnt_check = skip_fcnt_check
-    req.device.is_disabled = is_disabled
-    #req.device.tags.update({})
-    
-    resp = client.Create(req, metadata=auth_token)
-  
+  req = api.CreateDeviceRequest()
+  req.device.dev_eui = dev_eui
+  req.device.name = name
+  req.device.description = ""
+  req.device.application_id = application_id
+  req.device.device_profile_id = device_profile_id
+  req.device.skip_fcnt_check = skip_fcnt_check
+  req.device.is_disabled = is_disabled
+  #req.device.tags.update({})    
+  resp = client.Create(req, metadata=auth_token)
   
   #CreateDeviceKeysRequest
   req = api.CreateDeviceKeysRequest()
@@ -119,30 +137,38 @@ def CreateDevice(
   
   return resp  
 
+def DeleteDevice(device_id):
+  client = api.DeviceServiceStub(channel)
+  req = api.DeleteDeviceRequest()
+  req.dev_eui=device_id
+  resp = client.Delete(req,metadata=auth_token)
+  return resp
+
 def CreateGateway(gateway_id, name, tenant_id, description=None, location=None):
   client = api.GatewayServiceStub(channel)
   req = api.CreateGatewayRequest()
   req.gateway.gateway_id=gateway_id
   req.gateway.name = name
-  #req.gateway.description =description
+  req.gateway.description =description
   #req.gateway.location=location
   req.gateway.tenant_id=tenant_id
   req.gateway.stats_interval=60
   resp = client.Create(req, metadata=auth_token)
-
   return resp
   
+  
+def DeleteGateway(gateway_id):
+  client = api.GatewayServiceStub(channel)
+  req = api.DeleteGatewayRequest()
+  req.gateway_id=gateway_id  
+  resp = client.Delete(req, metadata=auth_token)
+  return resp  
 
-"""
-#TBD, not useful for OTAA
-def ActivateDevice(dev_eui):
-  client = api.DeviceServiceStub(channel)
-  auth_token = [("authorization", "Bearer %s" % api_token)]
-  req = api.ActivateDeviceRequest()
-  req.device_activation.dev_eui=dev_eui
-  resp = client.Activate(req, metadata=auth_token)
-"""
-
+def get_dict(str_application_id):
+    k, v = str_application_id.split(': ')    
+    v = v.replace('"','').strip("\n")
+    # Crea il dizionario
+    return {k: v}
 
 def GetDeviceProfile(id):    
   client = api.DeviceProfileServiceStub(channel)
@@ -151,10 +177,9 @@ def GetDeviceProfile(id):
   resp = client.Get(req, metadata=auth_token)
   return resp
 
-
 def DeleteApplication(id):
   try:
-    client = api.DeviceProfileServiceStub(channel)
+    client = api.ApplicationServiceStub(channel)
     req = api.DeleteApplicationRequest()
     req.id=id
     resp = client.Delete(req, metadata=auth_token)
@@ -170,16 +195,62 @@ def ListDeviceProfiles(tenant_id):
   resp = client.List(req, metadata=auth_token)
   return resp
 
-print(ListGateways(tenant_id='52f14cd4-c6f1-4fbd-8f87-4025e1d49242'))
+#print(ListGateways(tenant_id='52f14cd4-c6f1-4fbd-8f87-4025e1d49242'))
 
-print(ListApplications(tenant_id))
-print(ListDevices(application_id='e9a065a4-73a0-437e-9711-69de6db90f14'))
-print(GetDeviceProfile(id='3c8f08c9-b6ee-40f9-bfde-0ff7a0b292fc')) 
-print(ListDeviceProfiles(tenant_id=tenant_id))
+#print(ListApplications(tenant_id))
+#print(ListDevices(application_id='e9a065a4-73a0-437e-9711-69de6db90f14'))
+#print(GetDeviceProfile(id='3c8f08c9-b6ee-40f9-bfde-0ff7a0b292fc')) 
+#print(ListDeviceProfiles(tenant_id=tenant_id))
 
-print(CreateDeviceProfile(name="TEST_OTAA_EU868_1.1.0",mac_version="LORAWAN_1_1_0", revision="RP002_1_0_3", tenant_id=tenant_id))
-print(CreateApplication(name="TEST-BLUEPRINT",tenant_id=tenant_id))
-print(DeleteApplication(id="e86e65c7-66fe-42eb-ae3a-2aeff64f021d"))
+#print()
+
+#STEP1 create the application
+print("[STEP1] CREATE APPLICATION")
+
+dict_application_id = get_dict(str(CreateApplication(name="TEST-BLUEPRINT",tenant_id=tenant_id)))
+application_id=dict_application_id["id"]
+
+#STEP2 Create Gateway
+print("[STEP2] CREATE GATEWAY")
+print(DeleteGateway("05b0da50148fd6b1"))
+CreateGateway(
+  gateway_id="05b0da50148fd6b1",
+  name="TEST-GW",
+  description="Gateway Building 9",
+  tenant_id=tenant_id
+)
+
+#STEP3 create Device profile:
+#DeleteDviceProfile("6c89e55f-041f-4e38-bd5b-ea5086130afa")
+print("[STEP3] CREATE GATEWAY")
+
+dict_device_profile_id = get_dict(str(CreateDeviceProfile(name="TEST_OTAA_EU868_1.1.0",mac_version="LORAWAN_1_1_0", revision="RP002_1_0_3", tenant_id=tenant_id)))
+device_profile_id=dict_device_profile_id["id"]
+print(device_profile_id)
+#DeleteDevice(device_id="14c3a79eed93ec98")
+print(CreateDevice(
+    dev_eui="14c3a79eed93ec98",
+    name="SMS-001",
+    application_id=application_id,
+    device_profile_id=device_profile_id,
+    application_key="8BD59A2C514C9EBDAF7E335E78A5E5B5",
+    skip_fcnt_check=False,
+    is_disabled=False
+))
+#DeleteDevice(device_id="14c3a79eed93ec22")
+print(CreateDevice(
+    dev_eui="14c3a79eed93ec22",
+    name="WS-001",
+    application_id=application_id,
+    device_profile_id=device_profile_id,
+    application_key="8AD59A1B514C9EBDAF7E335E78A5E5B4",
+    skip_fcnt_check=False,
+    is_disabled=False
+))
+exit()
+
+#print("** DELETE APPLICATION")
+#print(DeleteApplication(id=dict_application_id["id"]))
 
 """
 print(
@@ -193,9 +264,3 @@ print(
     is_disabled=False
 ))
 """
-
-print(CreateGateway(
-  gateway_id="05b0da50148fd6b1",
-  name="TEST-GW",
-  tenant_id="52f14cd4-c6f1-4fbd-8f87-4025e1d49242"
-))

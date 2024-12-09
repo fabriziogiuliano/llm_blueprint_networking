@@ -1,0 +1,69 @@
+{
+    "name": "Small Smart City",
+    "description": "A network blueprint for a small smart city with various IoT applications.",
+    "components": [
+      {
+        "type": "Central Control Center",
+        "id": "CCC-001",
+        "location": "City Hall",
+        "responsibilities": ["Monitoring", "Management", "Data Analysis"]
+      },
+      {"type": "LoRa Gateway",
+        "id": "GW-001",
+        "application": "LoRa Gateway",
+        "location": "City Hall",
+        "protocol": "LoRaWAN",        
+        "latitude": 38.10351066811096,
+        "longitude": 13.3459399220741
+      },
+      {"type": "WiFi AP",
+      "id": "AP-001",
+      "application": "WiFi Access Point",
+      "location": "City Hall",      
+      "protocol": "WiFi",
+      "ip_address":"192.168.1.1",        
+      "latitude": 38.10351066811096,
+      "longitude": 13.3459399220741
+      },
+      {
+        "type": "IoT Sensor",
+        "id": "IOT-001",
+        "application": "Traffic Management",
+        "location": "Intersection A",
+        "sensor_type": "Traffic Camera Sensor",
+        "protocol": "LoRaWAN",
+        "SF": 7,
+        "latitude": 38.10863528672466,
+        "longitude": 13.34050633101243,
+        "data_flow":"constant transmission each 1minute"
+      },
+      
+      {
+        "type": "IoT Sensor",
+        "id": "IOT-002",
+        "application": "Waste Management",
+        "location": "Bin Area B",
+        "sensor_type": "Ultrasonic Sensor",        
+        "protocol": "LoRaWAN",
+        "SF": 7,
+        "latitude": 38.0998337384608,
+        "longitude": 13.337136092765382,
+        "data_flow":"constant transmission each 1minute"
+      },
+      {
+        "type": "Camera",
+        "id": "STA-001",
+        "application": "Camera Monitoring",
+        "location": "Park C",
+        "sensor_type": "Survelliance camera",
+        "protocol":"Wi-Fi",
+        "data_flow":"UDP flow at 1Mbps",
+        "ip_address":"192.168.1.100",
+        "latitude": 38.10351066811096,
+        "longitude": 13.3459399220741
+      }
+    ],
+    "network_type": "Heterogeneous",
+    "protocols": ["Wi-Fi", "LoRaWAN"]
+  }
+  
