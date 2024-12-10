@@ -13,7 +13,7 @@ with open("sample_ns3_code.cc") as f:
         sample_ns3_code = f.read()
 
 #blueprint_scenario_filenames=["smart_home","smart_home_mixed","smart_agriculture","smart_city"]
-blueprint_scenario_filenames=["smart_city"]
+blueprint_scenario_filenames=["smart_home"]
 for blueprint_scenario_filename in blueprint_scenario_filenames:
     print(f"OPEN: {blueprint_scenario_filename}...")
     with open(f"blueprints/{blueprint_scenario_filename}.json") as f:

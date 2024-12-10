@@ -219,8 +219,10 @@ dict_device_profile_id = get_dict(str(CreateDeviceProfile(name="TEST_OTAA_EU868_
 device_profile_id=dict_device_profile_id["id"]
 print(device_profile_id)
 
-print("[STEP4] CREATE LORAWAN DEVICES")
-DeleteDevice(device_id="14c3a79eed93ec98")
+print("[STEP4] CREATE ALL LORAWAN DEVICES described in the blueprint")
+
+#STEP4 create Device:
+#EXAMPLE FOR ONE DEVICE
 print(CreateDevice(
     dev_eui="14c3a79eed93ec98",
     name="SMS-001",
@@ -230,18 +232,3 @@ print(CreateDevice(
     skip_fcnt_check=False,
     is_disabled=False
 ))
-DeleteDevice(device_id="14c3a79eed93ec22")
-print(CreateDevice(
-    dev_eui="14c3a79eed93ec22",
-    name="WS-001",
-    application_id=application_id,
-    device_profile_id=device_profile_id,
-    application_key="8AD59A1B514C9EBDAF7E335E78A5E5B4",
-    skip_fcnt_check=False,
-    is_disabled=False
-))
-
-
-#WIFI PART
-
-#... TBD
