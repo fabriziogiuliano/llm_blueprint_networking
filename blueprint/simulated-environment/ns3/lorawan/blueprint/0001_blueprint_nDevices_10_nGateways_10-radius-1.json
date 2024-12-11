@@ -1,0 +1,246 @@
+{
+  "type": "configuration",
+  "version": "1.0",
+  "mqtt": {
+    "broker": "<mqtt broker hostname>",
+    "port": 8883,
+    "client_id": "mqtt-db-logger",
+    "username": "<username here>",
+    "password": "<passowrd here>",
+    "topics": [
+      "application/+/device/+/event/#"
+    ]
+  },
+  "mongodb": {
+    "host": "<mongodb database hostname>",
+    "port": 27017,
+    "database": "Chirpstack-Supernova"
+  },
+  "network": {
+    "id": "lorawan-network",
+    "name": "LoRaWAN Network",
+    "network_server": {
+      "id": "network-server-1",
+      "name": "ChirpStack Network Server",
+      "address": "<network server addr>",
+      "api_token": "<API token Here>"
+    },
+    "coverage": {
+      "radius": 1
+    },
+    "gateways": [
+      {
+        "id": "gateway-1",
+        "name": "LoRa Gateway 1",
+        "address": "192.168.1.101",
+        "latitude": 38.09938725597074,
+        "longitude": 13.339562324623591,
+        "frequency_band": "EU868",
+        "model": "gateway-model-1"
+      },
+      {
+        "id": "gateway-2",
+        "name": "LoRa Gateway 2",
+        "address": "192.168.1.102",
+        "latitude": 38.098478613648204,
+        "longitude": 13.349598953461774,
+        "frequency_band": "EU868",
+        "model": "gateway-model-2"
+      },
+      {
+        "id": "gateway-3",
+        "name": "LoRa Gateway 3",
+        "address": "192.168.1.103",
+        "latitude": 38.099626348541484,
+        "longitude": 13.345828548206208,
+        "frequency_band": "EU868",
+        "model": "gateway-model-3"
+      },
+      {
+        "id": "gateway-4",
+        "name": "LoRa Gateway 4",
+        "address": "192.168.1.104",
+        "latitude": 38.10257310240886,
+        "longitude": 13.33962093422903,
+        "frequency_band": "EU868",
+        "model": "gateway-model-4"
+      },
+      {
+        "id": "gateway-5",
+        "name": "LoRa Gateway 5",
+        "address": "192.168.1.105",
+        "latitude": 38.10129633246975,
+        "longitude": 13.342129796071392,
+        "frequency_band": "EU868",
+        "model": "gateway-model-5"
+      },
+      {
+        "id": "gateway-6",
+        "name": "LoRa Gateway 6",
+        "address": "192.168.1.106",
+        "latitude": 38.101890054218096,
+        "longitude": 13.351223157127679,
+        "frequency_band": "EU868",
+        "model": "gateway-model-6"
+      },
+      {
+        "id": "gateway-7",
+        "name": "LoRa Gateway 7",
+        "address": "192.168.1.107",
+        "latitude": 38.10218100366419,
+        "longitude": 13.348518164371479,
+        "frequency_band": "EU868",
+        "model": "gateway-model-7"
+      },
+      {
+        "id": "gateway-8",
+        "name": "LoRa Gateway 8",
+        "address": "192.168.1.108",
+        "latitude": 38.1082683172268,
+        "longitude": 13.337299021142496,
+        "frequency_band": "EU868",
+        "model": "gateway-model-8"
+      },
+      {
+        "id": "gateway-9",
+        "name": "LoRa Gateway 9",
+        "address": "192.168.1.109",
+        "latitude": 38.10308879983628,
+        "longitude": 13.344729037300661,
+        "frequency_band": "EU868",
+        "model": "gateway-model-9"
+      },
+      {
+        "id": "gateway-10",
+        "name": "LoRa Gateway 10",
+        "address": "192.168.1.110",
+        "latitude": 38.10203580213313,
+        "longitude": 13.354146099606268,
+        "frequency_band": "EU868",
+        "model": "gateway-model-10"
+      }
+    ],
+    "devices": [
+      {
+        "id": "device-1",
+        "name": "Smart CCTV Camera",
+        "description": "Monitors public areas with intelligent cameras and motion detection.",
+        "DR": 7,
+        "dev_eui": "81E090DFA80FA150",
+        "app_eui": "0000000000000000",
+        "app_key": "90A5BE769EB02AFC27B4AC61B726D34C",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.10496092319043,
+        "longitude": 13.34732122964895
+      },
+      {
+        "id": "device-2",
+        "name": "Public Lighting Sensor",
+        "description": "Adjusts street lighting intensity based on time of day and environmental conditions.",
+        "DR": 7,
+        "dev_eui": "E5D1F620113F4896",
+        "app_eui": "0000000000000000",
+        "app_key": "C1979EE6661AB3E0A0DA871A2D454B14",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.104026047277785,
+        "longitude": 13.344704136616828
+      },
+      {
+        "id": "device-3",
+        "name": "Smart Urban Resource Management",
+        "description": "Monitors and optimizes the use of resources like water, energy, and waste.",
+        "DR": 7,
+        "dev_eui": "16E0E137EE1CDAE0",
+        "app_eui": "0000000000000000",
+        "app_key": "3FFF2212F40BD2007FC54A0FE9977A8E",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.10073064886816,
+        "longitude": 13.338861762382246
+      },
+      {
+        "id": "device-4",
+        "name": "Smart Floodgate Controller",
+        "description": "Adjusts floodgates in flood-prone areas based on water levels.",
+        "DR": 7,
+        "dev_eui": "E4278969D875F1A6",
+        "app_eui": "0000000000000000",
+        "app_key": "1BC0091066B594545BB2C7C1EF412679",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.10393644791167,
+        "longitude": 13.34298220391395
+      },
+      {
+        "id": "device-5",
+        "name": "Smart Public Space Usage",
+        "description": "Monitors the use of public spaces to optimize maintenance and usage.",
+        "DR": 7,
+        "dev_eui": "A8E0606AA0EE587E",
+        "app_eui": "0000000000000000",
+        "app_key": "9A61C62557CA5940054D56D7644F2C96",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.10666802406829,
+        "longitude": 13.341434113550411
+      },
+      {
+        "id": "device-6",
+        "name": "Smart Waste Bin",
+        "description": "Monitors the fill level of waste bins for efficient waste collection.",
+        "DR": 7,
+        "dev_eui": "7FC6A6C3B56E8AF4",
+        "app_eui": "0000000000000000",
+        "app_key": "CACD8C96D62304CE2ED981FB2E50AF80",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.10428223410208,
+        "longitude": 13.346272672022868
+      },
+      {
+        "id": "device-7",
+        "name": "Smart Urban Monitoring Platform",
+        "description": "Provides a platform for monitoring various IoT devices and sensors in a city.",
+        "DR": 7,
+        "dev_eui": "5D60F13F91127D3B",
+        "app_eui": "0000000000000000",
+        "app_key": "C78B4BF6092BAEC78239D6E0206EBF8C",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.1073547413365,
+        "longitude": 13.343359095249266
+      },
+      {
+        "id": "device-8",
+        "name": "Smart Rainwater Harvesting",
+        "description": "Monitors and optimizes the use of rainwater harvesting systems.",
+        "DR": 7,
+        "dev_eui": "9B835073F7C43778",
+        "app_eui": "0000000000000000",
+        "app_key": "B1E34A81FF56A4B422BE1748AE915FEC",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.111351732855006,
+        "longitude": 13.34311330426987
+      },
+      {
+        "id": "device-9",
+        "name": "Weather Station",
+        "description": "Monitors weather conditions such as temperature, humidity, wind, rain, and atmospheric pressure.",
+        "DR": 7,
+        "dev_eui": "82293E478EA54EA4",
+        "app_eui": "0000000000000000",
+        "app_key": "C5D2A2C879985C681FAEF00B8B54E485",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.10670175438151,
+        "longitude": 13.350147611623807
+      },
+      {
+        "id": "device-10",
+        "name": "Smart Smart Grid Management",
+        "description": "Monitors and manages energy consumption across the smart city grid.",
+        "DR": 7,
+        "dev_eui": "C310DF334DA8D9C0",
+        "app_eui": "0000000000000000",
+        "app_key": "C6940DD961D1C165C0C35346964AD1A7",
+        "profile": "sensor-profile-xyz",
+        "latitude": 38.10595110484317,
+        "longitude": 13.348607879452018
+      }
+    ]
+  }
+}
