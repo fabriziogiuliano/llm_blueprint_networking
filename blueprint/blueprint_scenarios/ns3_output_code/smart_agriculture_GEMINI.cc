@@ -1,5 +1,3 @@
-To create the NS-3 code for the "Smart Agriculture" blueprint, we need to adapt the provided sample NS-3 code to match the components and network type specified in the "Smart Agriculture" blueprint. Below is the NS-3 code tailored for the "Smart Agriculture" scenario:
-
 
 #include "ns3/building-allocator.h"
 #include "ns3/building-penetration-loss.h"
@@ -30,6 +28,7 @@ To create the NS-3 code for the "Smart Agriculture" blueprint, we need to adapt 
 #include "ns3/ssid.h"
 #include "ns3/internet-stack-helper.h"
 #include "ns3/ipv4-address-helper.h"
+#include "ns3/uinteger.h"
 
 #include <algorithm>
 #include <ctime>
@@ -192,8 +191,8 @@ main(int argc, char* argv[])
     gateways.Create(nGateways);
 
     Ptr<ListPositionAllocator> allocator = CreateObject<ListPositionAllocator>();
-    // Make it so that nodes are at a certain height > 0
-    allocator->Add(Vector(38.10863528672477, 13.34050633101244, 15.0));
+        // Set gateway position
+    allocator->Add(Vector(0.0, 0.0, 15.0)); // Example position, modify as needed
     loramobility.SetPositionAllocator(allocator);
     loramobility.Install(gateways);
 
@@ -308,7 +307,7 @@ main(int argc, char* argv[])
     // Create a forwarder for each gateway
     forHelper.Install(gateways);
 
-    /**********
+   /**********
      *  Run    *
      **********/
 
@@ -335,46 +334,74 @@ main(int argc, char* argv[])
 }
 
 
-### Explanation:
-1. **Network Settings**:
-   - The number of end devices (`nDevices`) is set to 4 to match the components in the blueprint.
-   - The number of gateways (`nGateways`) is set to 1.
-   - The radius (`radiusMeters`) and simulation time (`simulationTimeSeconds`) are set to 1000 meters and 600 seconds, respectively.
+**Explanation of Changes:**
 
-2. **Channel Model**:
-   - The channel model is configured with a log-distance propagation loss model.
-   - Realistic channel modeling with buildings and correlated shadowing can be enabled if needed.
+1.  **Component Mapping to NS-3 Entities:**
 
-3. **Mobility**:
-   - Mobility is set using a uniform disc position allocator and a constant position mobility model.
+    *   **Farm Management System:** In this simulation, the "Farm Management System" is represented by the central `networkServer`. It doesn't have a separate node, as its responsibilities (Crop Monitoring, Irrigation Control, Data Analysis) are handled by the NS3 network server.
+    *   **Soil Moisture Sensor, Weather Station:** These are represented by the end devices in the LoRaWAN network. In this code, the type distinction is not made explicitly (e.g., all end devices use the same settings and app). To implement specific behaviour you have to define a specific class based on the end devices.
+    *   **Irrigation Controller:** Similarly, the "Irrigation Controller" is implemented as an end device connected to the LoRa network. In this simplified implementation we are using all the devices as a sensor. 
+    *   **Drone:** The drone is not explicitly modelled in this simulation. Drones are complicated to model and a very complex class must be developed.
 
-4. **LoRa Channel and Helpers**:
-   - The LoRa channel, PHY helper, MAC helper, and network server helper are configured.
+2.  **LoRaWAN Network:**
 
-5. **End Devices**:
-   - End devices are created and installed with LoRa net devices.
-   - Each end device is assigned a mobility model and positioned at a certain height.
+    *   The core of the simulation is a LoRaWAN network, with end devices, gateways, and a network server.
+    *   The provided code creates the required channel, PHY, MAC, and network helper objects.
+    *   It sets up end devices, gateways, and a network server for LoRa communication.
 
-6. **Gateways**:
-   - Gateways are created and installed with LoRa net devices.
-   - Gateways are positioned using a list position allocator.
+3.  **Mobility:**
 
-7. **Buildings**:
-   - Buildings are handled using a grid building allocator.
-   - Buildings are installed for end devices and gateways.
+    *   The mobility of end devices and gateways is configured using `ConstantPositionMobilityModel`.
+    *   The position of the Gateway is fixed, and end devices are distributed randomly in the circle.
+    *   The z-axis of the devices is set at a fixed height (1.2m).
 
-8. **Spreading Factor**:
-   - The spreading factor for end devices is set up.
+4.  **Application Setup:**
 
-9. **Applications**:
-   - Periodic sender applications are installed on end devices.
+    *   End devices are configured to send data packets periodically.
+    *   The period between transmissions can be configured using the `appPeriodSeconds` variable.
 
-10. **Network Server**:
-    - A network server is created and connected to gateways using point-to-point links.
-    - A forwarder is installed for each gateway.
+5.  **Network Server:**
 
-11. **Simulation Run**:
-    - The simulation is run for the specified duration.
-    - Performance metrics are computed and printed to a file.
+    *   A central `networkServer` node is created for network management.
+    *   Point-to-point connections are established between gateways and the network server using  `PointToPointHelper`.
 
-This code sets up a LoRaWAN network for smart agriculture with the specified components and configurations.
+6.  **Building Model (Optional):**
+
+    *   If `realisticChannelModel` is set to true, it creates buildings using the `GridBuildingAllocator` to add more realistic wireless propagation effects.
+    *   Buildings also provide a good representation of the environment.
+
+7.  **Output and Tracing:**
+
+    *   The code has support for generating an output file for the building and a text file for the number of total MAC Packets.
+
+**Key Configuration Points:**
+
+*   **Number of End Devices (Sensors/Actuators):** Change `nDevices` to reflect the number of sensors and actuators in your network.
+*   **Radius:** Modify `radiusMeters` to adjust the area of the simulated environment.
+*   **Simulation Time:** Adjust `simulationTimeSeconds` to control how long the simulation runs.
+*   **Transmission Period:** Change `appPeriodSeconds` to alter the data transmission frequency of end devices.
+*   **Realistic Channel Model:**  Set `realisticChannelModel` to `true` to simulate a more complex channel with buildings, and shadowing effects.
+*   **Positioning:** You can adjust the positioning of devices if required.
+
+**How to Use:**
+
+1.  **Save:** Save the code as a `.cc` file (e.g., `smart-agriculture.cc`).
+2.  **Compile:** Compile the code using the NS-3 build system.
+3.  **Run:** Execute the simulation with the desired command-line arguments:
+
+    bash
+    ./waf --run "smart-agriculture --nDevices=5 --simulationTime=1200 --appPeriod=30"
+    
+
+    This command will run the simulation with 5 end devices, a simulation time of 1200 seconds, and a transmission period of 30 seconds.
+4.  **Output:** The building information will be saved in `buildings.txt` and LoRaWAN packet information is stored in `lora-packet-tracker.txt`.
+
+**Further Steps:**
+
+*   **Customize Sensor Behavior:** Implement specific classes based on `LoraEndDeviceApplication` to simulate different sensor types (e.g., soil moisture, temperature, etc.) or actuator behavior.
+*   **Implement Actuation:**  Include logic to control actuators based on sensor data.
+*   **Add Drone Simulation:**  A more complex mobility model and additional logic are required to simulate the drone and its behavior.
+*   **Visualize Data:** Use data analysis tools to visualize and analyse the results of the simulation.
+*   **Add new sensors or actuators**: Implement a new class for each kind of sensor or actuator.
+
+This provides a starting point to develop a complete simulation of a Smart Agriculture System in NS-3.

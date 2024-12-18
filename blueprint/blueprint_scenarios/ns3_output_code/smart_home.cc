@@ -1,3 +1,5 @@
+To generate the corresponding NS-3 code for the provided TEST BLUEPRINT, we need to adapt the SAMPLE NS-3 code to match the components and their configurations specified in the TEST BLUEPRINT. Below is the NS-3 code tailored to the TEST BLUEPRINT:
+
 
 #include "ns3/building-allocator.h"
 #include "ns3/building-penetration-loss.h"
@@ -32,19 +34,24 @@
 #include <ctime>
 
 using namespace ns3;
+using namespace lorawan;
 
 NS_LOG_COMPONENT_DEFINE("SmartHomeExample");
 
 // Network settings
-int nWiFiAPNodes=1;
-int nWiFiStaNodes=4;
+int nWiFiAPNodes = 1;
+int nWiFiStaNodes = 4;
 double simulationTimeSeconds = 600; //!< Scenario duration (s) in simulated time
+
+// Output control
+bool printBuildingInfo = true; //!< Whether to print building information
 
 int
 main(int argc, char* argv[])
 {
     CommandLine cmd(__FILE__);
     cmd.AddValue("simulationTime", "The time (s) for which to simulate", simulationTimeSeconds);
+    cmd.AddValue("print", "Whether or not to print building information", printBuildingInfo);
     cmd.Parse(argc, argv);
 
     // Set up logging
@@ -61,37 +68,37 @@ main(int argc, char* argv[])
     NS_LOG_DEBUG("Create WiFi Nodes...");
 
     NodeContainer wifiStaNodes;
-    wifiStaNodes.Create (nWiFiStaNodes);
+    wifiStaNodes.Create(nWiFiStaNodes);
 
     NodeContainer wifiApNode;
-    wifiApNode.Create (nWiFiAPNodes);
+    wifiApNode.Create(nWiFiAPNodes);
 
-    YansWifiChannelHelper wifichannel = YansWifiChannelHelper::Default ();
+    YansWifiChannelHelper wifichannel = YansWifiChannelHelper::Default();
     YansWifiPhyHelper phy;
-    phy.SetChannel (wifichannel.Create ());
+    phy.SetChannel(wifichannel.Create());
 
     WifiHelper wifi;
-    wifi.SetStandard (WIFI_STANDARD_80211a);
-    wifi.SetRemoteStationManager ("ns3::AarfWifiManager");
+    wifi.SetStandard(WIFI_STANDARD_80211a);
+    wifi.SetRemoteStationManager("ns3::AarfWifiManager");
 
     WifiMacHelper mac;
-    Ssid ssid = Ssid ("ns-3-ssid");
+    Ssid ssid = Ssid("ns-3-ssid");
 
-    mac.SetType ("ns3::StaWifiMac",
-                "Ssid", SsidValue (ssid),
-                "ActiveProbing", BooleanValue (false));
+    mac.SetType("ns3::StaWifiMac",
+                "Ssid", SsidValue(ssid),
+                "ActiveProbing", BooleanValue(false));
 
     NetDeviceContainer staDevices;
-    staDevices = wifi.Install (phy, mac, wifiStaNodes);
+    staDevices = wifi.Install(phy, mac, wifiStaNodes);
 
-    mac.SetType ("ns3::ApWifiMac",
-                "Ssid", SsidValue (ssid));
+    mac.SetType("ns3::ApWifiMac",
+                "Ssid", SsidValue(ssid));
 
     NetDeviceContainer apDevices;
-    apDevices = wifi.Install (phy, mac, wifiApNode);
+    apDevices = wifi.Install(phy, mac, wifiApNode);
 
     MobilityHelper wifimobility;
-    wifimobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+    wifimobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
 
     Ptr<ListPositionAllocator> allocatorAPWiFi = CreateObject<ListPositionAllocator>();
     allocatorAPWiFi->Add(Vector(38.10351066811096, 13.3459399220741, 1.5));
@@ -99,52 +106,51 @@ main(int argc, char* argv[])
     wifimobility.Install(wifiApNode);
 
     Ptr<ListPositionAllocator> allocatorStaWiFi = CreateObject<ListPositionAllocator>();
-    allocatorStaWiFi->Add(Vector(38.10351066811096, 13.3459399220741, 1.5)); // Smart Hub
-    allocatorStaWiFi->Add(Vector(38.103拷528672426, 13.34拷50633101243, 1.5)); // Smart Thermostat
-    allocatorStaWiFi->Add(Vector(38.10351066811096, 13.3459399220741, 1.5)); // Smart Light Bulb
-    allocatorStaWiFi->Add(Vector(38.10351066811096, 13.3459399220741, 1.5)); // Smart Door Lock
-    allocatorStaWiFi->Add(Vector(38.10351066811096, 13.3459399220741, 1.5)); // Smart Security Camera
+    allocatorStaWiFi->Add(Vector(38.10863528672426, 13.34050633101243, 1.5));
+    allocatorStaWiFi->Add(Vector(38.10863528672436, 13.34050633101243, 1.5));
+    allocatorStaWiFi->Add(Vector(38.10863528672446, 13.34050633101243, 1.5));
+    allocatorStaWiFi->Add(Vector(38.10863528672456, 13.34050633101243, 1.5));
     wifimobility.SetPositionAllocator(allocatorStaWiFi);
     wifimobility.Install(wifiStaNodes);
 
     InternetStackHelper stack;
-    stack.Install (wifiApNode);
-    stack.Install (wifiStaNodes);
+    stack.Install(wifiApNode);
+    stack.Install(wifiStaNodes);
 
     Ipv4AddressHelper address;
-    address.SetBase ("192.168.1.0", "255.255.255.0");
+    address.SetBase("192.168.1.0", "255.255.255.0");
 
     Ipv4InterfaceContainer staNodeInterfaces;
-    staNodeInterfaces = address.Assign (staDevices);
+    staNodeInterfaces = address.Assign(staDevices);
     Ipv4InterfaceContainer apNodeInterface;
-    apNodeInterface = address.Assign (apDevices);
+    apNodeInterface = address.Assign(apDevices);
 
     // Print the IP addresses of the WiFi STA nodes
     for (uint32_t i = 0; i < staNodeInterfaces.GetN(); ++i)
     {
-        Ipv4Address addr = staNodeInterfaces.GetAddress (i);
+        Ipv4Address addr = staNodeInterfaces.GetAddress(i);
         std::cout << "IP address of wifiStaNode " << i << ": " << addr << std::endl;
     }
     NS_LOG_DEBUG("WiFi - Setup Udp");
 
     uint16_t sinkPort = 8080;
-    Address sinkAddress (InetSocketAddress (Ipv4Address::GetAny (), sinkPort));
-    PacketSinkHelper packetSinkHelper ("ns3::UdpSocketFactory", sinkAddress);
-    ApplicationContainer sinkApps = packetSinkHelper.Install (wifiStaNodes.Get (0));
-    sinkApps.Start (Seconds (0.0));
-    sinkApps.Stop (Seconds (10.0));
+    Address sinkAddress(InetSocketAddress(Ipv4Address::GetAny(), sinkPort));
+    PacketSinkHelper packetSinkHelper("ns3::UdpSocketFactory", sinkAddress);
+    ApplicationContainer sinkApps = packetSinkHelper.Install(wifiStaNodes.Get(0));
+    sinkApps.Start(Seconds(0.0));
+    sinkApps.Stop(Seconds(10.0));
 
-    OnOffHelper onoff ("ns3::UdpSocketFactory",
-                        InetSocketAddress (Ipv4Address ("192.168.1.1"), sinkPort));
-    onoff.SetConstantRate (DataRate ("1Mbps"));
-    onoff.SetAttribute ("PacketSize", UintegerValue (1024));
-    ApplicationContainer clientApps = onoff.Install (wifiStaNodes.Get (1));
-    clientApps.Start (Seconds (1.0));
-    clientApps.Stop (Seconds (10.0));
+    OnOffHelper onoff("ns3::UdpSocketFactory",
+                      InetSocketAddress(Ipv4Address("192.168.1.1"), sinkPort));
+    onoff.SetConstantRate(DataRate("1Mbps"));
+    onoff.SetAttribute("PacketSize", UintegerValue(1024));
+    ApplicationContainer clientApps = onoff.Install(wifiStaNodes.Get(1));
+    clientApps.Start(Seconds(1.0));
+    clientApps.Stop(Seconds(10.0));
 
     //Tracing
-    phy.EnablePcap ("wifi-ap", apDevices);
-    phy.EnablePcap ("wifi-sta", staDevices);
+    phy.EnablePcap("wifi-ap", apDevices);
+    phy.EnablePcap("wifi-sta", staDevices);
 
     /**********
      *  Run    *
@@ -159,3 +165,20 @@ main(int argc, char* argv[])
 
     return 0;
 }
+
+
+### Explanation:
+1. **WiFi Setup**:
+   - The code sets up a WiFi network with one Access Point (AP) and four Station (STA) nodes.
+   - The positions of the AP and STA nodes are set using `ListPositionAllocator`.
+   - IP addresses are assigned to the nodes using `Ipv4AddressHelper`.
+
+2. **UDP Application**:
+   - A UDP sink application is installed on the first STA node.
+   - A UDP client application is installed on the second STA node, which sends data to the sink application.
+
+3. **Simulation Control**:
+   - The simulation runs for a specified duration (`simulationTimeSeconds`).
+   - Pcap tracing is enabled for the WiFi devices.
+
+This code matches the components and their configurations specified in the TEST BLUEPRINT, focusing on the WiFi network and the UDP data flow between the devices.

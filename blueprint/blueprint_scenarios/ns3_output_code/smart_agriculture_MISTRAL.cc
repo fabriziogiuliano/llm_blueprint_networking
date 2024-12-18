@@ -1,4 +1,4 @@
-To create the NS-3 code for the "Smart Agriculture" blueprint, we need to adapt the provided sample NS-3 code to match the components and network type specified in the "Smart Agriculture" blueprint. Below is the NS-3 code tailored for the "Smart Agriculture" scenario:
+To create the NS-3 code for the "Smart Agriculture" blueprint, we need to adapt the provided sample NS-3 code to fit the components and network type specified in the "Smart Agriculture" blueprint. Below is the NS-3 code tailored for the "Smart Agriculture" scenario:
 
 
 #include "ns3/building-allocator.h"
@@ -193,7 +193,7 @@ main(int argc, char* argv[])
 
     Ptr<ListPositionAllocator> allocator = CreateObject<ListPositionAllocator>();
     // Make it so that nodes are at a certain height > 0
-    allocator->Add(Vector(38.10863528672477, 13.34050633101244, 15.0));
+    allocator->Add(Vector(0.0, 0.0, 15.0));
     loramobility.SetPositionAllocator(allocator);
     loramobility.Install(gateways);
 
@@ -337,44 +337,48 @@ main(int argc, char* argv[])
 
 ### Explanation:
 1. **Network Settings**:
-   - The number of end devices (`nDevices`) is set to 4 to match the components in the blueprint.
+   - The number of end devices (`nDevices`) is set to 4 to represent the Soil Moisture Sensor, Weather Station, Irrigation Controller, and Drone.
    - The number of gateways (`nGateways`) is set to 1.
-   - The radius (`radiusMeters`) and simulation time (`simulationTimeSeconds`) are set to 1000 meters and 600 seconds, respectively.
+   - The radius of the deployment area is set to 1000 meters.
+   - The simulation time is set to 600 seconds.
 
 2. **Channel Model**:
-   - The channel model is configured with a log-distance propagation loss model.
-   - Realistic channel modeling with buildings and correlated shadowing can be enabled if needed.
+   - A realistic channel model with buildings and correlated shadowing can be enabled or disabled.
 
 3. **Mobility**:
-   - Mobility is set using a uniform disc position allocator and a constant position mobility model.
+   - The mobility model is set to `ConstantPositionMobilityModel` with a uniform disc position allocator.
 
-4. **LoRa Channel and Helpers**:
-   - The LoRa channel, PHY helper, MAC helper, and network server helper are configured.
+4. **LoRa Channel Creation**:
+   - The LoRa channel is created with a log-distance propagation loss model.
+   - If the realistic channel model is enabled, correlated shadowing and building penetration loss are added.
 
-5. **End Devices**:
-   - End devices are created and installed with LoRa net devices.
-   - Each end device is assigned a mobility model and positioned at a certain height.
+5. **Helpers**:
+   - Helpers for LoRa PHY, MAC, and network server are created.
 
-6. **Gateways**:
-   - Gateways are created and installed with LoRa net devices.
-   - Gateways are positioned using a list position allocator.
+6. **End Devices**:
+   - End devices are created and installed with LoRa PHY and MAC.
+   - The devices are positioned at a certain height.
 
-7. **Buildings**:
+7. **Gateways**:
+   - Gateways are created and installed with LoRa PHY and MAC.
+   - The gateways are positioned at a certain height.
+
+8. **Buildings**:
    - Buildings are handled using a grid building allocator.
    - Buildings are installed for end devices and gateways.
 
-8. **Spreading Factor**:
+9. **Spreading Factor**:
    - The spreading factor for end devices is set up.
 
-9. **Applications**:
-   - Periodic sender applications are installed on end devices.
+10. **Applications**:
+    - Periodic sender applications are installed on the end devices.
 
-10. **Network Server**:
-    - A network server is created and connected to gateways using point-to-point links.
+11. **Network Server**:
+    - A network server is created and connected to the gateways using Point-to-Point links.
     - A forwarder is installed for each gateway.
 
-11. **Simulation Run**:
+12. **Simulation Run**:
     - The simulation is run for the specified duration.
     - Performance metrics are computed and printed to a file.
 
-This code sets up a LoRaWAN network for smart agriculture with the specified components and configurations.
+This code sets up a LoRaWAN network for smart agriculture with the specified components and network type. Adjustments can be made based on specific requirements and additional components can be added as needed.

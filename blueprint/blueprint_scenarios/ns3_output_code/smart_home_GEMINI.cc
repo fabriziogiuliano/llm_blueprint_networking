@@ -1,5 +1,3 @@
-To create the NS-3 code for the "Smart Agriculture" blueprint, we need to adapt the provided sample NS-3 code to match the components and network type specified in the "Smart Agriculture" blueprint. Below is the NS-3 code tailored for the "Smart Agriculture" scenario:
-
 
 #include "ns3/building-allocator.h"
 #include "ns3/building-penetration-loss.h"
@@ -30,18 +28,26 @@ To create the NS-3 code for the "Smart Agriculture" blueprint, we need to adapt 
 #include "ns3/ssid.h"
 #include "ns3/internet-stack-helper.h"
 #include "ns3/ipv4-address-helper.h"
+#include "ns3/mac-address.h"
 
 #include <algorithm>
 #include <ctime>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include <iomanip>
 
 using namespace ns3;
 using namespace lorawan;
 
-NS_LOG_COMPONENT_DEFINE("SmartAgricultureExample");
+NS_LOG_COMPONENT_DEFINE("SmartHomeExample");
 
 // Network settings
-int nDevices = 4;                 //!< Number of end device nodes to create
+int nDevices = 0;                 //!< Number of end device nodes to create
 int nGateways = 1;                  //!< Number of gateway nodes to create
+int nWiFiAPNodes=1;
+int nWiFiStaNodes=4;
 double radiusMeters = 1000;         //!< Radius (m) of the deployment
 double simulationTimeSeconds = 600; //!< Scenario duration (s) in simulated time
 
@@ -53,6 +59,31 @@ int appPeriodSeconds = 60; //!< Duration (s) of the inter-transmission time of e
 
 // Output control
 bool printBuildingInfo = true; //!< Whether to print building information
+
+
+// Function to convert a MAC address string to a Mac64Address
+Mac64Address ParseMacAddress(const std::string& macStr) {
+    std::istringstream ss(macStr);
+    uint8_t bytes[6];
+    char delimiter;
+
+    for (int i = 0; i < 6; ++i) {
+        if (!(ss >> std::hex >> (int&)bytes[i])) {
+            // Handle parsing error, e.g., throw an exception or return a default value
+            std::cerr << "Error parsing MAC address: " << macStr << std::endl;
+            return Mac64Address::GetBroadcast();
+        }
+        if (i < 5) {
+            ss >> delimiter; // Consume the colon delimiter
+            if (delimiter != ':') {
+                 std::cerr << "Error parsing MAC address: " << macStr << ". Delimiter error." << std::endl;
+                 return Mac64Address::GetBroadcast();
+            }
+        }
+    }
+    return Mac64Address(bytes);
+}
+
 
 int
 main(int argc, char* argv[])
@@ -68,7 +99,7 @@ main(int argc, char* argv[])
     cmd.Parse(argc, argv);
 
     // Set up logging
-    LogComponentEnable("SmartAgricultureExample", LOG_LEVEL_ALL);
+    LogComponentEnable("SmartHomeExample", LOG_LEVEL_ALL);
 
     /***********
      *  Setup  *
@@ -308,6 +339,112 @@ main(int argc, char* argv[])
     // Create a forwarder for each gateway
     forHelper.Install(gateways);
 
+    /************************
+     *  Create WiFi Nodes  *
+     ************************/
+    NS_LOG_DEBUG("Create WiFi Nodes...");
+
+    NodeContainer wifiStaNodes;
+    wifiStaNodes.Create (nWiFiStaNodes);
+
+    NodeContainer wifiApNode;
+    wifiApNode.Create (nWiFiAPNodes);
+
+    YansWifiChannelHelper wifichannel = YansWifiChannelHelper::Default ();
+    YansWifiPhyHelper phy;
+    phy.SetChannel (wifichannel.Create ());
+
+    WifiHelper wifi;
+    wifi.SetStandard (WIFI_STANDARD_80211a);
+    wifi.SetRemoteStationManager ("ns3::AarfWifiManager");
+
+    WifiMacHelper mac;
+    Ssid ssid = Ssid ("SmartHomeAPMyExperiment");
+
+    mac.SetType ("ns3::StaWifiMac",
+                "Ssid", SsidValue (ssid),
+                "ActiveProbing", BooleanValue (false));
+
+    NetDeviceContainer staDevices;
+    staDevices = wifi.Install (phy, mac, wifiStaNodes);
+
+    mac.SetType ("ns3::ApWifiMac",
+                "Ssid", SsidValue (ssid));
+
+    NetDeviceContainer apDevices;
+    apDevices = wifi.Install (phy, mac, wifiApNode);
+
+    MobilityHelper wifimobility;
+    wifimobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+
+    Ptr<ListPositionAllocator> allocatorAPWiFi = CreateObject<ListPositionAllocator>();
+    allocatorAPWiFi->Add(Vector(38.10351066811091, 13.3459399220741, 1.5));
+    wifimobility.SetPositionAllocator(allocatorAPWiFi);
+    wifimobility.Install(wifiApNode);
+
+    Ptr<ListPositionAllocator> allocatorStaWiFi = CreateObject<ListPositionAllocator>();
+    allocatorStaWiFi->Add(Vector(38.10863528672426, 13.34050633101243, 1.5));
+    allocatorStaWiFi->Add(Vector(38.10863528672436, 13.34050633101243, 1.5));   
+    allocatorStaWiFi->Add(Vector(38.10863528672436, 13.34050633101243, 1.5));    
+    allocatorStaWiFi->Add(Vector(38.10863528672436, 13.34050633101243, 1.5));
+    wifimobility.SetPositionAllocator(allocatorStaWiFi);
+    wifimobility.Install(wifiStaNodes);
+
+    InternetStackHelper stack;
+    stack.Install (wifiApNode);
+    stack.Install (wifiStaNodes);
+
+    Ipv4AddressHelper address;
+    address.SetBase ("192.168.1.0", "255.255.255.0");
+
+    Ipv4InterfaceContainer staNodeInterfaces;
+    staNodeInterfaces = address.Assign (staDevices);
+    Ipv4InterfaceContainer apNodeInterface;
+    apNodeInterface = address.Assign (apDevices);
+
+    // Set MAC addresses for each WiFi STA node
+    std::vector<std::string> macAddresses = {
+        "61:5F:64:5E:90:EB",
+        "60:36:1E:9A:0A:0C",
+        "39:9F:51:CD:F7:08",
+        "0B:E3:41:0A:33:B7"
+    };
+
+    for(uint32_t i = 0; i < wifiStaNodes.GetN(); ++i) {
+        Ptr<NetDevice> netDevice = wifiStaNodes.Get(i)->GetDevice(0);
+        Ptr<WifiNetDevice> wifiNetDevice = DynamicCast<WifiNetDevice>(netDevice);
+         if (wifiNetDevice) {
+             Mac64Address macAddr = ParseMacAddress(macAddresses[i]);
+             wifiNetDevice->SetMacAddress(macAddr);
+          }
+    }
+    // Print the IP addresses of the WiFi STA nodes
+    for (uint32_t i = 0; i < staNodeInterfaces.GetN(); ++i)
+    {
+        Ipv4Address addr = staNodeInterfaces.GetAddress (i);
+        std::cout << "IP address of wifiStaNode " << i << ": " << addr << std::endl;
+    }
+    NS_LOG_DEBUG("WiFi - Setup Udp");
+
+    uint16_t sinkPort = 8080;
+    Address sinkAddress (InetSocketAddress (Ipv4Address::GetAny (), sinkPort));
+    PacketSinkHelper packetSinkHelper ("ns3::UdpSocketFactory", sinkAddress);
+    ApplicationContainer sinkApps = packetSinkHelper.Install (wifiStaNodes.Get (0));
+    sinkApps.Start (Seconds (0.0));
+    sinkApps.Stop (Seconds (10.0));
+
+    OnOffHelper onoff ("ns3::UdpSocketFactory",
+                        InetSocketAddress (Ipv4Address ("192.168.1.1"), sinkPort));
+    onoff.SetConstantRate (DataRate ("1Mbps"));
+    onoff.SetAttribute ("PacketSize", UintegerValue (1024));
+    ApplicationContainer clientApps = onoff.Install (wifiStaNodes.Get (1));
+    clientApps.Start (Seconds (1.0));
+    clientApps.Stop (Seconds (10.0));
+
+    //Tracing
+    phy.EnablePcap ("wifi-ap", apDevices);
+    phy.EnablePcap ("wifi-sta", staDevices);
+
     /**********
      *  Run    *
      **********/
@@ -335,46 +472,33 @@ main(int argc, char* argv[])
 }
 
 
-### Explanation:
-1. **Network Settings**:
-   - The number of end devices (`nDevices`) is set to 4 to match the components in the blueprint.
-   - The number of gateways (`nGateways`) is set to 1.
-   - The radius (`radiusMeters`) and simulation time (`simulationTimeSeconds`) are set to 1000 meters and 600 seconds, respectively.
+**Explanation:**
 
-2. **Channel Model**:
-   - The channel model is configured with a log-distance propagation loss model.
-   - Realistic channel modeling with buildings and correlated shadowing can be enabled if needed.
+1.  **Includes:** Added `<iostream>`, `<fstream>`, `<string>`, `<sstream>`, and `<iomanip>` for input/output, file handling, string manipulation, and formatting.
+2.  **`ParseMacAddress` Function:**
+    *   Takes a MAC address string (e.g., "00:11:22:33:44:55") as input.
+    *   Uses `std::istringstream` to parse the string into individual byte values.
+    *   Converts each byte from hex string to an integer.
+    *   Constructs a `Mac64Address` object from the parsed bytes.
+    *   Includes error handling for parsing failures.
+3. **Node and NetDevice Setup**
+  * A loop iterates through `wifiStaNodes`, retrieves the `NetDevice` object, and casts it to `WifiNetDevice`. If the cast is successful, it means the net device is indeed a wifi net device.
+  * Calls ParseMacAddress to convert string MAC address to `Mac64Address`. 
+   *Sets the MAC address of the `WifiNetDevice`.
+4.  **MAC Address Assignment:**
+    *   A `std::vector<std::string> macAddresses` stores the MAC addresses from your blueprint.
+    *   The code iterates through the `wifiStaNodes` and sets the corresponding MAC address for each device using the `ParseMacAddress` function and  `wifiNetDevice->SetMacAddress(macAddr)`.
 
-3. **Mobility**:
-   - Mobility is set using a uniform disc position allocator and a constant position mobility model.
+**To use this code:**
 
-4. **LoRa Channel and Helpers**:
-   - The LoRa channel, PHY helper, MAC helper, and network server helper are configured.
+1.  **Save:** Save the code as a `.cc` file (e.g., `smart_home_simulation.cc`).
+2.  **Compile:** Compile the code using the NS-3 build system (e.g., `waf configure; waf`).
+3.  **Run:** Execute the simulation (e.g., `./build/scratch/smart_home_simulation`).
 
-5. **End Devices**:
-   - End devices are created and installed with LoRa net devices.
-   - Each end device is assigned a mobility model and positioned at a certain height.
+**Key Changes:**
 
-6. **Gateways**:
-   - Gateways are created and installed with LoRa net devices.
-   - Gateways are positioned using a list position allocator.
+*   The main focus is on parsing the MAC addresses from the blueprint.
+*   The rest of the code is a direct mapping from your provided blueprint to the NS-3 objects.
+*   You can adjust the `macAddresses` vector if you have different MAC addresses in the future.
 
-7. **Buildings**:
-   - Buildings are handled using a grid building allocator.
-   - Buildings are installed for end devices and gateways.
-
-8. **Spreading Factor**:
-   - The spreading factor for end devices is set up.
-
-9. **Applications**:
-   - Periodic sender applications are installed on end devices.
-
-10. **Network Server**:
-    - A network server is created and connected to gateways using point-to-point links.
-    - A forwarder is installed for each gateway.
-
-11. **Simulation Run**:
-    - The simulation is run for the specified duration.
-    - Performance metrics are computed and printed to a file.
-
-This code sets up a LoRaWAN network for smart agriculture with the specified components and configurations.
+This revised code should properly set up your WiFi network with the specified SSIDs, MAC addresses, and IP addresses, as described in your blueprint, allowing you to simulate the smart home scenario. Let me know if you have more questions!

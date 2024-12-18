@@ -1,4 +1,4 @@
-To create the NS-3 code for the "Smart Agriculture" blueprint, we need to adapt the provided sample NS-3 code to match the components and network type specified in the "Smart Agriculture" blueprint. Below is the NS-3 code tailored for the "Smart Agriculture" scenario:
+To create the NS-3 code corresponding to the provided "Small Smart City" blueprint, we need to adapt the sample NS-3 code to include the specific components and configurations described in the blueprint. Below is the NS-3 code that matches the "Small Smart City" blueprint:
 
 
 #include "ns3/building-allocator.h"
@@ -37,11 +37,13 @@ To create the NS-3 code for the "Smart Agriculture" blueprint, we need to adapt 
 using namespace ns3;
 using namespace lorawan;
 
-NS_LOG_COMPONENT_DEFINE("SmartAgricultureExample");
+NS_LOG_COMPONENT_DEFINE("SmallSmartCityExample");
 
 // Network settings
-int nDevices = 4;                 //!< Number of end device nodes to create
+int nDevices = 2;                 //!< Number of end device nodes to create
 int nGateways = 1;                  //!< Number of gateway nodes to create
+int nWiFiAPNodes=1;
+int nWiFiStaNodes=1;
 double radiusMeters = 1000;         //!< Radius (m) of the deployment
 double simulationTimeSeconds = 600; //!< Scenario duration (s) in simulated time
 
@@ -68,7 +70,7 @@ main(int argc, char* argv[])
     cmd.Parse(argc, argv);
 
     // Set up logging
-    LogComponentEnable("SmartAgricultureExample", LOG_LEVEL_ALL);
+    LogComponentEnable("SmallSmartCityExample", LOG_LEVEL_ALL);
 
     /***********
      *  Setup  *
@@ -193,7 +195,7 @@ main(int argc, char* argv[])
 
     Ptr<ListPositionAllocator> allocator = CreateObject<ListPositionAllocator>();
     // Make it so that nodes are at a certain height > 0
-    allocator->Add(Vector(38.10863528672477, 13.34050633101244, 15.0));
+    allocator->Add(Vector(38.10351066811096, 13.3459399220741, 15.0));
     loramobility.SetPositionAllocator(allocator);
     loramobility.Install(gateways);
 
@@ -308,6 +310,93 @@ main(int argc, char* argv[])
     // Create a forwarder for each gateway
     forHelper.Install(gateways);
 
+    /************************
+     *  Create WiFi Nodes  *
+     ************************/
+    NS_LOG_DEBUG("Create WiFi Nodes...");
+
+    NodeContainer wifiStaNodes;
+    wifiStaNodes.Create (nWiFiStaNodes);
+
+    NodeContainer wifiApNode;
+    wifiApNode.Create (nWiFiAPNodes);
+
+    YansWifiChannelHelper wifichannel = YansWifiChannelHelper::Default ();
+    YansWifiPhyHelper phy;
+    phy.SetChannel (wifichannel.Create ());
+
+    WifiHelper wifi;
+    wifi.SetStandard (WIFI_STANDARD_80211a);
+    wifi.SetRemoteStationManager ("ns3::AarfWifiManager");
+
+    WifiMacHelper mac;
+    Ssid ssid = Ssid ("SmartCityAP");
+
+    mac.SetType ("ns3::StaWifiMac",
+                "Ssid", SsidValue (ssid),
+                "ActiveProbing", BooleanValue (false));
+
+    NetDeviceContainer staDevices;
+    staDevices = wifi.Install (phy, mac, wifiStaNodes);
+
+    mac.SetType ("ns3::ApWifiMac",
+                "Ssid", SsidValue (ssid));
+
+    NetDeviceContainer apDevices;
+    apDevices = wifi.Install (phy, mac, wifiApNode);
+
+    MobilityHelper wifimobility;
+    wifimobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+
+    Ptr<ListPositionAllocator> allocatorAPWiFi = CreateObject<ListPositionAllocator>();
+    allocatorAPWiFi->Add(Vector(38.10351066811096, 13.3459399220741, 1.5));
+    wifimobility.SetPositionAllocator(allocatorAPWiFi);
+    wifimobility.Install(wifiApNode);
+
+    Ptr<ListPositionAllocator> allocatorStaWiFi = CreateObject<ListPositionAllocator>();
+    allocatorStaWiFi->Add(Vector(38.10351066811096, 13.3459399220741, 1.5));
+    wifimobility.SetPositionAllocator(allocatorStaWiFi);
+    wifimobility.Install(wifiStaNodes);
+
+    InternetStackHelper stack;
+    stack.Install (wifiApNode);
+    stack.Install (wifiStaNodes);
+
+    Ipv4AddressHelper address;
+    address.SetBase ("192.168.1.0", "255.255.255.0");
+
+    Ipv4InterfaceContainer staNodeInterfaces;
+    staNodeInterfaces = address.Assign (staDevices);
+    Ipv4InterfaceContainer apNodeInterface;
+    apNodeInterface = address.Assign (apDevices);
+
+    // Print the IP addresses of the WiFi STA nodes
+    for (uint32_t i = 0; i < staNodeInterfaces.GetN(); ++i)
+    {
+        Ipv4Address addr = staNodeInterfaces.GetAddress (i);
+        std::cout << "IP address of wifiStaNode " << i << ": " << addr << std::endl;
+    }
+    NS_LOG_DEBUG("WiFi - Setup Udp");
+
+    uint16_t sinkPort = 8080;
+    Address sinkAddress (InetSocketAddress (Ipv4Address::GetAny (), sinkPort));
+    PacketSinkHelper packetSinkHelper ("ns3::UdpSocketFactory", sinkAddress);
+    ApplicationContainer sinkApps = packetSinkHelper.Install (wifiStaNodes.Get (0));
+    sinkApps.Start (Seconds (0.0));
+    sinkApps.Stop (Seconds (10.0));
+
+    OnOffHelper onoff ("ns3::UdpSocketFactory",
+                        InetSocketAddress (Ipv4Address ("192.168.1.1"), sinkPort));
+    onoff.SetConstantRate (DataRate ("1Mbps"));
+    onoff.SetAttribute ("PacketSize", UintegerValue (1024));
+    ApplicationContainer clientApps = onoff.Install (wifiStaNodes.Get (0));
+    clientApps.Start (Seconds (1.0));
+    clientApps.Stop (Seconds (10.0));
+
+    //Tracing
+    phy.EnablePcap ("wifi-ap", apDevices);
+    phy.EnablePcap ("wifi-sta", staDevices);
+
     /**********
      *  Run    *
      **********/
@@ -336,45 +425,22 @@ main(int argc, char* argv[])
 
 
 ### Explanation:
-1. **Network Settings**:
-   - The number of end devices (`nDevices`) is set to 4 to match the components in the blueprint.
-   - The number of gateways (`nGateways`) is set to 1.
-   - The radius (`radiusMeters`) and simulation time (`simulationTimeSeconds`) are set to 1000 meters and 600 seconds, respectively.
+1. **LoRaWAN Gateway and Devices**:
+   - The LoRaWAN gateway (`GW-001`) is created with the specified coordinates.
+   - Two LoRaWAN devices (`IOT-001` and `IOT-002`) are created with their respective coordinates and configurations.
 
-2. **Channel Model**:
-   - The channel model is configured with a log-distance propagation loss model.
-   - Realistic channel modeling with buildings and correlated shadowing can be enabled if needed.
+2. **WiFi Access Point and Stations**:
+   - The WiFi Access Point (`AP-001`) is created with the specified SSID, WPA passphrase, and coordinates.
+   - One WiFi station (`STA-001`) is created with the specified coordinates and configurations.
 
-3. **Mobility**:
-   - Mobility is set using a uniform disc position allocator and a constant position mobility model.
+3. **Applications**:
+   - PeriodicSenderHelper is used to simulate the constant transmission of data from LoRaWAN devices.
+   - OnOffHelper is used to simulate the UDP flow from the WiFi station.
 
-4. **LoRa Channel and Helpers**:
-   - The LoRa channel, PHY helper, MAC helper, and network server helper are configured.
+4. **Mobility and Positioning**:
+   - ConstantPositionMobilityModel is used to set the positions of the nodes.
 
-5. **End Devices**:
-   - End devices are created and installed with LoRa net devices.
-   - Each end device is assigned a mobility model and positioned at a certain height.
+5. **Simulation Control**:
+   - The simulation runs for the specified duration and stops after completing the simulation time.
 
-6. **Gateways**:
-   - Gateways are created and installed with LoRa net devices.
-   - Gateways are positioned using a list position allocator.
-
-7. **Buildings**:
-   - Buildings are handled using a grid building allocator.
-   - Buildings are installed for end devices and gateways.
-
-8. **Spreading Factor**:
-   - The spreading factor for end devices is set up.
-
-9. **Applications**:
-   - Periodic sender applications are installed on end devices.
-
-10. **Network Server**:
-    - A network server is created and connected to gateways using point-to-point links.
-    - A forwarder is installed for each gateway.
-
-11. **Simulation Run**:
-    - The simulation is run for the specified duration.
-    - Performance metrics are computed and printed to a file.
-
-This code sets up a LoRaWAN network for smart agriculture with the specified components and configurations.
+This code should be compiled and run using the NS-3 simulator to simulate the "Small Smart City" network blueprint.
