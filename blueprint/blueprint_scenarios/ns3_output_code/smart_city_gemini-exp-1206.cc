@@ -1,174 +1,4 @@
 
-        Given the following TEST BLUEPRINT provide me the corresponding NS-3 code. Use the follwing SAMPLE NS-3 code and SAMPLE BLUEPRINT as reference.    
-        Not add description, just return cpp code.
-                TEST BLUEPRINT:
-
-                {
-  "name": "Small Smart City",
-    "description": "A network blueprint for a small smart city with various IoT applications.",
-    "experiment_duration":"1 hour",
-
-  "components":{
-    "lora_gateways": [
-      {
-        "name": "GW-001",
-        "description": "Gateway City Hall",
-        "latitude": 38.10351066811096,
-        "longitude": 13.3459399220741,
-        "gateway_id":"05b0da50148fd6b1",
-        "protocol": "LoRaWAN",        
-        "application": "LoRa Gateway",
-        "location": "City Hall"     
-      }    
-    ],
-    "lora_devices": [
-      {
-        "dev_eui":"81a63bce0927e700",
-        "name":"IOT-001",      
-        "application_key":"4ba2162e111f9c2c216b7d68e09f43a8",
-        "type": "IoT Sensor",
-        "application": "Traffic Management",
-        "location": "Intersection A",
-        "sensor_type": "Traffic Camera Sensor",
-        "protocol": "LoRaWAN",
-        "SF": 7,
-        "latitude": 38.10863528672466,
-        "longitude": 13.34050633101243,
-        "data_flow":"constant transmission each 1minute"
-      },
-      {
-        "dev_eui":"89697aa089cc3005",
-        "name":"IOT-002",      
-        "application_key":"a1ac00d450efb7facb46a243cbf7731f",
-        "type": "IoT Sensor",
-        "application": "Waste Management",
-        "location": "Bin Area B",
-        "sensor_type": "Ultrasonic Sensor",        
-        "protocol": "LoRaWAN",
-        "SF": 7,
-        "latitude": 38.0998337384608,
-        "longitude": 13.337136092765382,
-        "data_flow":"constant transmission each 1minute"
-      }
-    ],
-    "wifi_ap":
-    [
-      {
-        "type": "WiFi AP",
-        "id":"AP-001",
-        "ssid":"SmartCityAP",
-        "wpa_passphrase":12345678,
-        "wpa_key_mgmt":"WPA-PSK",
-        "wlan_IP":"192.168.1.1",
-        "eth_IP":"10.8.8.16",              
-        "application": "WiFi Access Point",
-        "location": "City Hall",      
-        "protocol": "WiFi",
-        "latitude": 38.10351066811096,
-        "longitude": 13.3459399220741
-      }
-    ],
-    "wifi_stations":[
-      {
-        "id":"STA-001",
-        "ssid":"SmartCityAP",
-        "wpa_passphrase":12345678,
-        "wpa_key_mgmt":"WPA-PSK",
-        "wlan_IP":"192.168.1.101",
-        "wlan_MAC_ADDR":"08:5B:28:2B:9E:74",
-        "eth_IP":"10.8.8.17",
-        "user":"root",
-        "password":123456,
-        "type": "Camera",
-        "application": "Camera Monitoring",
-        "location": "Park C",
-        "sensor_type": "Survelliance camera",
-        "protocol":"Wi-Fi",
-        "data_flow":"UDP flow at 1Mbps",
-        "ip_address":"192.168.1.100",
-        "latitude": 38.10351066811096,
-        "longitude": 13.3459399220741
-        
-      },
-      {
-
-      },
-      {
-
-      }
-    ]
-  }
-}
-
-
-
-                SAMPLE BLUEPRINT:
-
-                {
-  "name": "Smart Home",
-  "description": "A network blueprint for a smart home with various automated devices.",
-  "components": [
-
-    {"type": "WiFi AP",
-      "id": "AP-001",
-      "application": "WiFi Access Point",
-      "location": "City Hall",      
-      "protocol": "WiFi",
-      "ip_address":"192.168.1.1",        
-      "latitude": 38.10351066811091,
-      "longitude": 13.3459399220741
-    },
-    {
-      "type": "Smart Thermostat",
-      "id": "ST-001",
-      "location": "Hallway",
-      "temperature_range": "18-25°C",
-      "energy_efficiency": "A+" ,     
-      "protocol":"Wi-Fi",
-      "latitude": 38.10863528672426,
-      "longitude": 13.34050633101243,
-      "ip_address":"192.168.1.2"
-    },
-    {
-      "type": "Smart Light Bulb",
-      "id": "SLB-001",
-      "location": "Kitchen",
-      "brightness": "Adjustable",
-      "color_temperature": "2700K-6500K", 
-      "protocol":"Wi-Fi",
-      "latitude": 38.10863528672436,
-      "longitude": 13.34050633101243,     
-      "ip_address":"192.168.1.3"
-    },
-    {
-      "type": "LoRaWAN Gateway",
-      "id": "GW-001",
-      "description":"WiFi device for with LoRa GW",
-      "ip_address":"192.168.1.110",
-      "latitude": 38.10863528672477,
-      "longitude": 13.34050633101244
-    },  
-    {
-      "type": "IoT Sensor",
-      "id": "WM-001",
-      "application": "Water meter",
-      "location": "Intersection A",
-      "sensor_type": "Water sensor",
-      "protocol": "LoRaWAN",
-      "SF": 7,
-      "latitude": 38.10863528672466,
-      "longitude": 13.34050633101243,
-      "data_flow":"constant transmission each 1 hour"
-    }
-  ],
-  "network_type": "Heterogeneous",
-  "protocols": ["Wi-Fi","LoRaWAN"]
-}
-
-
-                SAMPLE NS3 CODE:
-
-                
 #include "ns3/building-allocator.h"
 #include "ns3/building-penetration-loss.h"
 #include "ns3/buildings-helper.h"
@@ -205,15 +35,15 @@
 using namespace ns3;
 using namespace lorawan;
 
-NS_LOG_COMPONENT_DEFINE("SmartHomeExample");
+NS_LOG_COMPONENT_DEFINE("SmallSmartCityExample");
 
 // Network settings
-int nDevices = 1;                 //!< Number of end device nodes to create
-int nGateways = 1;                  //!< Number of gateway nodes to create
+int nLoraDevices = 2;                 //!< Number of end device nodes to create
+int nLoraGateways = 1;                  //!< Number of gateway nodes to create
 int nWiFiAPNodes=1;
-int nWiFiStaNodes=2;
+int nWiFiStaNodes=3;
 double radiusMeters = 1000;         //!< Radius (m) of the deployment
-double simulationTimeSeconds = 600; //!< Scenario duration (s) in simulated time
+double simulationTimeSeconds = 3600; //!< Scenario duration (s) in simulated time
 
 // Channel model
 bool realisticChannelModel = false; //!< Whether to use a more realistic channel model with
@@ -228,7 +58,7 @@ int
 main(int argc, char* argv[])
 {
     CommandLine cmd(__FILE__);
-    cmd.AddValue("nDevices", "Number of end devices to include in the simulation", nDevices);
+    cmd.AddValue("nDevices", "Number of end devices to include in the simulation", nLoraDevices);
     cmd.AddValue("radius", "The radius (m) of the area to simulate", radiusMeters);
     cmd.AddValue("simulationTime", "The time (s) for which to simulate", simulationTimeSeconds);
     cmd.AddValue("appPeriod",
@@ -238,7 +68,7 @@ main(int argc, char* argv[])
     cmd.Parse(argc, argv);
 
     // Set up logging
-    LogComponentEnable("SmartHomeExample", LOG_LEVEL_ALL);
+    LogComponentEnable("SmallSmartCityExample", LOG_LEVEL_ALL);
 
     /***********
      *  Setup  *
@@ -316,10 +146,15 @@ main(int argc, char* argv[])
 
     // Create a set of nodes
     NodeContainer endDevices;
-    endDevices.Create(nDevices);
+    endDevices.Create(nLoraDevices);
 
     // Assign a mobility model to each node
+    Ptr<ListPositionAllocator> allocatorLoraED = CreateObject<ListPositionAllocator>();
+    allocatorLoraED->Add(Vector(38.10863528672466, 13.34050633101243, 1.0));
+    allocatorLoraED->Add(Vector(38.0998337384608, 13.337136092765382, 1.0));
+    loramobility.SetPositionAllocator(allocatorLoraED);
     loramobility.Install(endDevices);
+    
 
     // Make it so that nodes are at a certain height > 0
     for (auto j = endDevices.Begin(); j != endDevices.End(); ++j)
@@ -359,11 +194,11 @@ main(int argc, char* argv[])
 
     // Create the gateway nodes (allocate them uniformly on the disc)
     NodeContainer gateways;
-    gateways.Create(nGateways);
+    gateways.Create(nLoraGateways);
 
     Ptr<ListPositionAllocator> allocator = CreateObject<ListPositionAllocator>();
     // Make it so that nodes are at a certain height > 0
-    allocator->Add(Vector(38.10863528672477, 13.34050633101244, 15.0));
+    allocator->Add(Vector(38.10351066811096, 13.3459399220741, 15.0));
     loramobility.SetPositionAllocator(allocator);
     loramobility.Install(gateways);
 
@@ -498,7 +333,7 @@ main(int argc, char* argv[])
     wifi.SetRemoteStationManager ("ns3::AarfWifiManager");
 
     WifiMacHelper mac;
-    Ssid ssid = Ssid ("ns-3-ssid");
+    Ssid ssid = Ssid ("SmartCityAP");
 
     mac.SetType ("ns3::StaWifiMac",
                 "Ssid", SsidValue (ssid),
@@ -517,13 +352,13 @@ main(int argc, char* argv[])
     wifimobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 
     Ptr<ListPositionAllocator> allocatorAPWiFi = CreateObject<ListPositionAllocator>();
-    allocatorAPWiFi->Add(Vector(38.10351066811091, 13.3459399220741, 1.5));
+    allocatorAPWiFi->Add(Vector(38.10351066811096, 13.3459399220741, 1.5));
     wifimobility.SetPositionAllocator(allocatorAPWiFi);
     wifimobility.Install(wifiApNode);
 
     Ptr<ListPositionAllocator> allocatorStaWiFi = CreateObject<ListPositionAllocator>();
-    allocatorStaWiFi->Add(Vector(38.10863528672426, 13.34050633101243, 1.5));
-    allocatorStaWiFi->Add(Vector(38.10863528672436, 13.34050633101243, 1.5));    
+    allocatorStaWiFi->Add(Vector(38.10351066811096, 13.3459399220741, 1.5));
+    //allocatorStaWiFi->Add(Vector(38.10863528672436, 13.34050633101243, 1.5));    
     wifimobility.SetPositionAllocator(allocatorStaWiFi);
     wifimobility.Install(wifiStaNodes);
 
@@ -591,9 +426,3 @@ main(int argc, char* argv[])
 
     return 0;
 }
-
-
-
-                NS3 CODE:
-
-                
