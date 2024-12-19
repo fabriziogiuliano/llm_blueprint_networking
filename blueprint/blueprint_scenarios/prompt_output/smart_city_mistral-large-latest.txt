@@ -1,4 +1,172 @@
 
+    Given the following TEST BLUEPRINT provide me the corresponding NS-3 code. Use the follwing SAMPLE NS-3 code and SAMPLE BLUEPRINT as reference.    
+    Not add description, just return cpp code.
+            TEST BLUEPRINT:
+
+            {
+  "name": "Small Smart City",
+    "description": "A network blueprint for a small smart city with various IoT applications.",
+  "components":{
+    "lora_gateways": [
+      {
+        "name": "GW-001",
+        "description": "Gateway City Hall",
+        "latitude": 38.10351066811096,
+        "longitude": 13.3459399220741,
+        "gateway_id":"05b0da50148fd6b1",
+        "protocol": "LoRaWAN",        
+        "application": "LoRa Gateway",
+        "location": "City Hall"     
+      }    
+    ],
+    "lora_devices": [
+      {
+        "dev_eui":"81a63bce0927e700",
+        "name":"IOT-001",      
+        "application_key":"4ba2162e111f9c2c216b7d68e09f43a8",
+        "type": "IoT Sensor",
+        "application": "Traffic Management",
+        "location": "Intersection A",
+        "sensor_type": "Traffic Camera Sensor",
+        "protocol": "LoRaWAN",
+        "SF": 7,
+        "latitude": 38.10863528672466,
+        "longitude": 13.34050633101243,
+        "data_flow":"constant transmission each 1minute"
+      },
+      {
+        "dev_eui":"89697aa089cc3005",
+        "name":"IOT-002",      
+        "application_key":"a1ac00d450efb7facb46a243cbf7731f",
+        "type": "IoT Sensor",
+        "application": "Waste Management",
+        "location": "Bin Area B",
+        "sensor_type": "Ultrasonic Sensor",        
+        "protocol": "LoRaWAN",
+        "SF": 7,
+        "latitude": 38.0998337384608,
+        "longitude": 13.337136092765382,
+        "data_flow":"constant transmission each 1minute"
+      }
+    ],
+    "wifi_ap":
+    [
+      {
+        "type": "WiFi AP",
+        "id":"AP-001",
+        "ssid":"SmartCityAP",
+        "wpa_passphrase":12345678,
+        "wpa_key_mgmt":"WPA-PSK",
+        "wlan_IP":"192.168.1.1",
+        "eth_IP":"10.8.8.16",              
+        "application": "WiFi Access Point",
+        "location": "City Hall",      
+        "protocol": "WiFi",
+        "latitude": 38.10351066811096,
+        "longitude": 13.3459399220741
+      }
+    ],
+    "wifi_stations":[
+      {
+        "id":"STA-001",
+        "ssid":"SmartCityAP",
+        "wpa_passphrase":12345678,
+        "wpa_key_mgmt":"WPA-PSK",
+        "wlan_IP":"192.168.1.101",
+        "wlan_MAC_ADDR":"08:5B:28:2B:9E:74",
+        "eth_IP":"10.8.8.17",
+        "user":"root",
+        "password":123456,
+        "type": "Camera",
+        "application": "Camera Monitoring",
+        "location": "Park C",
+        "sensor_type": "Survelliance camera",
+        "protocol":"Wi-Fi",
+        "data_flow":"UDP flow at 1Mbps",
+        "ip_address":"192.168.1.100",
+        "latitude": 38.10351066811096,
+        "longitude": 13.3459399220741
+        
+      },
+      {
+
+      },
+      {
+
+      }
+    ]
+  }
+}
+
+
+
+            SAMPLE BLUEPRINT:
+
+            {
+  "name": "Smart Home",
+  "description": "A network blueprint for a smart home with various automated devices.",
+  "components": [
+
+    {"type": "WiFi AP",
+      "id": "AP-001",
+      "application": "WiFi Access Point",
+      "location": "City Hall",      
+      "protocol": "WiFi",
+      "ip_address":"192.168.1.1",        
+      "latitude": 38.10351066811091,
+      "longitude": 13.3459399220741
+    },
+    {
+      "type": "Smart Thermostat",
+      "id": "ST-001",
+      "location": "Hallway",
+      "temperature_range": "18-25°C",
+      "energy_efficiency": "A+" ,     
+      "protocol":"Wi-Fi",
+      "latitude": 38.10863528672426,
+      "longitude": 13.34050633101243,
+      "ip_address":"192.168.1.2"
+    },
+    {
+      "type": "Smart Light Bulb",
+      "id": "SLB-001",
+      "location": "Kitchen",
+      "brightness": "Adjustable",
+      "color_temperature": "2700K-6500K", 
+      "protocol":"Wi-Fi",
+      "latitude": 38.10863528672436,
+      "longitude": 13.34050633101243,     
+      "ip_address":"192.168.1.3"
+    },
+    {
+      "type": "LoRaWAN Gateway",
+      "id": "GW-001",
+      "description":"WiFi device for with LoRa GW",
+      "ip_address":"192.168.1.110",
+      "latitude": 38.10863528672477,
+      "longitude": 13.34050633101244
+    },  
+    {
+      "type": "IoT Sensor",
+      "id": "WM-001",
+      "application": "Water meter",
+      "location": "Intersection A",
+      "sensor_type": "Water sensor",
+      "protocol": "LoRaWAN",
+      "SF": 7,
+      "latitude": 38.10863528672466,
+      "longitude": 13.34050633101243,
+      "data_flow":"constant transmission each 1 hour"
+    }
+  ],
+  "network_type": "Heterogeneous",
+  "protocols": ["Wi-Fi","LoRaWAN"]
+}
+
+
+            SAMPLE NS3 CODE:
+
+            
 #include "ns3/building-allocator.h"
 #include "ns3/building-penetration-loss.h"
 #include "ns3/buildings-helper.h"
@@ -28,8 +196,6 @@
 #include "ns3/ssid.h"
 #include "ns3/internet-stack-helper.h"
 #include "ns3/ipv4-address-helper.h"
-#include "ns3/wpa-supplicant-helper.h"
-#include "ns3/netanim-module.h"
 
 #include <algorithm>
 #include <ctime>
@@ -42,8 +208,8 @@ NS_LOG_COMPONENT_DEFINE("SmartHomeExample");
 // Network settings
 int nDevices = 1;                 //!< Number of end device nodes to create
 int nGateways = 1;                  //!< Number of gateway nodes to create
-int nWiFiAPNodes = 1;
-int nWiFiStaNodes = 4;
+int nWiFiAPNodes=1;
+int nWiFiStaNodes=2;
 double radiusMeters = 1000;         //!< Radius (m) of the deployment
 double simulationTimeSeconds = 600; //!< Scenario duration (s) in simulated time
 
@@ -55,33 +221,6 @@ int appPeriodSeconds = 60; //!< Duration (s) of the inter-transmission time of e
 
 // Output control
 bool printBuildingInfo = true; //!< Whether to print building information
-
-// Network configuration parameters
-std::string wifiApSsid = "SmartHomeAPMyExperiment";
-std::string wifiApPassphrase = "12345678";
-std::string wifiApWpaKeyMgmt = "WPA-PSK";
-std::string wifiApWlanIp = "192.168.1.1";
-std::string wifiApEthIp = "10.8.8.16";
-
-struct WifiStationConfig {
-    std::string id;
-    std::string ssid;
-    std::string wpaPassphrase;
-    std::string wpaKeyMgmt;
-    std::string wlanIp;
-    std::string wlanMacAddr;
-    std::string ethIp;
-    std::string user;
-    std::string password;
-};
-
-std::vector<WifiStationConfig> wifiStations = {
-    {"ST-001", "SmartHomeAPMyExperiment", "12345678", "WPA-PSK", "192.168.1.103", "61:5F:64:5E:90:EB", "10.8.8.17", "root", "123456"},
-    {"SLB-001", "SmartHomeAPMyExperiment", "12345678", "WPA-PSK", "192.168.1.102", "60:36:1E:9A:0A:0C", "10.8.8.18", "root", "123456"},
-    {"SDL-001", "SmartHomeAPMyExperiment", "12345678", "WPA-PSK", "192.168.1.101", "39:9F:51:CD:F7:08", "10.8.8.19", "root", "123456"},
-    {"SSC-001", "SmartHomeAPMyExperiment", "12345678", "WPA-PSK", "192.168.1.100", "0B:E3:41:0A:33:B7", "10.8.8.20", "root", "123456"}
-};
-
 
 int
 main(int argc, char* argv[])
@@ -357,7 +496,7 @@ main(int argc, char* argv[])
     wifi.SetRemoteStationManager ("ns3::AarfWifiManager");
 
     WifiMacHelper mac;
-    Ssid ssid = Ssid (wifiApSsid);
+    Ssid ssid = Ssid ("ns-3-ssid");
 
     mac.SetType ("ns3::StaWifiMac",
                 "Ssid", SsidValue (ssid),
@@ -372,7 +511,6 @@ main(int argc, char* argv[])
     NetDeviceContainer apDevices;
     apDevices = wifi.Install (phy, mac, wifiApNode);
 
-
     MobilityHelper wifimobility;
     wifimobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 
@@ -382,15 +520,8 @@ main(int argc, char* argv[])
     wifimobility.Install(wifiApNode);
 
     Ptr<ListPositionAllocator> allocatorStaWiFi = CreateObject<ListPositionAllocator>();
-    
-    // Assign initial positions for WiFi stations based on blueprint
-    for(const auto& station : wifiStations)
-    {
-        if (station.id == "ST-001") allocatorStaWiFi->Add(Vector(38.10863528672426, 13.34050633101243, 1.5));
-        if (station.id == "SLB-001") allocatorStaWiFi->Add(Vector(38.10863528672436, 13.34050633101243, 1.5));
-        if (station.id == "SDL-001") allocatorStaWiFi->Add(Vector(38.10863528672446, 13.34050633101243, 1.5));
-        if (station.id == "SSC-001") allocatorStaWiFi->Add(Vector(38.10863528672456, 13.34050633101243, 1.5));
-    }
+    allocatorStaWiFi->Add(Vector(38.10863528672426, 13.34050633101243, 1.5));
+    allocatorStaWiFi->Add(Vector(38.10863528672436, 13.34050633101243, 1.5));    
     wifimobility.SetPositionAllocator(allocatorStaWiFi);
     wifimobility.Install(wifiStaNodes);
 
@@ -405,30 +536,6 @@ main(int argc, char* argv[])
     staNodeInterfaces = address.Assign (staDevices);
     Ipv4InterfaceContainer apNodeInterface;
     apNodeInterface = address.Assign (apDevices);
-
-    // Configure WPA Supplicant for WiFi stations
-    WpaSupplicantHelper wpaSupplicant;
-    wpaSupplicant.SetSsid(ssid);
-    wpaSupplicant.SetPassphrase(wifiApPassphrase);
-    wpaSupplicant.SetWpaKeyMgmt(wifiApWpaKeyMgmt);
-    wpaSupplicant.Install(wifiStaNodes);
-
-    // Assign MAC addresses and IP addresses to WiFi stations based on blueprint
-    for (uint32_t i = 0; i < wifiStations.size(); ++i)
-    {
-        Ptr<NetDevice> netDevice = staDevices.Get (i);
-        Ptr<WifiNetDevice> wifiNetDevice = DynamicCast<WifiNetDevice> (netDevice);
-         if (wifiNetDevice) {
-          wifiNetDevice->GetMac()->SetAddress(Mac48Address::ConvertFrom(wifiStations[i].wlanMacAddr));
-        }
-       
-        Ipv4AddressHelper ipv4;
-        ipv4.SetBase (wifiStations[i].wlanIp, "255.255.255.0");
-
-         Ipv4InterfaceContainer interface = ipv4.Assign (NetDeviceContainer(staDevices.Get(i)));
-    
-    
-    }
 
     // Print the IP addresses of the WiFi STA nodes
     for (uint32_t i = 0; i < staNodeInterfaces.GetN(); ++i)
@@ -453,12 +560,10 @@ main(int argc, char* argv[])
     clientApps.Start (Seconds (1.0));
     clientApps.Stop (Seconds (10.0));
 
-   //Tracing
+    //Tracing
     phy.EnablePcap ("wifi-ap", apDevices);
     phy.EnablePcap ("wifi-sta", staDevices);
 
-
-  
     /**********
      *  Run    *
      **********/
@@ -466,12 +571,6 @@ main(int argc, char* argv[])
     Simulator::Stop(appStopTime + Hours(1));
 
     NS_LOG_INFO("*** Running simulation...");
-
-    // NetAnim
-    AnimationInterface anim ("SmartHome.xml");
-    anim.SetMaxPktsPerLine (10000);
-
-
     Simulator::Run();
 
     Simulator::Destroy();
@@ -491,3 +590,8 @@ main(int argc, char* argv[])
     return 0;
 }
 
+
+
+            NS3 CODE:
+
+            

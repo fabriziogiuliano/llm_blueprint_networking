@@ -1,20 +1,10 @@
-
-
 import os
-"""
-==================================== SELECT MODEL!!!! ====================================
-""" 
-select_model="MISTRAL"
-"""
-==================================== SELECT MODEL!!!! ====================================
-"""
-
 from mistralai import Mistral
 from dotenv import load_dotenv
-load_dotenv()
 from datetime import datetime
-
 import google.generativeai as genai
+
+load_dotenv()
 
 def generatePrompt(sample_blueprint,sample_ns3_code,blueprint_scenario_filename):
     with open(f"blueprints/{blueprint_scenario_filename}_complete.json") as f:
@@ -120,7 +110,7 @@ def generatePrompt(sample_blueprint,sample_ns3_code,blueprint_scenario_filename)
     """
     prompt = f"""
     Given the following TEST BLUEPRINT provide me the corresponding NS-3 code. Use the follwing SAMPLE NS-3 code and SAMPLE BLUEPRINT as reference.    
-    
+    Not add description, just return cpp code.
             TEST BLUEPRINT:
 
             {test_blueprint}
@@ -139,12 +129,10 @@ def generatePrompt(sample_blueprint,sample_ns3_code,blueprint_scenario_filename)
             """
     return prompt
 def runLLM(select_model,prompt):
-    if select_model=="MISTRAL":
-        model = "mistral-large-latest"
+    if select_model=="mistral-large-latest":        
         client = Mistral(api_key=os.getenv('MISTRAL_API_KEY'))
-
         chat_response = client.chat.complete(
-            model = model,
+            model = select_model,
             temperature=0,
             messages = [
                 {
@@ -156,17 +144,20 @@ def runLLM(select_model,prompt):
 
         response = chat_response.choices[0].message.content
         
-    if select_model=="GEMINI":
-        genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-        #model = genai.GenerativeModel('gemini-2.0-flash-exp') #gemini-exp-1206
-        model = genai.GenerativeModel('gemini-exp-1206')
+    if select_model=="gemini-exp-1206" or select_model=="gemini-2.0-flash-exp":
+        genai.configure(api_key=os.getenv("GEMINI_API_KEY"))        
+        model = genai.GenerativeModel(select_model)
         response = model.generate_content(prompt)
         response = response.text
+    
     return response
 
 
-blueprint_scenario_filenames=["smart_home","smart_agriculture","smart_city"]
-model_names = ["MISTRAL","GEMINI"]
+#blueprint_scenario_filenames=["smart_home","smart_agriculture","smart_city"]
+#model_names = ["gemini-exp-1206","gemini-2.0-flash-exp","mistral-large-latest"]
+
+blueprint_scenario_filenames=["smart_home"]
+model_names = ["gemini-exp-1206"]
 def main():
 
     for select_model in model_names:
@@ -180,6 +171,9 @@ def main():
         for blueprint_scenario_filename in blueprint_scenario_filenames:
             prompt = generatePrompt(sample_blueprint,sample_ns3_code,blueprint_scenario_filename)
             
+            if not os.path.isdir("prompt_output"):                                
+                os.mkdir("prompt_output")
+            
             output_filename = f"prompt_output/{blueprint_scenario_filename}_{select_model}.txt"
             with open(output_filename, 'w') as file:
                 file.write(prompt)
@@ -187,7 +181,8 @@ def main():
 
 
             response=runLLM(select_model,prompt)
-
+            if not os.path.isdir("ns3_output_code"):                                
+                os.mkdir("ns3_output_code")
             output_filename = f"ns3_output_code/{blueprint_scenario_filename}_{select_model}.cc"
             with open(output_filename, 'w') as file:
                 file.write(response.replace("```cpp","").replace("```",""))

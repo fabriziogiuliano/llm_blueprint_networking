@@ -1,4 +1,148 @@
 
+    Given the following TEST BLUEPRINT provide me the corresponding NS-3 code. Use the follwing SAMPLE NS-3 code and SAMPLE BLUEPRINT as reference.    
+    Not add description, just return cpp code.
+            TEST BLUEPRINT:
+
+            {
+  "name": "Smart Home",
+  "description": "A network blueprint for a smart home with various automated devices.",
+  "experiment_duration":"1 hour",
+  "wifi_ap":
+  [
+    {
+      "id":"AP-001",
+      "ssid":"SmartHomeAPMyExperiment",
+      "wpa_passphrase":12345678,
+      "wpa_key_mgmt":"WPA-PSK",
+      "wlan_IP":"192.168.1.1",
+      "eth_IP":"10.8.8.16"
+    }
+  ],
+  "wifi_stations":[
+    {
+      "id":"ST-001",
+      "ssid":"SmartHomeAPMyExperiment",
+      "activity": "UDP trasmission at maximum throughput of 30 minutes, start at 0",
+      "wpa_passphrase":12345678,
+      "wpa_key_mgmt":"WPA-PSK",
+      "wlan_IP":"192.168.1.103",
+      "wlan_MAC_ADDR":"61:5F:64:5E:90:EB",
+      "distance":"10 meter far from AP",
+      "eth_IP":"10.8.8.17",
+      "user":"root",
+      "password":123456
+    },
+    {
+      "id":"SLB-001",
+      "ssid":"SmartHomeAPMyExperiment",
+      "activity": "TCP trasmission at maximum throughput of 30 minutes, start at 0",
+      "wpa_passphrase":12345678,
+      "wpa_key_mgmt":"WPA-PSK",
+      "wlan_IP":"192.168.1.102",
+      "distance":"5 meter far from AP",
+      "wlan_MAC_ADDR":"60:36:1E:9A:0A:0C",
+      "eth_IP":"10.8.8.18",
+      "user":"root",
+      "password":123456
+    },
+    {
+      "id":"SDL-001",
+      "ssid":"SmartHomeAPMyExperiment",
+      "activity": "UDP trasmission at 1Mbps of 10 minutes, start at 10sec",
+      "wpa_passphrase":12345678,
+      "wpa_key_mgmt":"WPA-PSK",
+      "wlan_IP":"192.168.1.101",
+      "distance":"1 meter far from AP",
+      "wlan_MAC_ADDR":"39:9F:51:CD:F7:08",
+      "eth_IP":"10.8.8.19",
+      "user":"root",
+      "password":123456
+    },
+    {
+      "id":"SSC-001",
+      "ssid":"SmartHomeAPMyExperiment",
+      "activity": "UDP trasmission at 2Mbps of 10 minutes, start at 5sec",
+      "wpa_passphrase":12345678,
+      "wpa_key_mgmt":"WPA-PSK",
+      "wlan_IP":"192.168.1.100",
+      "distance":"15 meter far from AP",
+      "wlan_MAC_ADDR":"0B:E3:41:0A:33:B7",
+      "eth_IP":"10.8.8.20",
+      "user":"root",
+      "password":123456
+    }
+  ]
+}
+
+
+
+            SAMPLE BLUEPRINT:
+
+            {
+  "name": "Smart Home",
+  "description": "A network blueprint for a smart home with various automated devices.",
+  "components": [
+
+    {"type": "WiFi AP",
+      "id": "AP-001",
+      "application": "WiFi Access Point",
+      "location": "City Hall",      
+      "protocol": "WiFi",
+      "ip_address":"192.168.1.1",        
+      "latitude": 38.10351066811091,
+      "longitude": 13.3459399220741
+    },
+    {
+      "type": "Smart Thermostat",
+      "id": "ST-001",
+      "location": "Hallway",
+      "temperature_range": "18-25°C",
+      "energy_efficiency": "A+" ,     
+      "protocol":"Wi-Fi",
+      "latitude": 38.10863528672426,
+      "longitude": 13.34050633101243,
+      "ip_address":"192.168.1.2"
+    },
+    {
+      "type": "Smart Light Bulb",
+      "id": "SLB-001",
+      "location": "Kitchen",
+      "brightness": "Adjustable",
+      "color_temperature": "2700K-6500K", 
+      "protocol":"Wi-Fi",
+      "latitude": 38.10863528672436,
+      "longitude": 13.34050633101243,     
+      "ip_address":"192.168.1.3"
+    },
+    {
+      "type": "LoRaWAN Gateway",
+      "id": "GW-001",
+      "description":"WiFi device for with LoRa GW",
+      "ip_address":"192.168.1.110",
+      "latitude": 38.10863528672477,
+      "longitude": 13.34050633101244
+    },  
+    {
+      "type": "IoT Sensor",
+      "id": "WM-001",
+      "application": "Water meter",
+      "location": "Intersection A",
+      "sensor_type": "Water sensor",
+      "protocol": "LoRaWAN",
+      "SF": 7,
+      "latitude": 38.10863528672466,
+      "longitude": 13.34050633101243,
+      "data_flow":"constant transmission each 1 hour"
+    }
+  ],
+  "network_type": "Heterogeneous",
+  "protocols": ["Wi-Fi","LoRaWAN"]
+}
+
+
+            SAMPLE NS3 CODE:
+
+            
 #include "ns3/building-allocator.h"
 #include "ns3/building-penetration-loss.h"
 #include "ns3/buildings-helper.h"
@@ -35,15 +179,15 @@
 using namespace ns3;
 using namespace lorawan;
 
-NS_LOG_COMPONENT_DEFINE("SmallSmartCityExample");
+NS_LOG_COMPONENT_DEFINE("SmartHomeExample");
 
 // Network settings
-int nDevices = 2;                 //!< Number of end device nodes to create
+int nDevices = 1;                 //!< Number of end device nodes to create
 int nGateways = 1;                  //!< Number of gateway nodes to create
 int nWiFiAPNodes=1;
-int nWiFiStaNodes = 1;
+int nWiFiStaNodes=2;
 double radiusMeters = 1000;         //!< Radius (m) of the deployment
-double simulationTimeSeconds = 3600; //!< Scenario duration (s) in simulated time
+double simulationTimeSeconds = 600; //!< Scenario duration (s) in simulated time
 
 // Channel model
 bool realisticChannelModel = false; //!< Whether to use a more realistic channel model with
@@ -68,7 +212,7 @@ main(int argc, char* argv[])
     cmd.Parse(argc, argv);
 
     // Set up logging
-    LogComponentEnable("SmallSmartCityExample", LOG_LEVEL_ALL);
+    LogComponentEnable("SmartHomeExample", LOG_LEVEL_ALL);
 
     /***********
      *  Setup  *
@@ -193,7 +337,7 @@ main(int argc, char* argv[])
 
     Ptr<ListPositionAllocator> allocator = CreateObject<ListPositionAllocator>();
     // Make it so that nodes are at a certain height > 0
-    allocator->Add(Vector(38.10351066811096, 13.3459399220741, 15.0));
+    allocator->Add(Vector(38.10863528672477, 13.34050633101244, 15.0));
     loramobility.SetPositionAllocator(allocator);
     loramobility.Install(gateways);
 
@@ -347,12 +491,13 @@ main(int argc, char* argv[])
     wifimobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 
     Ptr<ListPositionAllocator> allocatorAPWiFi = CreateObject<ListPositionAllocator>();
-    allocatorAPWiFi->Add(Vector(38.10351066811096, 13.3459399220741, 1.5));
+    allocatorAPWiFi->Add(Vector(38.10351066811091, 13.3459399220741, 1.5));
     wifimobility.SetPositionAllocator(allocatorAPWiFi);
     wifimobility.Install(wifiApNode);
 
     Ptr<ListPositionAllocator> allocatorStaWiFi = CreateObject<ListPositionAllocator>();
-    allocatorStaWiFi->Add(Vector(38.10351066811096, 13.3459399220741, 1.5));
+    allocatorStaWiFi->Add(Vector(38.10863528672426, 13.34050633101243, 1.5));
+    allocatorStaWiFi->Add(Vector(38.10863528672436, 13.34050633101243, 1.5));    
     wifimobility.SetPositionAllocator(allocatorStaWiFi);
     wifimobility.Install(wifiStaNodes);
 
@@ -387,7 +532,7 @@ main(int argc, char* argv[])
                         InetSocketAddress (Ipv4Address ("192.168.1.1"), sinkPort));
     onoff.SetConstantRate (DataRate ("1Mbps"));
     onoff.SetAttribute ("PacketSize", UintegerValue (1024));
-    ApplicationContainer clientApps = onoff.Install (wifiStaNodes.Get (0));
+    ApplicationContainer clientApps = onoff.Install (wifiStaNodes.Get (1));
     clientApps.Start (Seconds (1.0));
     clientApps.Stop (Seconds (10.0));
 
@@ -420,3 +565,9 @@ main(int argc, char* argv[])
 
     return 0;
 }
+
+
+
+            NS3 CODE:
+
+            

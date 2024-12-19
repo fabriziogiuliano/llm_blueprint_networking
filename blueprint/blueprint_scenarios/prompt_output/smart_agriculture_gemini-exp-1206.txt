@@ -1,4 +1,172 @@
 
+    Given the following TEST BLUEPRINT provide me the corresponding NS-3 code. Use the follwing SAMPLE NS-3 code and SAMPLE BLUEPRINT as reference.    
+    Not add description, just return cpp code.
+            TEST BLUEPRINT:
+
+            {
+  "name": "Smart Agriculture",
+  "description": "A network blueprint for smart agriculture with various sensors and actuators.",
+  "components":{
+    "lora_gateways": [
+      {
+        "name": "GW-RAK-ROOF",
+        "description": "Gateway Building 9",
+        "latitude": 38.10351066811096,
+        "longitude": 13.3459399220741,
+        "altitude": 30,
+        "gateway_id":"05b0da50148fd6b1"
+      }    
+    ],
+    "lora_devices": [
+      {
+        "type": "Farm Management System",
+        "name":"FMS-001",
+        "location": "Farm Office",      
+        "responsibilities": ["Crop Monitoring", "Irrigation Control", "Data Analysis"],
+        "dev_eui":"629b560f15ed4565",
+        "latitude": 38.10863528672466,
+        "longitude": 13.34050633101243,
+        "application_key":"56a31fdf2a92f61bbc3c0e07bbd0f7d3"
+      },
+      {
+        "type": "Soil Moisture Sensor",
+        "name":"SMS-001",      
+        "location": "Field A",
+        "dev_eui":"96b18ec6b841f6b6",
+        "application_key":"5d43d73ea0b4095ca8162c3633fe498",
+        "sensor_type": "Capacitive",
+        "data_rate": "1 Kbps",
+        "latitude": 38.10863528672466,
+        "longitude": 13.34050633101243
+
+      },
+      {
+        "type": "Weather Station",
+        "name":"WS-001",      
+        "location": "Field B",
+        "dev_eui":"4af31c0e9fa1d5de", 
+        "latitude": 38.10863528672466,
+        "longitude": 13.34050633101243,       
+        "application_key":"36ad40bd675a8a68ad887c15bee482c4",
+        "parameters": ["Temperature", "Humidity", "Wind Speed"],
+        "data_rate": "5 Kbps"
+        
+      },
+      {
+        "type": "Irrigation Controller",
+        "name":"IC-001",      
+        "location": "Field C",
+        "dev_eui":"197ba985d7822c4a",
+        "latitude": 38.10863528672466,
+        "longitude": 13.34050633101243,
+        "application_key":"962d281e76f988fc326bd30c6f617535",
+        "control_type": "Automatic",
+        "water_flow_rate": "10 L/min"
+      },
+      {
+        "type": "Drone",
+        "name":"DR-001",      
+        "location": "Aerial",
+        "dev_eui":"7c3142d87f67a1f3",
+        "latitude": 38.10863528672466,
+        "longitude": 13.34050633101243,
+        "application_key":"dc7063e10207358949a771e7053f598",
+        "purpose": "Crop Surveillance",
+        "flight_time": "30 minutes"
+        
+      }
+    ],
+    "wifi_ap":
+    [
+      {
+
+      }
+    ],
+    "wifi_stations":[
+      {
+
+      },
+      {
+
+      },
+      {
+
+      }
+    ]
+    
+}
+  
+}
+
+
+
+            SAMPLE BLUEPRINT:
+
+            {
+  "name": "Smart Home",
+  "description": "A network blueprint for a smart home with various automated devices.",
+  "components": [
+
+    {"type": "WiFi AP",
+      "id": "AP-001",
+      "application": "WiFi Access Point",
+      "location": "City Hall",      
+      "protocol": "WiFi",
+      "ip_address":"192.168.1.1",        
+      "latitude": 38.10351066811091,
+      "longitude": 13.3459399220741
+    },
+    {
+      "type": "Smart Thermostat",
+      "id": "ST-001",
+      "location": "Hallway",
+      "temperature_range": "18-25°C",
+      "energy_efficiency": "A+" ,     
+      "protocol":"Wi-Fi",
+      "latitude": 38.10863528672426,
+      "longitude": 13.34050633101243,
+      "ip_address":"192.168.1.2"
+    },
+    {
+      "type": "Smart Light Bulb",
+      "id": "SLB-001",
+      "location": "Kitchen",
+      "brightness": "Adjustable",
+      "color_temperature": "2700K-6500K", 
+      "protocol":"Wi-Fi",
+      "latitude": 38.10863528672436,
+      "longitude": 13.34050633101243,     
+      "ip_address":"192.168.1.3"
+    },
+    {
+      "type": "LoRaWAN Gateway",
+      "id": "GW-001",
+      "description":"WiFi device for with LoRa GW",
+      "ip_address":"192.168.1.110",
+      "latitude": 38.10863528672477,
+      "longitude": 13.34050633101244
+    },  
+    {
+      "type": "IoT Sensor",
+      "id": "WM-001",
+      "application": "Water meter",
+      "location": "Intersection A",
+      "sensor_type": "Water sensor",
+      "protocol": "LoRaWAN",
+      "SF": 7,
+      "latitude": 38.10863528672466,
+      "longitude": 13.34050633101243,
+      "data_flow":"constant transmission each 1 hour"
+    }
+  ],
+  "network_type": "Heterogeneous",
+  "protocols": ["Wi-Fi","LoRaWAN"]
+}
+
+
+            SAMPLE NS3 CODE:
+
+            
 #include "ns3/building-allocator.h"
 #include "ns3/building-penetration-loss.h"
 #include "ns3/buildings-helper.h"
@@ -28,7 +196,6 @@
 #include "ns3/ssid.h"
 #include "ns3/internet-stack-helper.h"
 #include "ns3/ipv4-address-helper.h"
-#include "ns3/string.h"
 
 #include <algorithm>
 #include <ctime>
@@ -36,13 +203,13 @@
 using namespace ns3;
 using namespace lorawan;
 
-NS_LOG_COMPONENT_DEFINE("SmartCityExample");
+NS_LOG_COMPONENT_DEFINE("SmartHomeExample");
 
 // Network settings
-int nDevices = 2;                 //!< Number of end device nodes to create
+int nDevices = 1;                 //!< Number of end device nodes to create
 int nGateways = 1;                  //!< Number of gateway nodes to create
 int nWiFiAPNodes=1;
-int nWiFiStaNodes=1;
+int nWiFiStaNodes=2;
 double radiusMeters = 1000;         //!< Radius (m) of the deployment
 double simulationTimeSeconds = 600; //!< Scenario duration (s) in simulated time
 
@@ -69,7 +236,7 @@ main(int argc, char* argv[])
     cmd.Parse(argc, argv);
 
     // Set up logging
-    LogComponentEnable("SmartCityExample", LOG_LEVEL_ALL);
+    LogComponentEnable("SmartHomeExample", LOG_LEVEL_ALL);
 
     /***********
      *  Setup  *
@@ -152,7 +319,7 @@ main(int argc, char* argv[])
     // Assign a mobility model to each node
     loramobility.Install(endDevices);
 
-        // Make it so that nodes are at a certain height > 0
+    // Make it so that nodes are at a certain height > 0
     for (auto j = endDevices.Begin(); j != endDevices.End(); ++j)
     {
         Ptr<MobilityModel> mobility = (*j)->GetObject<MobilityModel>();
@@ -160,7 +327,6 @@ main(int argc, char* argv[])
         position.z = 1.2;
         mobility->SetPosition(position);
     }
-
 
     // Create the LoraNetDevices of the end devices
     uint8_t nwkId = 54;
@@ -195,10 +361,9 @@ main(int argc, char* argv[])
 
     Ptr<ListPositionAllocator> allocator = CreateObject<ListPositionAllocator>();
     // Make it so that nodes are at a certain height > 0
-    allocator->Add(Vector(38.10351066811096, 13.3459399220741, 15.0));
+    allocator->Add(Vector(38.10863528672477, 13.34050633101244, 15.0));
     loramobility.SetPositionAllocator(allocator);
     loramobility.Install(gateways);
-
 
     // Create a netdevice for each gateway
     phyHelper.SetDeviceType(LoraPhyHelper::GW);
@@ -331,7 +496,7 @@ main(int argc, char* argv[])
     wifi.SetRemoteStationManager ("ns3::AarfWifiManager");
 
     WifiMacHelper mac;
-    Ssid ssid = Ssid ("SmartCityAP");
+    Ssid ssid = Ssid ("ns-3-ssid");
 
     mac.SetType ("ns3::StaWifiMac",
                 "Ssid", SsidValue (ssid),
@@ -350,12 +515,13 @@ main(int argc, char* argv[])
     wifimobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 
     Ptr<ListPositionAllocator> allocatorAPWiFi = CreateObject<ListPositionAllocator>();
-    allocatorAPWiFi->Add(Vector(38.10351066811096, 13.3459399220741, 1.5));
+    allocatorAPWiFi->Add(Vector(38.10351066811091, 13.3459399220741, 1.5));
     wifimobility.SetPositionAllocator(allocatorAPWiFi);
     wifimobility.Install(wifiApNode);
 
     Ptr<ListPositionAllocator> allocatorStaWiFi = CreateObject<ListPositionAllocator>();
-    allocatorStaWiFi->Add(Vector(38.10351066811096, 13.3459399220741, 1.5));   
+    allocatorStaWiFi->Add(Vector(38.10863528672426, 13.34050633101243, 1.5));
+    allocatorStaWiFi->Add(Vector(38.10863528672436, 13.34050633101243, 1.5));    
     wifimobility.SetPositionAllocator(allocatorStaWiFi);
     wifimobility.Install(wifiStaNodes);
 
@@ -384,15 +550,15 @@ main(int argc, char* argv[])
     PacketSinkHelper packetSinkHelper ("ns3::UdpSocketFactory", sinkAddress);
     ApplicationContainer sinkApps = packetSinkHelper.Install (wifiStaNodes.Get (0));
     sinkApps.Start (Seconds (0.0));
-    sinkApps.Stop (Seconds (simulationTimeSeconds));
+    sinkApps.Stop (Seconds (10.0));
 
     OnOffHelper onoff ("ns3::UdpSocketFactory",
-                        InetSocketAddress (apNodeInterface.GetAddress(0), sinkPort));
+                        InetSocketAddress (Ipv4Address ("192.168.1.1"), sinkPort));
     onoff.SetConstantRate (DataRate ("1Mbps"));
     onoff.SetAttribute ("PacketSize", UintegerValue (1024));
-    ApplicationContainer clientApps = onoff.Install (wifiStaNodes.Get(0));
+    ApplicationContainer clientApps = onoff.Install (wifiStaNodes.Get (1));
     clientApps.Start (Seconds (1.0));
-    clientApps.Stop (Seconds (simulationTimeSeconds));
+    clientApps.Stop (Seconds (10.0));
 
     //Tracing
     phy.EnablePcap ("wifi-ap", apDevices);
@@ -424,73 +590,8 @@ main(int argc, char* argv[])
     return 0;
 }
 
-**Explanation:**
 
-1.  **Includes:** Includes the necessary NS-3 header files for LoRaWAN, WiFi, and other functionalities.
-2.  **Logging:** Sets up logging for the SmartCityExample component.
-3.  **Network Settings:** Defines variables for the number of devices, gateways, simulation time, radius, and application period.
-4.  **Main Function:**
-    *   **Command Line Arguments:** Parses command-line arguments to configure simulation parameters.
-    *   **Setup:** Initializes the simulation environment.
-    *   **LoRa Channel:** Creates the LoRa channel with the log distance propagation loss model (optionally with correlated shadowing and building penetration loss).
-    *   **LoRa Helpers:** Creates the necessary helpers for LoRa PHY, MAC, and network server.
-    *   **LoRa End Devices:**
-        *   Creates `nDevices` end device nodes.
-        *   Assigns a constant position mobility model.
-        *   Creates LoRa network devices for the end devices.
-    *   **LoRa Gateways:**
-        *   Creates `nGateways` gateway nodes.
-        *   Assigns a specific position to the gateway
-        *    Creates LoRa network devices for the gateway.
-    *   **Buildings:**
-        *   Creates a grid of buildings (if `realisticChannelModel` is enabled).
-    *   **Spreading Factors:** Sets the spreading factors for the end devices.
-    *   **End Device Applications:** Installs the periodic sender application on the end devices to send data periodically.
-    *   **Network Server:** Creates the network server node, point-to-point links, and installs the network server helper.
-    *    **WiFi Nodes**
-       *   Creates `nWiFiStaNodes` station nodes.
-        *   Creates `nWiFiAPNodes` access point node.
-        *   Sets up the WiFi channel and PHY layer.
-        *   Sets up the WiFi MAC layer for AP and stations with the specified SSID.
-        *   Assigns positions for the AP and stations.
-        *   Installs the TCP/IP stack.
-        *   Assigns IP addresses.
-        *   Creates a UDP sink on the staNodes[0] to receive data
-        *   Creates an OnOff application on staNodes[0] to generate traffic at a constant rate of 1Mbps
-        *   Enables packet capturing for both access point and stations
-    *   **Simulation Run:**
-        *   Starts the simulation and runs until the specified time.
-        *   Destroys the simulator.
-    *   **Results:** Prints the total number of MAC packets to the console.
 
-**Key Changes Made:**
+            NS3 CODE:
 
-*   **LoRa Devices:**
-    *   The number of devices was set to 2 (nDevices = 2).
-    *   Added constant position mobility.
-    *   Devices will be positioned randomly in the circle according to the radius.
-*    **LoRa Gateways**
-    *   The gateway's location has been set manually.
-*   **WiFi Access Point:**
-    *   Added `nWiFiAPNodes` = 1 for one Access Point.
-    *   The position of the Access Point has been manually set.
-    *   The SSID has been set to "SmartCityAP".
-*   **WiFi Stations:**
-    *   Added `nWiFiStaNodes` = 1 for one station.
-    *   The position of the station has been manually set.
-    *   The SSID is "SmartCityAP", matching the Access Point.
-     *   Added traffic generation using the OnOff Helper.
-
-**How to Compile and Run:**
-
-1.  **Save:** Save the code as `smart-city-example.cc`.
-2.  **Compile:**
-    bash
-    ./waf configure
-    ./waf build
-    
-3.  **Run:**
-    bash
-    ./waf --run "smart-city-example"
-    
-**Remember to adjust the `nDevices` , `nGateways` , `nWiFiAPNodes` and `nWiFiStaNodes` variables and the position allocations for the specific number of nodes you want to simulate.**
+            
