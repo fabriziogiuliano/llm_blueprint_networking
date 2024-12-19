@@ -28,15 +28,11 @@
 #include "ns3/ssid.h"
 #include "ns3/internet-stack-helper.h"
 #include "ns3/ipv4-address-helper.h"
-#include "ns3/mac-address.h"
+#include "ns3/wpa-supplicant-helper.h"
+#include "ns3/netanim-module.h"
 
 #include <algorithm>
 #include <ctime>
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <sstream>
-#include <iomanip>
 
 using namespace ns3;
 using namespace lorawan;
@@ -44,10 +40,10 @@ using namespace lorawan;
 NS_LOG_COMPONENT_DEFINE("SmartHomeExample");
 
 // Network settings
-int nDevices = 0;                 //!< Number of end device nodes to create
+int nDevices = 1;                 //!< Number of end device nodes to create
 int nGateways = 1;                  //!< Number of gateway nodes to create
-int nWiFiAPNodes=1;
-int nWiFiStaNodes=4;
+int nWiFiAPNodes = 1;
+int nWiFiStaNodes = 4;
 double radiusMeters = 1000;         //!< Radius (m) of the deployment
 double simulationTimeSeconds = 600; //!< Scenario duration (s) in simulated time
 
@@ -60,29 +56,31 @@ int appPeriodSeconds = 60; //!< Duration (s) of the inter-transmission time of e
 // Output control
 bool printBuildingInfo = true; //!< Whether to print building information
 
+// Network configuration parameters
+std::string wifiApSsid = "SmartHomeAPMyExperiment";
+std::string wifiApPassphrase = "12345678";
+std::string wifiApWpaKeyMgmt = "WPA-PSK";
+std::string wifiApWlanIp = "192.168.1.1";
+std::string wifiApEthIp = "10.8.8.16";
 
-// Function to convert a MAC address string to a Mac64Address
-Mac64Address ParseMacAddress(const std::string& macStr) {
-    std::istringstream ss(macStr);
-    uint8_t bytes[6];
-    char delimiter;
+struct WifiStationConfig {
+    std::string id;
+    std::string ssid;
+    std::string wpaPassphrase;
+    std::string wpaKeyMgmt;
+    std::string wlanIp;
+    std::string wlanMacAddr;
+    std::string ethIp;
+    std::string user;
+    std::string password;
+};
 
-    for (int i = 0; i < 6; ++i) {
-        if (!(ss >> std::hex >> (int&)bytes[i])) {
-            // Handle parsing error, e.g., throw an exception or return a default value
-            std::cerr << "Error parsing MAC address: " << macStr << std::endl;
-            return Mac64Address::GetBroadcast();
-        }
-        if (i < 5) {
-            ss >> delimiter; // Consume the colon delimiter
-            if (delimiter != ':') {
-                 std::cerr << "Error parsing MAC address: " << macStr << ". Delimiter error." << std::endl;
-                 return Mac64Address::GetBroadcast();
-            }
-        }
-    }
-    return Mac64Address(bytes);
-}
+std::vector<WifiStationConfig> wifiStations = {
+    {"ST-001", "SmartHomeAPMyExperiment", "12345678", "WPA-PSK", "192.168.1.103", "61:5F:64:5E:90:EB", "10.8.8.17", "root", "123456"},
+    {"SLB-001", "SmartHomeAPMyExperiment", "12345678", "WPA-PSK", "192.168.1.102", "60:36:1E:9A:0A:0C", "10.8.8.18", "root", "123456"},
+    {"SDL-001", "SmartHomeAPMyExperiment", "12345678", "WPA-PSK", "192.168.1.101", "39:9F:51:CD:F7:08", "10.8.8.19", "root", "123456"},
+    {"SSC-001", "SmartHomeAPMyExperiment", "12345678", "WPA-PSK", "192.168.1.100", "0B:E3:41:0A:33:B7", "10.8.8.20", "root", "123456"}
+};
 
 
 int
@@ -359,7 +357,7 @@ main(int argc, char* argv[])
     wifi.SetRemoteStationManager ("ns3::AarfWifiManager");
 
     WifiMacHelper mac;
-    Ssid ssid = Ssid ("SmartHomeAPMyExperiment");
+    Ssid ssid = Ssid (wifiApSsid);
 
     mac.SetType ("ns3::StaWifiMac",
                 "Ssid", SsidValue (ssid),
@@ -374,6 +372,7 @@ main(int argc, char* argv[])
     NetDeviceContainer apDevices;
     apDevices = wifi.Install (phy, mac, wifiApNode);
 
+
     MobilityHelper wifimobility;
     wifimobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 
@@ -383,10 +382,15 @@ main(int argc, char* argv[])
     wifimobility.Install(wifiApNode);
 
     Ptr<ListPositionAllocator> allocatorStaWiFi = CreateObject<ListPositionAllocator>();
-    allocatorStaWiFi->Add(Vector(38.10863528672426, 13.34050633101243, 1.5));
-    allocatorStaWiFi->Add(Vector(38.10863528672436, 13.34050633101243, 1.5));   
-    allocatorStaWiFi->Add(Vector(38.10863528672436, 13.34050633101243, 1.5));    
-    allocatorStaWiFi->Add(Vector(38.10863528672436, 13.34050633101243, 1.5));
+    
+    // Assign initial positions for WiFi stations based on blueprint
+    for(const auto& station : wifiStations)
+    {
+        if (station.id == "ST-001") allocatorStaWiFi->Add(Vector(38.10863528672426, 13.34050633101243, 1.5));
+        if (station.id == "SLB-001") allocatorStaWiFi->Add(Vector(38.10863528672436, 13.34050633101243, 1.5));
+        if (station.id == "SDL-001") allocatorStaWiFi->Add(Vector(38.10863528672446, 13.34050633101243, 1.5));
+        if (station.id == "SSC-001") allocatorStaWiFi->Add(Vector(38.10863528672456, 13.34050633101243, 1.5));
+    }
     wifimobility.SetPositionAllocator(allocatorStaWiFi);
     wifimobility.Install(wifiStaNodes);
 
@@ -402,22 +406,30 @@ main(int argc, char* argv[])
     Ipv4InterfaceContainer apNodeInterface;
     apNodeInterface = address.Assign (apDevices);
 
-    // Set MAC addresses for each WiFi STA node
-    std::vector<std::string> macAddresses = {
-        "61:5F:64:5E:90:EB",
-        "60:36:1E:9A:0A:0C",
-        "39:9F:51:CD:F7:08",
-        "0B:E3:41:0A:33:B7"
-    };
+    // Configure WPA Supplicant for WiFi stations
+    WpaSupplicantHelper wpaSupplicant;
+    wpaSupplicant.SetSsid(ssid);
+    wpaSupplicant.SetPassphrase(wifiApPassphrase);
+    wpaSupplicant.SetWpaKeyMgmt(wifiApWpaKeyMgmt);
+    wpaSupplicant.Install(wifiStaNodes);
 
-    for(uint32_t i = 0; i < wifiStaNodes.GetN(); ++i) {
-        Ptr<NetDevice> netDevice = wifiStaNodes.Get(i)->GetDevice(0);
-        Ptr<WifiNetDevice> wifiNetDevice = DynamicCast<WifiNetDevice>(netDevice);
+    // Assign MAC addresses and IP addresses to WiFi stations based on blueprint
+    for (uint32_t i = 0; i < wifiStations.size(); ++i)
+    {
+        Ptr<NetDevice> netDevice = staDevices.Get (i);
+        Ptr<WifiNetDevice> wifiNetDevice = DynamicCast<WifiNetDevice> (netDevice);
          if (wifiNetDevice) {
-             Mac64Address macAddr = ParseMacAddress(macAddresses[i]);
-             wifiNetDevice->SetMacAddress(macAddr);
-          }
+          wifiNetDevice->GetMac()->SetAddress(Mac48Address::ConvertFrom(wifiStations[i].wlanMacAddr));
+        }
+       
+        Ipv4AddressHelper ipv4;
+        ipv4.SetBase (wifiStations[i].wlanIp, "255.255.255.0");
+
+         Ipv4InterfaceContainer interface = ipv4.Assign (NetDeviceContainer(staDevices.Get(i)));
+    
+    
     }
+
     // Print the IP addresses of the WiFi STA nodes
     for (uint32_t i = 0; i < staNodeInterfaces.GetN(); ++i)
     {
@@ -441,10 +453,12 @@ main(int argc, char* argv[])
     clientApps.Start (Seconds (1.0));
     clientApps.Stop (Seconds (10.0));
 
-    //Tracing
+   //Tracing
     phy.EnablePcap ("wifi-ap", apDevices);
     phy.EnablePcap ("wifi-sta", staDevices);
 
+
+  
     /**********
      *  Run    *
      **********/
@@ -452,6 +466,12 @@ main(int argc, char* argv[])
     Simulator::Stop(appStopTime + Hours(1));
 
     NS_LOG_INFO("*** Running simulation...");
+
+    // NetAnim
+    AnimationInterface anim ("SmartHome.xml");
+    anim.SetMaxPktsPerLine (10000);
+
+
     Simulator::Run();
 
     Simulator::Destroy();
@@ -471,34 +491,3 @@ main(int argc, char* argv[])
     return 0;
 }
 
-
-**Explanation:**
-
-1.  **Includes:** Added `<iostream>`, `<fstream>`, `<string>`, `<sstream>`, and `<iomanip>` for input/output, file handling, string manipulation, and formatting.
-2.  **`ParseMacAddress` Function:**
-    *   Takes a MAC address string (e.g., "00:11:22:33:44:55") as input.
-    *   Uses `std::istringstream` to parse the string into individual byte values.
-    *   Converts each byte from hex string to an integer.
-    *   Constructs a `Mac64Address` object from the parsed bytes.
-    *   Includes error handling for parsing failures.
-3. **Node and NetDevice Setup**
-  * A loop iterates through `wifiStaNodes`, retrieves the `NetDevice` object, and casts it to `WifiNetDevice`. If the cast is successful, it means the net device is indeed a wifi net device.
-  * Calls ParseMacAddress to convert string MAC address to `Mac64Address`. 
-   *Sets the MAC address of the `WifiNetDevice`.
-4.  **MAC Address Assignment:**
-    *   A `std::vector<std::string> macAddresses` stores the MAC addresses from your blueprint.
-    *   The code iterates through the `wifiStaNodes` and sets the corresponding MAC address for each device using the `ParseMacAddress` function and  `wifiNetDevice->SetMacAddress(macAddr)`.
-
-**To use this code:**
-
-1.  **Save:** Save the code as a `.cc` file (e.g., `smart_home_simulation.cc`).
-2.  **Compile:** Compile the code using the NS-3 build system (e.g., `waf configure; waf`).
-3.  **Run:** Execute the simulation (e.g., `./build/scratch/smart_home_simulation`).
-
-**Key Changes:**
-
-*   The main focus is on parsing the MAC addresses from the blueprint.
-*   The rest of the code is a direct mapping from your provided blueprint to the NS-3 objects.
-*   You can adjust the `macAddresses` vector if you have different MAC addresses in the future.
-
-This revised code should properly set up your WiFi network with the specified SSIDs, MAC addresses, and IP addresses, as described in your blueprint, allowing you to simulate the smart home scenario. Let me know if you have more questions!

@@ -1,4 +1,6 @@
-To generate the corresponding NS-3 code based on the provided TEST BLUEPRINT, we need to adapt the SAMPLE NS-3 code to match the specifics of the TEST BLUEPRINT. The TEST BLUEPRINT specifies a WiFi Access Point (AP) and multiple WiFi stations with specific configurations. Below is the NS-3 code that sets up the network according to the TEST BLUEPRINT:
+To generate the corresponding NS-3 code based on the provided TEST BLUEPRINT, we need to adapt the SAMPLE NS-3 code to match the specifics of the TEST BLUEPRINT. The TEST BLUEPRINT specifies details for a WiFi Access Point (AP) and multiple WiFi stations. We will configure the NS-3 code to reflect these details.
+
+Here is the NS-3 code adapted to the TEST BLUEPRINT:
 
 
 #include "ns3/core-module.h"
@@ -7,15 +9,22 @@ To generate the corresponding NS-3 code based on the provided TEST BLUEPRINT, we
 #include "ns3/mobility-module.h"
 #include "ns3/wifi-module.h"
 #include "ns3/applications-module.h"
+#include "ns3/yans-wifi-helper.h"
+#include "ns3/ssid.h"
+#include "ns3/on-off-helper.h"
+#include "ns3/packet-sink-helper.h"
+#include "ns3/inet-socket-address.h"
+#include "ns3/ipv4-address-helper.h"
+#include "ns3/internet-stack-helper.h"
 #include "ns3/log.h"
 
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE("SmartHomeAPMyExperiment");
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-    LogComponentEnable("SmartHomeAPMyExperiment", LOG_LEVEL_INFO);
+    LogComponentEnable("SmartHomeAPMyExperiment", LOG_LEVEL_ALL);
 
     // Create nodes
     NodeContainer wifiApNode;
@@ -24,34 +33,34 @@ int main(int argc, char *argv[])
     NodeContainer wifiStaNodes;
     wifiStaNodes.Create(4);
 
-    // Set up WiFi
-    YansWifiChannelHelper channel = YansWifiChannelHelper::Default();
-    YansWifiPhyHelper phy = YansWifiPhyHelper::Default();
-    phy.SetChannel(channel.Create());
+    // Create WiFi channel and physical layer
+    YansWifiChannelHelper wifiChannel = YansWifiChannelHelper::Default();
+    YansWifiPhyHelper wifiPhy = YansWifiPhyHelper::Default();
+    wifiPhy.SetChannel(wifiChannel.Create());
 
-    WifiHelper wifi = WifiHelper::Default();
+    // Create WiFi helper and configure it
+    WifiHelper wifi;
     wifi.SetStandard(WIFI_STANDARD_80211a);
     wifi.SetRemoteStationManager("ns3::AarfWifiManager");
 
-    WifiMacHelper mac;
+    // Create WiFi MAC helper and configure it
+    WifiMacHelper wifiMac;
     Ssid ssid = Ssid("SmartHomeAPMyExperiment");
 
     // Configure AP
-    mac.SetType("ns3::ApWifiMac",
-                "Ssid", SsidValue(ssid),
-                "BeaconGeneration", BooleanValue(true),
-                "BeaconInterval", TimeValue(Seconds(2.5)));
+    wifiMac.SetType("ns3::ApWifiMac",
+                    "Ssid", SsidValue(ssid));
 
     NetDeviceContainer apDevice;
-    apDevice = wifi.Install(phy, mac, wifiApNode);
+    apDevice = wifi.Install(wifiPhy, wifiMac, wifiApNode);
 
     // Configure STA
-    mac.SetType("ns3::StaWifiMac",
-                "Ssid", SsidValue(ssid),
-                "ActiveProbing", BooleanValue(false));
+    wifiMac.SetType("ns3::StaWifiMac",
+                    "Ssid", SsidValue(ssid),
+                    "ActiveProbing", BooleanValue(false));
 
     NetDeviceContainer staDevices;
-    staDevices = wifi.Install(phy, mac, wifiStaNodes);
+    staDevices = wifi.Install(wifiPhy, wifiMac, wifiStaNodes);
 
     // Set up mobility
     MobilityHelper mobility;
@@ -59,13 +68,15 @@ int main(int argc, char *argv[])
 
     Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator>();
     positionAlloc->Add(Vector(0.0, 0.0, 0.0)); // AP position
-    positionAlloc->Add(Vector(10.0, 0.0, 0.0)); // ST-001 position
-    positionAlloc->Add(Vector(20.0, 0.0, 0.0)); // SLB-001 position
-    positionAlloc->Add(Vector(30.0, 0.0, 0.0)); // SDL-001 position
-    positionAlloc->Add(Vector(40.0, 0.0, 0.0)); // SSC-001 position
-
     mobility.SetPositionAllocator(positionAlloc);
     mobility.Install(wifiApNode);
+
+    positionAlloc = CreateObject<ListPositionAllocator>();
+    positionAlloc->Add(Vector(10.0, 10.0, 0.0)); // STA-001 position
+    positionAlloc->Add(Vector(20.0, 20.0, 0.0)); // SLB-001 position
+    positionAlloc->Add(Vector(30.0, 30.0, 0.0)); // SDL-001 position
+    positionAlloc->Add(Vector(40.0, 40.0, 0.0)); // SSC-001 position
+    mobility.SetPositionAllocator(positionAlloc);
     mobility.Install(wifiStaNodes);
 
     // Install internet stack
@@ -90,7 +101,7 @@ int main(int argc, char *argv[])
         std::cout << "IP address of wifiStaNode " << i << ": " << addr << std::endl;
     }
 
-    // Set up applications
+    // Set up UDP applications
     uint16_t sinkPort = 8080;
     Address sinkAddress(InetSocketAddress(Ipv4Address::GetAny(), sinkPort));
     PacketSinkHelper packetSinkHelper("ns3::UdpSocketFactory", sinkAddress);
@@ -98,7 +109,8 @@ int main(int argc, char *argv[])
     sinkApps.Start(Seconds(0.0));
     sinkApps.Stop(Seconds(10.0));
 
-    OnOffHelper onoff("ns3::UdpSocketFactory", InetSocketAddress(Ipv4Address("192.168.1.1"), sinkPort));
+    OnOffHelper onoff("ns3::UdpSocketFactory",
+                      InetSocketAddress(Ipv4Address("192.168.1.1"), sinkPort));
     onoff.SetConstantRate(DataRate("1Mbps"));
     onoff.SetAttribute("PacketSize", UintegerValue(1024));
     ApplicationContainer clientApps = onoff.Install(wifiStaNodes.Get(1));
@@ -106,10 +118,10 @@ int main(int argc, char *argv[])
     clientApps.Stop(Seconds(10.0));
 
     // Enable pcap tracing
-    phy.EnablePcap("wifi-ap", apDevice);
-    phy.EnablePcap("wifi-sta", staDevices);
+    wifiPhy.EnablePcap("wifi-ap", apDevice);
+    wifiPhy.EnablePcap("wifi-sta", staDevices);
 
-    // Run simulation
+    // Run the simulation
     Simulator::Stop(Seconds(10.0));
     Simulator::Run();
     Simulator::Destroy();
@@ -119,29 +131,13 @@ int main(int argc, char *argv[])
 
 
 ### Explanation:
-1. **Node Creation**:
-   - We create one WiFi AP node and four WiFi station nodes.
+1. **Node Creation**: We create nodes for the WiFi AP and WiFi stations.
+2. **WiFi Configuration**: We configure the WiFi channel, physical layer, and MAC layer.
+3. **Mobility**: We set up the mobility models for the nodes.
+4. **Internet Stack**: We install the internet stack on the nodes.
+5. **IP Addressing**: We assign IP addresses to the nodes.
+6. **UDP Applications**: We set up UDP applications for data transmission.
+7. **Tracing**: We enable pcap tracing for the WiFi devices.
+8. **Simulation**: We run the simulation for a specified duration.
 
-2. **WiFi Configuration**:
-   - We set up the WiFi channel, PHY layer, and MAC layer.
-   - The SSID is set to "SmartHomeAPMyExperiment" as specified in the TEST BLUEPRINT.
-
-3. **Mobility**:
-   - We use a constant position mobility model to place the nodes at specific positions.
-
-4. **Internet Stack**:
-   - We install the internet stack on all nodes.
-
-5. **IP Addressing**:
-   - We assign IP addresses to the WiFi AP and stations based on the TEST BLUEPRINT.
-
-6. **Applications**:
-   - We set up a UDP packet sink on one of the WiFi stations and a UDP client on another station to simulate data transmission.
-
-7. **Tracing**:
-   - We enable pcap tracing for the WiFi AP and stations.
-
-8. **Simulation**:
-   - We run the simulation for 10 seconds and then destroy the simulation environment.
-
-This code sets up a WiFi network with one access point and four stations, matching the specifics of the TEST BLUEPRINT.
+This code sets up a WiFi network with one access point and four stations, matching the details provided in the TEST BLUEPRINT.

@@ -4,48 +4,101 @@
             TEST BLUEPRINT:
 
             {
-    "name": "Smart Agriculture",
-    "description": "A network blueprint for smart agriculture with various sensors and actuators.",
-    "components": [
+  "name": "Smart Agriculture",
+  "description": "A network blueprint for smart agriculture with various sensors and actuators.",
+  "components":{
+    "lora_gateways": [
+      {
+        "name": "GW-RAK-ROOF",
+        "description": "Gateway Building 9",
+        "latitude": 38.10351066811096,
+        "longitude": 13.3459399220741,
+        "altitude": 30,
+        "gateway_id":"05b0da50148fd6b1"
+      }    
+    ],
+    "lora_devices": [
       {
         "type": "Farm Management System",
-        "id": "FMS-001",
-        "location": "Farm Office",
-        "responsibilities": ["Crop Monitoring", "Irrigation Control", "Data Analysis"]
+        "name":"FMS-001",
+        "location": "Farm Office",      
+        "responsibilities": ["Crop Monitoring", "Irrigation Control", "Data Analysis"],
+        "dev_eui":"629b560f15ed4565",
+        "latitude": 38.10863528672466,
+        "longitude": 13.34050633101243,
+        "application_key":"56a31fdf2a92f61bbc3c0e07bbd0f7d3"
       },
       {
         "type": "Soil Moisture Sensor",
-        "id": "SMS-001",
+        "name":"SMS-001",      
         "location": "Field A",
+        "dev_eui":"96b18ec6b841f6b6",
+        "application_key":"5d43d73ea0b4095ca8162c3633fe498",
         "sensor_type": "Capacitive",
-        "data_rate": "1 Kbps"
+        "data_rate": "1 Kbps",
+        "latitude": 38.10863528672466,
+        "longitude": 13.34050633101243
+
       },
       {
         "type": "Weather Station",
-        "id": "WS-001",
+        "name":"WS-001",      
         "location": "Field B",
+        "dev_eui":"4af31c0e9fa1d5de", 
+        "latitude": 38.10863528672466,
+        "longitude": 13.34050633101243,       
+        "application_key":"36ad40bd675a8a68ad887c15bee482c4",
         "parameters": ["Temperature", "Humidity", "Wind Speed"],
         "data_rate": "5 Kbps"
+        
       },
       {
         "type": "Irrigation Controller",
-        "id": "IC-001",
+        "name":"IC-001",      
         "location": "Field C",
+        "dev_eui":"197ba985d7822c4a",
+        "latitude": 38.10863528672466,
+        "longitude": 13.34050633101243,
+        "application_key":"962d281e76f988fc326bd30c6f617535",
         "control_type": "Automatic",
         "water_flow_rate": "10 L/min"
       },
       {
         "type": "Drone",
-        "id": "DR-001",
+        "name":"DR-001",      
         "location": "Aerial",
+        "dev_eui":"7c3142d87f67a1f3",
+        "latitude": 38.10863528672466,
+        "longitude": 13.34050633101243,
+        "application_key":"dc7063e10207358949a771e7053f598",
         "purpose": "Crop Surveillance",
         "flight_time": "30 minutes"
+        
       }
     ],
-    "network_type": "LoRaWAN",
-    "protocols": ["LoRaWAN"]
-  }
+    "wifi_ap":
+    [
+      {
+
+      }
+    ],
+    "wifi_stations":[
+      {
+
+      },
+      {
+
+      },
+      {
+
+      }
+    ]
+    
+}
   
+}
+
+
 
             SAMPLE BLUEPRINT:
 

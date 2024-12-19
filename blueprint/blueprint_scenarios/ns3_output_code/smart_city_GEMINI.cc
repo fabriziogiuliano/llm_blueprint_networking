@@ -28,23 +28,10 @@
 #include "ns3/ssid.h"
 #include "ns3/internet-stack-helper.h"
 #include "ns3/ipv4-address-helper.h"
+#include "ns3/string.h"
 
 #include <algorithm>
 #include <ctime>
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <sstream>
-
-#include "ns3/core-module.h"
-#include "ns3/network-module.h"
-#include "ns3/mobility-module.h"
-#include "ns3/config-store-module.h"
-#include "ns3/wifi-module.h"
-#include "ns3/internet-module.h"
-#include "ns3/applications-module.h"
-
-
 
 using namespace ns3;
 using namespace lorawan;
@@ -54,8 +41,8 @@ NS_LOG_COMPONENT_DEFINE("SmartCityExample");
 // Network settings
 int nDevices = 2;                 //!< Number of end device nodes to create
 int nGateways = 1;                  //!< Number of gateway nodes to create
-int nWiFiAPNodes = 1;
-int nWiFiStaNodes = 1;
+int nWiFiAPNodes=1;
+int nWiFiStaNodes=1;
 double radiusMeters = 1000;         //!< Radius (m) of the deployment
 double simulationTimeSeconds = 600; //!< Scenario duration (s) in simulated time
 
@@ -68,67 +55,6 @@ int appPeriodSeconds = 60; //!< Duration (s) of the inter-transmission time of e
 // Output control
 bool printBuildingInfo = true; //!< Whether to print building information
 
-struct LoraDeviceConfig {
-    std::string dev_eui;
-    std::string name;
-    std::string application_key;
-    std::string type;
-    std::string application;
-    std::string location;
-    std::string sensor_type;
-    int sf;
-    double latitude;
-    double longitude;
-    std::string data_flow;
-};
-struct WifiAPConfig
-{
-  std::string type;
-  std::string id;
-  std::string ssid;
-  std::string wpa_passphrase;
-  std::string wpa_key_mgmt;
-  std::string wlan_IP;
-  std::string eth_IP;
-  std::string application;
-  std::string location;
-  std::string protocol;
-    double latitude;
-    double longitude;
-};
-struct WifiSTAConfig
-{
-    std::string id;
-    std::string ssid;
-    std::string wpa_passphrase;
-    std::string wpa_key_mgmt;
-    std::string wlan_IP;
-    std::string wlan_MAC_ADDR;
-    std::string eth_IP;
-    std::string user;
-    std::string password;
-    std::string type;
-    std::string application;
-    std::string location;
-    std::string sensor_type;
-    std::string protocol;
-    std::string data_flow;
-    std::string ip_address;
-    double latitude;
-    double longitude;
-
-};
-struct LoraGatewayConfig {
-        std::string name;
-        std::string description;
-        double latitude;
-        double longitude;
-        std::string gateway_id;
-        std::string protocol;
-        std::string application;
-        std::string location;
-
-};
 int
 main(int argc, char* argv[])
 {
@@ -144,212 +70,7 @@ main(int argc, char* argv[])
 
     // Set up logging
     LogComponentEnable("SmartCityExample", LOG_LEVEL_ALL);
-    
-    // Read JSON configuration from file
-     std::ifstream file("blueprint.json");
-    if (!file.is_open()) {
-        std::cerr << "Failed to open blueprint.json" << std::endl;
-        return 1;
-    }
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    std::string jsonString = buffer.str();
-    file.close();
 
-    // Parse JSON using a simple method (you might want to use a proper JSON library)
-    std::vector<LoraDeviceConfig> loraDeviceConfigs;
-    std::vector<WifiAPConfig> wifiAPConfigs;
-    std::vector<WifiSTAConfig> wifiSTAConfigs;
-    std::vector<LoraGatewayConfig> loraGatewayConfigs;
-
-    size_t pos = jsonString.find("\"lora_devices\":");
-    if (pos != std::string::npos) {
-        size_t start = jsonString.find("[", pos) + 1;
-        size_t end = jsonString.find("]", start);
-        if (start != std::string::npos && end != std::string::npos)
-        {
-            std::string devicesJson = jsonString.substr(start, end - start);
-            std::stringstream ss(devicesJson);
-            std::string deviceJson;
-            while(std::getline(ss, deviceJson, '{'))
-            {
-                if (deviceJson.empty()) continue;
-                std::stringstream ss_dev(deviceJson);
-                std::string token;
-                LoraDeviceConfig config;
-                while(std::getline(ss_dev, token, ','))
-                {
-                    size_t colon_pos = token.find(":");
-                    if(colon_pos != std::string::npos)
-                    {
-                        std::string key = token.substr(0, colon_pos);
-                        std::string value = token.substr(colon_pos+1);
-                        
-                         key.erase(std::remove(key.begin(), key.end(), '"'), key.end());
-                        value.erase(std::remove(value.begin(), value.end(), '"'), value.end());
-                        
-                        if(key == "dev_eui") config.dev_eui=value;
-                        if(key == "name") config.name=value;
-                        if(key == "application_key") config.application_key = value;
-                        if(key == "type") config.type =value;
-                        if(key == "application") config.application = value;
-                        if(key == "location") config.location =value;
-                        if(key == "sensor_type") config.sensor_type =value;
-                        if(key == "SF") config.sf = std::stoi(value);
-                        if(key == "latitude") config.latitude = std::stod(value);
-                        if(key == "longitude") config.longitude = std::stod(value);
-                         if(key == "data_flow") config.data_flow =value;
-
-
-                    }
-                }
-
-                loraDeviceConfigs.push_back(config);
-            }
-        }
-
-    }
-     pos = jsonString.find("\"wifi_ap\":");
-    if (pos != std::string::npos) {
-        size_t start = jsonString.find("[", pos) + 1;
-        size_t end = jsonString.find("]", start);
-            if (start != std::string::npos && end != std::string::npos)
-        {
-            std::string devicesJson = jsonString.substr(start, end - start);
-            std::stringstream ss(devicesJson);
-            std::string deviceJson;
-            while(std::getline(ss, deviceJson, '{'))
-            {
-                if (deviceJson.empty()) continue;
-                std::stringstream ss_dev(deviceJson);
-                std::string token;
-                WifiAPConfig config;
-                while(std::getline(ss_dev, token, ','))
-                {
-                    size_t colon_pos = token.find(":");
-                     if(colon_pos != std::string::npos)
-                    {
-                        std::string key = token.substr(0, colon_pos);
-                        std::string value = token.substr(colon_pos+1);
-                         key.erase(std::remove(key.begin(), key.end(), '"'), key.end());
-                        value.erase(std::remove(value.begin(), value.end(), '"'), value.end());
-                        if(key == "type") config.type=value;
-                        if(key == "id") config.id=value;
-                        if(key == "ssid") config.ssid = value;
-                        if(key == "wpa_passphrase") config.wpa_passphrase =value;
-                        if(key == "wpa_key_mgmt") config.wpa_key_mgmt = value;
-                        if(key == "wlan_IP") config.wlan_IP =value;
-                        if(key == "eth_IP") config.eth_IP =value;
-                        if(key == "application") config.application=value;
-                         if(key == "location") config.location=value;
-                         if(key == "protocol") config.protocol = value;
-                          if(key == "latitude") config.latitude = std::stod(value);
-                         if(key == "longitude") config.longitude = std::stod(value);
-
-
-                    }
-                }
-
-                wifiAPConfigs.push_back(config);
-            }
-        }
-
-    }
-    
-      pos = jsonString.find("\"wifi_stations\":");
-    if (pos != std::string::npos) {
-        size_t start = jsonString.find("[", pos) + 1;
-        size_t end = jsonString.find("]", start);
-           if (start != std::string::npos && end != std::string::npos)
-        {
-            std::string devicesJson = jsonString.substr(start, end - start);
-            std::stringstream ss(devicesJson);
-            std::string deviceJson;
-            while(std::getline(ss, deviceJson, '{'))
-            {
-                if (deviceJson.empty()) continue;
-                std::stringstream ss_dev(deviceJson);
-                std::string token;
-                WifiSTAConfig config;
-                while(std::getline(ss_dev, token, ','))
-                {
-                    size_t colon_pos = token.find(":");
-                     if(colon_pos != std::string::npos)
-                    {
-                         std::string key = token.substr(0, colon_pos);
-                        std::string value = token.substr(colon_pos+1);
-                         key.erase(std::remove(key.begin(), key.end(), '"'), key.end());
-                        value.erase(std::remove(value.begin(), value.end(), '"'), value.end());
-                        if(key == "id") config.id=value;
-                        if(key == "ssid") config.ssid=value;
-                        if(key == "wpa_passphrase") config.wpa_passphrase=value;
-                         if(key == "wpa_key_mgmt") config.wpa_key_mgmt=value;
-                        if(key == "wlan_IP") config.wlan_IP = value;
-                        if(key == "wlan_MAC_ADDR") config.wlan_MAC_ADDR = value;
-                         if(key == "eth_IP") config.eth_IP =value;
-                        if(key == "user") config.user=value;
-                        if(key == "password") config.password=value;
-                        if(key == "type") config.type =value;
-                        if(key == "application") config.application=value;
-                        if(key == "location") config.location =value;
-                        if(key == "sensor_type") config.sensor_type =value;
-                         if(key == "protocol") config.protocol = value;
-                         if(key == "data_flow") config.data_flow=value;
-                         if(key == "ip_address") config.ip_address = value;
-                          if(key == "latitude") config.latitude = std::stod(value);
-                         if(key == "longitude") config.longitude = std::stod(value);
-                    }
-
-                }
-
-                wifiSTAConfigs.push_back(config);
-            }
-        }
-    }
-       pos = jsonString.find("\"lora_gateways\":");
-    if (pos != std::string::npos) {
-        size_t start = jsonString.find("[", pos) + 1;
-        size_t end = jsonString.find("]", start);
-          if (start != std::string::npos && end != std::string::npos)
-        {
-             std::string devicesJson = jsonString.substr(start, end - start);
-             std::stringstream ss(devicesJson);
-            std::string deviceJson;
-            while(std::getline(ss, deviceJson, '{'))
-            {
-                 if (deviceJson.empty()) continue;
-                std::stringstream ss_dev(deviceJson);
-                std::string token;
-                 LoraGatewayConfig config;
-                 while(std::getline(ss_dev, token, ','))
-                {
-                    size_t colon_pos = token.find(":");
-                     if(colon_pos != std::string::npos)
-                    {
-                        std::string key = token.substr(0, colon_pos);
-                        std::string value = token.substr(colon_pos+1);
-                         key.erase(std::remove(key.begin(), key.end(), '"'), key.end());
-                        value.erase(std::remove(value.begin(), value.end(), '"'), value.end());
-                        if(key == "name") config.name=value;
-                        if(key == "description") config.description=value;
-                        if(key == "latitude") config.latitude = std::stod(value);
-                        if(key == "longitude") config.longitude = std::stod(value);
-                        if(key == "gateway_id") config.gateway_id=value;
-                        if(key == "protocol") config.protocol=value;
-                        if(key == "application") config.application=value;
-                        if(key == "location") config.location=value;
-                    }
-                 }
-                   loraGatewayConfigs.push_back(config);
-            }
-        }
-    }
-    nDevices = loraDeviceConfigs.size();
-    nGateways= loraGatewayConfigs.size();
-    nWiFiAPNodes = wifiAPConfigs.size();
-    nWiFiStaNodes = wifiSTAConfigs.size();
-    
-    
     /***********
      *  Setup  *
      ***********/
@@ -431,18 +152,15 @@ main(int argc, char* argv[])
     // Assign a mobility model to each node
     loramobility.Install(endDevices);
 
-    // Make it so that nodes are at a certain height > 0
-   int i = 0;
-    for (auto j = endDevices.Begin(); j != endDevices.End(); ++j,++i)
+        // Make it so that nodes are at a certain height > 0
+    for (auto j = endDevices.Begin(); j != endDevices.End(); ++j)
     {
-       
         Ptr<MobilityModel> mobility = (*j)->GetObject<MobilityModel>();
         Vector position = mobility->GetPosition();
-        position.x= loraDeviceConfigs[i].latitude;
-        position.y= loraDeviceConfigs[i].longitude;
         position.z = 1.2;
         mobility->SetPosition(position);
     }
+
 
     // Create the LoraNetDevices of the end devices
     uint8_t nwkId = 54;
@@ -477,13 +195,10 @@ main(int argc, char* argv[])
 
     Ptr<ListPositionAllocator> allocator = CreateObject<ListPositionAllocator>();
     // Make it so that nodes are at a certain height > 0
-    for (uint32_t i =0; i< loraGatewayConfigs.size();i++)
-    {
-        allocator->Add(Vector(loraGatewayConfigs[i].latitude,loraGatewayConfigs[i].longitude, 15.0));
-    }
-
+    allocator->Add(Vector(38.10351066811096, 13.3459399220741, 15.0));
     loramobility.SetPositionAllocator(allocator);
     loramobility.Install(gateways);
+
 
     // Create a netdevice for each gateway
     phyHelper.SetDeviceType(LoraPhyHelper::GW);
@@ -617,11 +332,11 @@ main(int argc, char* argv[])
 
     WifiMacHelper mac;
     Ssid ssid = Ssid ("SmartCityAP");
-    
 
     mac.SetType ("ns3::StaWifiMac",
                 "Ssid", SsidValue (ssid),
                 "ActiveProbing", BooleanValue (false));
+
     NetDeviceContainer staDevices;
     staDevices = wifi.Install (phy, mac, wifiStaNodes);
 
@@ -635,18 +350,12 @@ main(int argc, char* argv[])
     wifimobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 
     Ptr<ListPositionAllocator> allocatorAPWiFi = CreateObject<ListPositionAllocator>();
-    for(uint32_t i = 0; i < wifiAPConfigs.size(); i++)
-    {
-         allocatorAPWiFi->Add(Vector(wifiAPConfigs[i].latitude, wifiAPConfigs[i].longitude, 1.5));
-    }
+    allocatorAPWiFi->Add(Vector(38.10351066811096, 13.3459399220741, 1.5));
     wifimobility.SetPositionAllocator(allocatorAPWiFi);
     wifimobility.Install(wifiApNode);
 
     Ptr<ListPositionAllocator> allocatorStaWiFi = CreateObject<ListPositionAllocator>();
-    for (uint32_t i = 0; i < wifiSTAConfigs.size();i++)
-    {
-       allocatorStaWiFi->Add(Vector(wifiSTAConfigs[i].latitude, wifiSTAConfigs[i].longitude, 1.5));
-    }
+    allocatorStaWiFi->Add(Vector(38.10351066811096, 13.3459399220741, 1.5));   
     wifimobility.SetPositionAllocator(allocatorStaWiFi);
     wifimobility.Install(wifiStaNodes);
 
@@ -675,15 +384,15 @@ main(int argc, char* argv[])
     PacketSinkHelper packetSinkHelper ("ns3::UdpSocketFactory", sinkAddress);
     ApplicationContainer sinkApps = packetSinkHelper.Install (wifiStaNodes.Get (0));
     sinkApps.Start (Seconds (0.0));
-    sinkApps.Stop (Seconds (10.0));
+    sinkApps.Stop (Seconds (simulationTimeSeconds));
 
     OnOffHelper onoff ("ns3::UdpSocketFactory",
-                        InetSocketAddress (Ipv4Address ("192.168.1.1"), sinkPort));
+                        InetSocketAddress (apNodeInterface.GetAddress(0), sinkPort));
     onoff.SetConstantRate (DataRate ("1Mbps"));
     onoff.SetAttribute ("PacketSize", UintegerValue (1024));
-    ApplicationContainer clientApps = onoff.Install (wifiStaNodes.Get (0));
+    ApplicationContainer clientApps = onoff.Install (wifiStaNodes.Get(0));
     clientApps.Start (Seconds (1.0));
-    clientApps.Stop (Seconds (10.0));
+    clientApps.Stop (Seconds (simulationTimeSeconds));
 
     //Tracing
     phy.EnablePcap ("wifi-ap", apDevices);
@@ -715,3 +424,73 @@ main(int argc, char* argv[])
     return 0;
 }
 
+**Explanation:**
+
+1.  **Includes:** Includes the necessary NS-3 header files for LoRaWAN, WiFi, and other functionalities.
+2.  **Logging:** Sets up logging for the SmartCityExample component.
+3.  **Network Settings:** Defines variables for the number of devices, gateways, simulation time, radius, and application period.
+4.  **Main Function:**
+    *   **Command Line Arguments:** Parses command-line arguments to configure simulation parameters.
+    *   **Setup:** Initializes the simulation environment.
+    *   **LoRa Channel:** Creates the LoRa channel with the log distance propagation loss model (optionally with correlated shadowing and building penetration loss).
+    *   **LoRa Helpers:** Creates the necessary helpers for LoRa PHY, MAC, and network server.
+    *   **LoRa End Devices:**
+        *   Creates `nDevices` end device nodes.
+        *   Assigns a constant position mobility model.
+        *   Creates LoRa network devices for the end devices.
+    *   **LoRa Gateways:**
+        *   Creates `nGateways` gateway nodes.
+        *   Assigns a specific position to the gateway
+        *    Creates LoRa network devices for the gateway.
+    *   **Buildings:**
+        *   Creates a grid of buildings (if `realisticChannelModel` is enabled).
+    *   **Spreading Factors:** Sets the spreading factors for the end devices.
+    *   **End Device Applications:** Installs the periodic sender application on the end devices to send data periodically.
+    *   **Network Server:** Creates the network server node, point-to-point links, and installs the network server helper.
+    *    **WiFi Nodes**
+       *   Creates `nWiFiStaNodes` station nodes.
+        *   Creates `nWiFiAPNodes` access point node.
+        *   Sets up the WiFi channel and PHY layer.
+        *   Sets up the WiFi MAC layer for AP and stations with the specified SSID.
+        *   Assigns positions for the AP and stations.
+        *   Installs the TCP/IP stack.
+        *   Assigns IP addresses.
+        *   Creates a UDP sink on the staNodes[0] to receive data
+        *   Creates an OnOff application on staNodes[0] to generate traffic at a constant rate of 1Mbps
+        *   Enables packet capturing for both access point and stations
+    *   **Simulation Run:**
+        *   Starts the simulation and runs until the specified time.
+        *   Destroys the simulator.
+    *   **Results:** Prints the total number of MAC packets to the console.
+
+**Key Changes Made:**
+
+*   **LoRa Devices:**
+    *   The number of devices was set to 2 (nDevices = 2).
+    *   Added constant position mobility.
+    *   Devices will be positioned randomly in the circle according to the radius.
+*    **LoRa Gateways**
+    *   The gateway's location has been set manually.
+*   **WiFi Access Point:**
+    *   Added `nWiFiAPNodes` = 1 for one Access Point.
+    *   The position of the Access Point has been manually set.
+    *   The SSID has been set to "SmartCityAP".
+*   **WiFi Stations:**
+    *   Added `nWiFiStaNodes` = 1 for one station.
+    *   The position of the station has been manually set.
+    *   The SSID is "SmartCityAP", matching the Access Point.
+     *   Added traffic generation using the OnOff Helper.
+
+**How to Compile and Run:**
+
+1.  **Save:** Save the code as `smart-city-example.cc`.
+2.  **Compile:**
+    bash
+    ./waf configure
+    ./waf build
+    
+3.  **Run:**
+    bash
+    ./waf --run "smart-city-example"
+    
+**Remember to adjust the `nDevices` , `nGateways` , `nWiFiAPNodes` and `nWiFiStaNodes` variables and the position allocations for the specific number of nodes you want to simulate.**

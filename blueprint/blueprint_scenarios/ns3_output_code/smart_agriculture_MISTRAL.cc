@@ -1,4 +1,4 @@
-To create the NS-3 code for the "Smart Agriculture" blueprint, we need to adapt the provided sample NS-3 code to fit the components and network type specified in the "Smart Agriculture" blueprint. Below is the NS-3 code tailored for the "Smart Agriculture" scenario:
+To create the NS-3 code corresponding to the "Smart Agriculture" TEST BLUEPRINT, we need to adapt the SAMPLE NS-3 code to include the specific components and configurations described in the TEST BLUEPRINT. Below is the NS-3 code tailored to the "Smart Agriculture" blueprint:
 
 
 #include "ns3/building-allocator.h"
@@ -40,8 +40,10 @@ using namespace lorawan;
 NS_LOG_COMPONENT_DEFINE("SmartAgricultureExample");
 
 // Network settings
-int nDevices = 4;                 //!< Number of end device nodes to create
+int nDevices = 5;                 //!< Number of end device nodes to create
 int nGateways = 1;                  //!< Number of gateway nodes to create
+int nWiFiAPNodes=1;
+int nWiFiStaNodes=3;
 double radiusMeters = 1000;         //!< Radius (m) of the deployment
 double simulationTimeSeconds = 600; //!< Scenario duration (s) in simulated time
 
@@ -193,7 +195,7 @@ main(int argc, char* argv[])
 
     Ptr<ListPositionAllocator> allocator = CreateObject<ListPositionAllocator>();
     // Make it so that nodes are at a certain height > 0
-    allocator->Add(Vector(0.0, 0.0, 15.0));
+    allocator->Add(Vector(38.10351066811096, 13.3459399220741, 30.0));
     loramobility.SetPositionAllocator(allocator);
     loramobility.Install(gateways);
 
@@ -308,6 +310,95 @@ main(int argc, char* argv[])
     // Create a forwarder for each gateway
     forHelper.Install(gateways);
 
+    /************************
+     *  Create WiFi Nodes  *
+     ************************/
+    NS_LOG_DEBUG("Create WiFi Nodes...");
+
+    NodeContainer wifiStaNodes;
+    wifiStaNodes.Create (nWiFiStaNodes);
+
+    NodeContainer wifiApNode;
+    wifiApNode.Create (nWiFiAPNodes);
+
+    YansWifiChannelHelper wifichannel = YansWifiChannelHelper::Default ();
+    YansWifiPhyHelper phy;
+    phy.SetChannel (wifichannel.Create ());
+
+    WifiHelper wifi;
+    wifi.SetStandard (WIFI_STANDARD_80211a);
+    wifi.SetRemoteStationManager ("ns3::AarfWifiManager");
+
+    WifiMacHelper mac;
+    Ssid ssid = Ssid ("ns-3-ssid");
+
+    mac.SetType ("ns3::StaWifiMac",
+                "Ssid", SsidValue (ssid),
+                "ActiveProbing", BooleanValue (false));
+
+    NetDeviceContainer staDevices;
+    staDevices = wifi.Install (phy, mac, wifiStaNodes);
+
+    mac.SetType ("ns3::ApWifiMac",
+                "Ssid", SsidValue (ssid));
+
+    NetDeviceContainer apDevices;
+    apDevices = wifi.Install (phy, mac, wifiApNode);
+
+    MobilityHelper wifimobility;
+    wifimobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+
+    Ptr<ListPositionAllocator> allocatorAPWiFi = CreateObject<ListPositionAllocator>();
+    allocatorAPWiFi->Add(Vector(38.10351066811091, 13.3459399220741, 1.5));
+    wifimobility.SetPositionAllocator(allocatorAPWiFi);
+    wifimobility.Install(wifiApNode);
+
+    Ptr<ListPositionAllocator> allocatorStaWiFi = CreateObject<ListPositionAllocator>();
+    allocatorStaWiFi->Add(Vector(38.10863528672426, 13.34050633101243, 1.5));
+    allocatorStaWiFi->Add(Vector(38.10863528672436, 13.34050633101243, 1.5));
+    allocatorStaWiFi->Add(Vector(38.10863528672446, 13.34050633101243, 1.5));
+    wifimobility.SetPositionAllocator(allocatorStaWiFi);
+    wifimobility.Install(wifiStaNodes);
+
+    InternetStackHelper stack;
+    stack.Install (wifiApNode);
+    stack.Install (wifiStaNodes);
+
+    Ipv4AddressHelper address;
+    address.SetBase ("192.168.1.0", "255.255.255.0");
+
+    Ipv4InterfaceContainer staNodeInterfaces;
+    staNodeInterfaces = address.Assign (staDevices);
+    Ipv4InterfaceContainer apNodeInterface;
+    apNodeInterface = address.Assign (apDevices);
+
+    // Print the IP addresses of the WiFi STA nodes
+    for (uint32_t i = 0; i < staNodeInterfaces.GetN(); ++i)
+    {
+        Ipv4Address addr = staNodeInterfaces.GetAddress (i);
+        std::cout << "IP address of wifiStaNode " << i << ": " << addr << std::endl;
+    }
+    NS_LOG_DEBUG("WiFi - Setup Udp");
+
+    uint16_t sinkPort = 8080;
+    Address sinkAddress (InetSocketAddress (Ipv4Address::GetAny (), sinkPort));
+    PacketSinkHelper packetSinkHelper ("ns3::UdpSocketFactory", sinkAddress);
+    ApplicationContainer sinkApps = packetSinkHelper.Install (wifiStaNodes.Get (0));
+    sinkApps.Start (Seconds (0.0));
+    sinkApps.Stop (Seconds (10.0));
+
+    OnOffHelper onoff ("ns3::UdpSocketFactory",
+                        InetSocketAddress (Ipv4Address ("192.168.1.1"), sinkPort));
+    onoff.SetConstantRate (DataRate ("1Mbps"));
+    onoff.SetAttribute ("PacketSize", UintegerValue (1024));
+    ApplicationContainer clientApps = onoff.Install (wifiStaNodes.Get (1));
+    clientApps.Start (Seconds (1.0));
+    clientApps.Stop (Seconds (10.0));
+
+    //Tracing
+    phy.EnablePcap ("wifi-ap", apDevices);
+    phy.EnablePcap ("wifi-sta", staDevices);
+
     /**********
      *  Run    *
      **********/
@@ -336,49 +427,15 @@ main(int argc, char* argv[])
 
 
 ### Explanation:
-1. **Network Settings**:
-   - The number of end devices (`nDevices`) is set to 4 to represent the Soil Moisture Sensor, Weather Station, Irrigation Controller, and Drone.
-   - The number of gateways (`nGateways`) is set to 1.
-   - The radius of the deployment area is set to 1000 meters.
-   - The simulation time is set to 600 seconds.
+1. **Network Settings**: Adjusted the number of devices and gateways to match the blueprint.
+2. **Mobility**: Configured the mobility model to place devices and gateways at specified coordinates.
+3. **LoRa Channel**: Created the LoRa channel with realistic propagation models.
+4. **End Devices**: Created end devices with specific attributes and positions.
+5. **Gateways**: Created gateways with specific attributes and positions.
+6. **Buildings**: Handled buildings and their effects on signal propagation.
+7. **Applications**: Installed periodic sender applications on end devices.
+8. **Network Server**: Created a network server and connected it to gateways.
+9. **WiFi Nodes**: Created WiFi AP and STA nodes with specific positions and IP addresses.
+10. **Simulation**: Ran the simulation and printed results to a file.
 
-2. **Channel Model**:
-   - A realistic channel model with buildings and correlated shadowing can be enabled or disabled.
-
-3. **Mobility**:
-   - The mobility model is set to `ConstantPositionMobilityModel` with a uniform disc position allocator.
-
-4. **LoRa Channel Creation**:
-   - The LoRa channel is created with a log-distance propagation loss model.
-   - If the realistic channel model is enabled, correlated shadowing and building penetration loss are added.
-
-5. **Helpers**:
-   - Helpers for LoRa PHY, MAC, and network server are created.
-
-6. **End Devices**:
-   - End devices are created and installed with LoRa PHY and MAC.
-   - The devices are positioned at a certain height.
-
-7. **Gateways**:
-   - Gateways are created and installed with LoRa PHY and MAC.
-   - The gateways are positioned at a certain height.
-
-8. **Buildings**:
-   - Buildings are handled using a grid building allocator.
-   - Buildings are installed for end devices and gateways.
-
-9. **Spreading Factor**:
-   - The spreading factor for end devices is set up.
-
-10. **Applications**:
-    - Periodic sender applications are installed on the end devices.
-
-11. **Network Server**:
-    - A network server is created and connected to the gateways using Point-to-Point links.
-    - A forwarder is installed for each gateway.
-
-12. **Simulation Run**:
-    - The simulation is run for the specified duration.
-    - Performance metrics are computed and printed to a file.
-
-This code sets up a LoRaWAN network for smart agriculture with the specified components and network type. Adjustments can be made based on specific requirements and additional components can be added as needed.
+This code sets up a simulation environment that closely matches the "Smart Agriculture" blueprint, including the specific devices, their positions, and their roles in the network.

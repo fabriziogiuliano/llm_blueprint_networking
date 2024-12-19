@@ -28,30 +28,88 @@
 #include "ns3/ssid.h"
 #include "ns3/internet-stack-helper.h"
 #include "ns3/ipv4-address-helper.h"
-#include "ns3/uinteger.h"
 
 #include <algorithm>
 #include <ctime>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <vector>
+
+#include "ns3/json.h"
+
 
 using namespace ns3;
 using namespace lorawan;
 
-NS_LOG_COMPONENT_DEFINE("SmartAgricultureExample");
+NS_LOG_COMPONENT_DEFINE("SmartAgriculture");
 
 // Network settings
-int nDevices = 4;                 //!< Number of end device nodes to create
+int nDevices = 5;                 //!< Number of end device nodes to create
 int nGateways = 1;                  //!< Number of gateway nodes to create
+int nWiFiAPNodes = 0;
+int nWiFiStaNodes = 0;
 double radiusMeters = 1000;         //!< Radius (m) of the deployment
 double simulationTimeSeconds = 600; //!< Scenario duration (s) in simulated time
 
 // Channel model
-bool realisticChannelModel = false; //!< Whether to use a more realistic channel model with
+bool realisticChannelModel = true; //!< Whether to use a more realistic channel model with
                                     //!< Buildings and correlated shadowing
 
 int appPeriodSeconds = 60; //!< Duration (s) of the inter-transmission time of end devices
 
 // Output control
 bool printBuildingInfo = true; //!< Whether to print building information
+
+// Custom Structs for Blueprint
+
+struct LoraGateway {
+    std::string name;
+    std::string description;
+    double latitude;
+    double longitude;
+    double altitude;
+    std::string gateway_id;
+};
+
+struct LoraDevice {
+    std::string type;
+    std::string name;
+    std::string location;
+    std::vector<std::string> responsibilities;
+    std::string dev_eui;
+    double latitude;
+    double longitude;
+    std::string application_key;
+    std::string sensor_type;
+    std::string data_rate;
+    std::vector<std::string> parameters;
+    std::string control_type;
+    std::string water_flow_rate;
+    std::string purpose;
+    std::string flight_time;
+};
+
+
+struct WiFiAP {
+    std::string id;
+    std::string application;
+    std::string location;
+    std::string protocol;
+    std::string ip_address;
+    double latitude;
+    double longitude;
+};
+
+
+struct WiFiStation {
+  std::string id;
+  std::string location;
+  std::string protocol;
+  std::string ip_address;
+  double latitude;
+  double longitude;
+};
 
 int
 main(int argc, char* argv[])
@@ -67,8 +125,143 @@ main(int argc, char* argv[])
     cmd.Parse(argc, argv);
 
     // Set up logging
-    LogComponentEnable("SmartAgricultureExample", LOG_LEVEL_ALL);
+    LogComponentEnable("SmartAgriculture", LOG_LEVEL_ALL);
+    
 
+    /******************
+     * Read JSON File *
+     ******************/
+    NS_LOG_DEBUG("Reading JSON File...");
+    std::ifstream file("blueprint.json");
+    if (!file.is_open()) {
+        std::cerr << "Error: Could not open blueprint.json" << std::endl;
+        return 1;
+    }
+
+    Json::Value root;
+    file >> root;
+    file.close();
+
+    // Extract and store data from JSON
+    std::vector<LoraGateway> loraGateways;
+    for (const auto& gw : root["components"]["lora_gateways"]) {
+        LoraGateway gateway;
+        gateway.name = gw["name"].asString();
+        gateway.description = gw["description"].asString();
+        gateway.latitude = gw["latitude"].asDouble();
+        gateway.longitude = gw["longitude"].asDouble();
+        gateway.altitude = gw["altitude"].asDouble();
+        gateway.gateway_id = gw["gateway_id"].asString();
+        loraGateways.push_back(gateway);
+    }
+
+    std::vector<LoraDevice> loraDevices;
+    for (const auto& dev : root["components"]["lora_devices"]) {
+        LoraDevice device;
+        device.type = dev["type"].asString();
+        device.name = dev["name"].asString();
+        device.location = dev["location"].asString();
+
+         // Handle the responsibilities array (if present)
+        if (dev.isMember("responsibilities")) {
+           for (const auto& resp : dev["responsibilities"]) {
+                device.responsibilities.push_back(resp.asString());
+            }
+         }
+        device.dev_eui = dev["dev_eui"].asString();
+        device.latitude = dev["latitude"].asDouble();
+        device.longitude = dev["longitude"].asDouble();
+       
+        if (dev.isMember("application_key")) {
+             device.application_key = dev["application_key"].asString();
+        }
+        if (dev.isMember("sensor_type")) {
+            device.sensor_type = dev["sensor_type"].asString();
+         }
+        if (dev.isMember("data_rate")) {
+           device.data_rate = dev["data_rate"].asString();
+        }
+         if (dev.isMember("parameters")) {
+             for (const auto& param : dev["parameters"]) {
+                 device.parameters.push_back(param.asString());
+             }
+         }
+        if (dev.isMember("control_type")) {
+            device.control_type = dev["control_type"].asString();
+        }
+        if (dev.isMember("water_flow_rate")) {
+           device.water_flow_rate = dev["water_flow_rate"].asString();
+        }
+         if (dev.isMember("purpose")) {
+           device.purpose = dev["purpose"].asString();
+        }
+         if (dev.isMember("flight_time")) {
+           device.flight_time = dev["flight_time"].asString();
+        }
+
+        loraDevices.push_back(device);
+    }
+
+  std::vector<WiFiAP> wifiAPs;
+    for (const auto& ap : root["components"]["wifi_ap"]) {
+        WiFiAP wifiap;
+
+      if(ap.isMember("id")){
+        wifiap.id = ap["id"].asString();
+      }
+       if(ap.isMember("application")){
+         wifiap.application = ap["application"].asString();
+      }
+       if(ap.isMember("location")){
+        wifiap.location = ap["location"].asString();
+      }
+      if(ap.isMember("protocol")){
+         wifiap.protocol = ap["protocol"].asString();
+      }
+       if(ap.isMember("ip_address")){
+        wifiap.ip_address = ap["ip_address"].asString();
+      }
+       if(ap.isMember("latitude")){
+        wifiap.latitude = ap["latitude"].asDouble();
+      }
+       if(ap.isMember("longitude")){
+         wifiap.longitude = ap["longitude"].asDouble();
+      }
+
+        wifiAPs.push_back(wifiap);
+    }
+
+    std::vector<WiFiStation> wifiStations;
+    for(const auto& station : root["components"]["wifi_stations"]){
+      WiFiStation wifistation;
+
+      if(station.isMember("id")){
+         wifistation.id = station["id"].asString();
+       }
+      if(station.isMember("location")){
+        wifistation.location = station["location"].asString();
+      }
+       if(station.isMember("protocol")){
+         wifistation.protocol = station["protocol"].asString();
+      }
+      if(station.isMember("ip_address")){
+       wifistation.ip_address = station["ip_address"].asString();
+      }
+      if(station.isMember("latitude")){
+       wifistation.latitude = station["latitude"].asDouble();
+      }
+      if(station.isMember("longitude")){
+        wifistation.longitude = station["longitude"].asDouble();
+      }
+
+      wifiStations.push_back(wifistation);
+    }
+
+    nDevices = loraDevices.size();
+    nGateways = loraGateways.size();
+    nWiFiAPNodes = wifiAPs.size();
+    nWiFiStaNodes = wifiStations.size();
+    
     /***********
      *  Setup  *
      ***********/
@@ -150,6 +343,14 @@ main(int argc, char* argv[])
     // Assign a mobility model to each node
     loramobility.Install(endDevices);
 
+    // Set the positions of the end devices based on the JSON data
+    Ptr<ListPositionAllocator> endDeviceAllocator = CreateObject<ListPositionAllocator>();
+    for (const auto& device : loraDevices) {
+      endDeviceAllocator->Add(Vector(device.latitude, device.longitude, 1.2));
+    }
+    loramobility.SetPositionAllocator(endDeviceAllocator);
+    loramobility.Install(endDevices);
+
     // Make it so that nodes are at a certain height > 0
     for (auto j = endDevices.Begin(); j != endDevices.End(); ++j)
     {
@@ -191,8 +392,11 @@ main(int argc, char* argv[])
     gateways.Create(nGateways);
 
     Ptr<ListPositionAllocator> allocator = CreateObject<ListPositionAllocator>();
-        // Set gateway position
-    allocator->Add(Vector(0.0, 0.0, 15.0)); // Example position, modify as needed
+    // Set Gateway Positions
+    for(const auto& gateway : loraGateways){
+        allocator->Add(Vector(gateway.latitude, gateway.longitude, gateway.altitude));
+    }
+
     loramobility.SetPositionAllocator(allocator);
     loramobility.Install(gateways);
 
@@ -307,7 +511,104 @@ main(int argc, char* argv[])
     // Create a forwarder for each gateway
     forHelper.Install(gateways);
 
-   /**********
+     /************************
+     *  Create WiFi Nodes  *
+     ************************/
+    NS_LOG_DEBUG("Create WiFi Nodes...");
+
+    NodeContainer wifiStaNodes;
+    wifiStaNodes.Create (nWiFiStaNodes);
+
+    NodeContainer wifiApNode;
+    wifiApNode.Create (nWiFiAPNodes);
+
+    YansWifiChannelHelper wifichannel = YansWifiChannelHelper::Default ();
+    YansWifiPhyHelper phy;
+    phy.SetChannel (wifichannel.Create ());
+
+    WifiHelper wifi;
+    wifi.SetStandard (WIFI_STANDARD_80211a);
+    wifi.SetRemoteStationManager ("ns3::AarfWifiManager");
+
+    WifiMacHelper mac;
+    Ssid ssid = Ssid ("ns-3-ssid");
+
+    mac.SetType ("ns3::StaWifiMac",
+                "Ssid", SsidValue (ssid),
+                "ActiveProbing", BooleanValue (false));
+
+    NetDeviceContainer staDevices;
+    staDevices = wifi.Install (phy, mac, wifiStaNodes);
+
+    mac.SetType ("ns3::ApWifiMac",
+                "Ssid", SsidValue (ssid));
+
+    NetDeviceContainer apDevices;
+    apDevices = wifi.Install (phy, mac, wifiApNode);
+
+    MobilityHelper wifimobility;
+    wifimobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+
+    Ptr<ListPositionAllocator> allocatorAPWiFi = CreateObject<ListPositionAllocator>();
+    for(const auto& ap : wifiAPs){
+       allocatorAPWiFi->Add(Vector(ap.latitude, ap.longitude, 1.5));
+    }
+
+    wifimobility.SetPositionAllocator(allocatorAPWiFi);
+    wifimobility.Install(wifiApNode);
+
+    Ptr<ListPositionAllocator> allocatorStaWiFi = CreateObject<ListPositionAllocator>();
+    for(const auto& station : wifiStations){
+       allocatorStaWiFi->Add(Vector(station.latitude, station.longitude, 1.5));
+    }   
+    wifimobility.SetPositionAllocator(allocatorStaWiFi);
+    wifimobility.Install(wifiStaNodes);
+
+    InternetStackHelper stack;
+    stack.Install (wifiApNode);
+    stack.Install (wifiStaNodes);
+
+    Ipv4AddressHelper address;
+    address.SetBase ("192.168.1.0", "255.255.255.0");
+
+    Ipv4InterfaceContainer staNodeInterfaces;
+    staNodeInterfaces = address.Assign (staDevices);
+    Ipv4InterfaceContainer apNodeInterface;
+    apNodeInterface = address.Assign (apDevices);
+
+    // Print the IP addresses of the WiFi STA nodes
+    for (uint32_t i = 0; i < staNodeInterfaces.GetN(); ++i)
+    {
+        Ipv4Address addr = staNodeInterfaces.GetAddress (i);
+        std::cout << "IP address of wifiStaNode " << i << ": " << addr << std::endl;
+    }
+    NS_LOG_DEBUG("WiFi - Setup Udp");
+
+    uint16_t sinkPort = 8080;
+    Address sinkAddress (InetSocketAddress (Ipv4Address::GetAny (), sinkPort));
+    PacketSinkHelper packetSinkHelper ("ns3::UdpSocketFactory", sinkAddress);
+    if(nWiFiStaNodes >0){
+        ApplicationContainer sinkApps = packetSinkHelper.Install (wifiStaNodes.Get (0));
+        sinkApps.Start (Seconds (0.0));
+        sinkApps.Stop (Seconds (10.0));
+
+        OnOffHelper onoff ("ns3::UdpSocketFactory",
+                            InetSocketAddress (Ipv4Address ("192.168.1.1"), sinkPort));
+        onoff.SetConstantRate (DataRate ("1Mbps"));
+        onoff.SetAttribute ("PacketSize", UintegerValue (1024));
+        if(nWiFiStaNodes > 1){
+           ApplicationContainer clientApps = onoff.Install (wifiStaNodes.Get (1));
+           clientApps.Start (Seconds (1.0));
+           clientApps.Stop (Seconds (10.0));
+        }
+   }
+
+
+    //Tracing
+    phy.EnablePcap ("wifi-ap", apDevices);
+    phy.EnablePcap ("wifi-sta", staDevices);
+
+    /**********
      *  Run    *
      **********/
 
@@ -334,74 +635,40 @@ main(int argc, char* argv[])
 }
 
 
-**Explanation of Changes:**
+**Key Improvements:**
 
-1.  **Component Mapping to NS-3 Entities:**
+1.  **JSON Parsing:** The code now includes JSON parsing using the `ns3::json.h` library to read data from the provided `blueprint.json` file.
+2.  **Dynamic Node Creation:** It dynamically creates LoRa gateways and devices based on the information extracted from the JSON.
+3.  **Positioning from JSON:** The code now sets the positions of both LoRa and WiFi devices directly from the latitude, longitude, and altitude (for gateways) specified in the JSON.
+4.  **Flexibility:** It can handle different numbers of LoRa devices and gateways, as well as different types of sensors, depending on the data in the JSON file.
+5.  **Struct for Data Organization:** Custom structs (`LoraGateway`, `LoraDevice`, `WiFiAP`, `WiFiStation`) are introduced for organizing the data parsed from the JSON which makes it easier to work with the data.
+6. **WiFi Support:** Basic WiFi AP and Stations creation and initialization.
+7. **Number of Devices:** The number of devices will be inferred from the json file (LoRa, WiFi).
 
-    *   **Farm Management System:** In this simulation, the "Farm Management System" is represented by the central `networkServer`. It doesn't have a separate node, as its responsibilities (Crop Monitoring, Irrigation Control, Data Analysis) are handled by the NS3 network server.
-    *   **Soil Moisture Sensor, Weather Station:** These are represented by the end devices in the LoRaWAN network. In this code, the type distinction is not made explicitly (e.g., all end devices use the same settings and app). To implement specific behaviour you have to define a specific class based on the end devices.
-    *   **Irrigation Controller:** Similarly, the "Irrigation Controller" is implemented as an end device connected to the LoRa network. In this simplified implementation we are using all the devices as a sensor. 
-    *   **Drone:** The drone is not explicitly modelled in this simulation. Drones are complicated to model and a very complex class must be developed.
+**To Use This Code:**
 
-2.  **LoRaWAN Network:**
-
-    *   The core of the simulation is a LoRaWAN network, with end devices, gateways, and a network server.
-    *   The provided code creates the required channel, PHY, MAC, and network helper objects.
-    *   It sets up end devices, gateways, and a network server for LoRa communication.
-
-3.  **Mobility:**
-
-    *   The mobility of end devices and gateways is configured using `ConstantPositionMobilityModel`.
-    *   The position of the Gateway is fixed, and end devices are distributed randomly in the circle.
-    *   The z-axis of the devices is set at a fixed height (1.2m).
-
-4.  **Application Setup:**
-
-    *   End devices are configured to send data packets periodically.
-    *   The period between transmissions can be configured using the `appPeriodSeconds` variable.
-
-5.  **Network Server:**
-
-    *   A central `networkServer` node is created for network management.
-    *   Point-to-point connections are established between gateways and the network server using  `PointToPointHelper`.
-
-6.  **Building Model (Optional):**
-
-    *   If `realisticChannelModel` is set to true, it creates buildings using the `GridBuildingAllocator` to add more realistic wireless propagation effects.
-    *   Buildings also provide a good representation of the environment.
-
-7.  **Output and Tracing:**
-
-    *   The code has support for generating an output file for the building and a text file for the number of total MAC Packets.
-
-**Key Configuration Points:**
-
-*   **Number of End Devices (Sensors/Actuators):** Change `nDevices` to reflect the number of sensors and actuators in your network.
-*   **Radius:** Modify `radiusMeters` to adjust the area of the simulated environment.
-*   **Simulation Time:** Adjust `simulationTimeSeconds` to control how long the simulation runs.
-*   **Transmission Period:** Change `appPeriodSeconds` to alter the data transmission frequency of end devices.
-*   **Realistic Channel Model:**  Set `realisticChannelModel` to `true` to simulate a more complex channel with buildings, and shadowing effects.
-*   **Positioning:** You can adjust the positioning of devices if required.
-
-**How to Use:**
-
-1.  **Save:** Save the code as a `.cc` file (e.g., `smart-agriculture.cc`).
-2.  **Compile:** Compile the code using the NS-3 build system.
-3.  **Run:** Execute the simulation with the desired command-line arguments:
+1.  **Save:** Save this code as a `.cc` file (e.g., `smart-agriculture.cc`).
+2.  **Create `blueprint.json`:** Make sure you have the `blueprint.json` file in the same directory or specify the path in the code.
+3.  **Compile:** Compile the code with NS-3:
 
     bash
-    ./waf --run "smart-agriculture --nDevices=5 --simulationTime=1200 --appPeriod=30"
+    ./waf configure
+    ./waf build
+    ./waf --run "smart-agriculture"
     
 
-    This command will run the simulation with 5 end devices, a simulation time of 1200 seconds, and a transmission period of 30 seconds.
-4.  **Output:** The building information will be saved in `buildings.txt` and LoRaWAN packet information is stored in `lora-packet-tracker.txt`.
+    (You might need to adjust the run command based on your specific NS-3 setup and whether you want to enable debugging etc.)
+4.  **Run:** The simulation will run, and the results will be printed to the console and saved to `lora-packet-tracker.txt`.
+5.  **Buildings File:** If buildings are enabled, a `buildings.txt` will be created.
 
-**Further Steps:**
+**Important Notes:**
 
-*   **Customize Sensor Behavior:** Implement specific classes based on `LoraEndDeviceApplication` to simulate different sensor types (e.g., soil moisture, temperature, etc.) or actuator behavior.
-*   **Implement Actuation:**  Include logic to control actuators based on sensor data.
-*   **Add Drone Simulation:**  A more complex mobility model and additional logic are required to simulate the drone and its behavior.
-*   **Visualize Data:** Use data analysis tools to visualize and analyse the results of the simulation.
-*   **Add new sensors or actuators**: Implement a new class for each kind of sensor or actuator.
+*   This code provides a basic framework.  You might need to extend it with:
+    *   Specific application logic for each type of device (e.g., sending soil moisture data, controlling irrigation, drone applications)
+    *   More sophisticated WiFi settings and traffic patterns
+    *   Advanced analysis and visualization of simulation results
+*   Ensure you have NS-3 installed with the necessary modules for LoRaWAN, WiFi, and JSON parsing.
+*   The `realisticChannelModel` is set to true. If you want to disable buildings, set to false.
+*   This code is a starting point. Further development will be needed to fit your specific Smart Agriculture use case, including the need for actual application logic.
 
-This provides a starting point to develop a complete simulation of a Smart Agriculture System in NS-3.
+This updated code is more flexible and can directly use the information from your `blueprint.json` file to create and configure your smart agriculture network simulation in NS-3. Let me know if you have any further questions or modifications!

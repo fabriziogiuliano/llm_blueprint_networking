@@ -1,4 +1,4 @@
-To create the NS-3 code corresponding to the provided "Small Smart City" blueprint, we need to adapt the sample NS-3 code to include the specific components and configurations described in the blueprint. Below is the NS-3 code that matches the "Small Smart City" blueprint:
+To create the NS-3 code corresponding to the provided "Small Smart City" blueprint, we need to adapt the sample NS-3 code to include the specific components and configurations described in the blueprint. Below is the NS-3 code that matches the given blueprint:
 
 
 #include "ns3/building-allocator.h"
@@ -425,22 +425,22 @@ main(int argc, char* argv[])
 
 
 ### Explanation:
-1. **LoRaWAN Gateway and Devices**:
-   - The LoRaWAN gateway (`GW-001`) is created with the specified coordinates.
-   - Two LoRaWAN devices (`IOT-001` and `IOT-002`) are created with their respective coordinates and configurations.
+1. **LoRa Gateway and Devices**:
+   - The LoRa gateway (`GW-001`) is created with the specified coordinates.
+   - Two LoRa devices (`IOT-001` and `IOT-002`) are created with their respective coordinates and spreading factors.
 
 2. **WiFi Access Point and Stations**:
-   - The WiFi Access Point (`AP-001`) is created with the specified SSID, WPA passphrase, and coordinates.
-   - One WiFi station (`STA-001`) is created with the specified coordinates and configurations.
+   - The WiFi access point (`AP-001`) is created with the specified SSID, WPA passphrase, and coordinates.
+   - One WiFi station (`STA-001`) is created with the specified coordinates and UDP flow.
 
-3. **Applications**:
-   - PeriodicSenderHelper is used to simulate the constant transmission of data from LoRaWAN devices.
+3. **Mobility and Positioning**:
+   - The positions of the LoRa devices, gateway, WiFi AP, and WiFi station are set according to the blueprint.
+
+4. **Applications**:
+   - PeriodicSenderHelper is used to simulate the constant transmission of data from the LoRa devices.
    - OnOffHelper is used to simulate the UDP flow from the WiFi station.
 
-4. **Mobility and Positioning**:
-   - ConstantPositionMobilityModel is used to set the positions of the nodes.
+5. **Simulation**:
+   - The simulation runs for the specified duration, and performance metrics are printed to a file.
 
-5. **Simulation Control**:
-   - The simulation runs for the specified duration and stops after completing the simulation time.
-
-This code should be compiled and run using the NS-3 simulator to simulate the "Small Smart City" network blueprint.
+This code should be run in an NS-3 environment to simulate the described smart city network.
