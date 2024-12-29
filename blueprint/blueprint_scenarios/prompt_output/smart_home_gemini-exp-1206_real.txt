@@ -1,5 +1,23 @@
-```python
-import os
+
+        Write a PYTHON CODE to set up the network described in TEST BLUEPRINT. Refer to the example code in SAMPLE PYTHON CODE.
+        
+        
+        It is mandatory that:
+        - Istantiate Only the Gateways, Access point and Devices which are in the TEST BLUEPRINT;
+        - if no WiFi nodes or AP, do not use any code for that;
+        - if there are no LoRa devices, do not use any gRPC code and ignore any function definitions;
+        - configure all devices described in TEST BLUEPRINT;
+        - for WiFi Access Point, you must use Fabric framework to manage connections;
+        - configure the AP through hostapd.conf and dnsmasq.conf;
+        - For each station add fixed IP  configuration for host=<wlan_MAC_ADDR>,<wlan_IP> in dnsmaq.conf;
+        - for WiFi Stations, fabric connection must be provided using ETH_IP;
+        
+        
+        given output has just python code, no additional description or explaination 
+        
+        SAMPLE PYTHON CODE:
+
+        import os
 import sys
 import traceback
 import grpc
@@ -7,6 +25,7 @@ from chirpstack_api import api
 import random
 
 #URL API CHIRPSTACK: https://www.chirpstack.io/docs/chirpstack/api/api.html
+
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -25,6 +44,7 @@ def ListGateways(tenant_id):
   resp = client.List(req, metadata=auth_token)
   return resp
 
+
 def ListApplications(tenant_id):
   client = api.ApplicationServiceStub(channel)
   req = api.ListApplicationsRequest()
@@ -35,6 +55,7 @@ def ListApplications(tenant_id):
 
   return resp
 
+
 def ListDevices(application_id):
   client = api.DeviceServiceStub(channel)
   req = api.ListDevicesRequest()
@@ -44,6 +65,7 @@ def ListDevices(application_id):
   resp = client.List(req, metadata=auth_token)
 
   return resp
+
 
 def CreateApplication(name, tenant_id):
   client = api.ApplicationServiceStub(channel)
@@ -64,6 +86,7 @@ def GetApplicationID(name, tenant_id):
   resp = client.Create(req, metadata=auth_token)
   #resp = None
   return resp
+
 
 def CreateDeviceProfile(name, tenant_id, region="EU868", mac_version="LORAWAN_1_0_3", revision ="RP002_1_0_3", supports_otaa=True):  
   client = api.DeviceProfileServiceStub(channel)
@@ -195,7 +218,7 @@ def ListDeviceProfiles(tenant_id):
 #STEP1 create the application
 print("[STEP1] CREATE APPLICATION")
 
-dict_application_id = get_dict(str(CreateApplication(name="Smart Agriculture",tenant_id=tenant_id)))
+dict_application_id = get_dict(str(CreateApplication(name="TEST-BLUEPRINT",tenant_id=tenant_id)))
 application_id=dict_application_id["id"]
 
 #STEP2 Create Gateway
@@ -203,7 +226,7 @@ print("[STEP2] CREATE GATEWAY")
 print(DeleteGateway("05b0da50148fd6b1"))
 CreateGateway(
   gateway_id="05b0da50148fd6b1",
-  name="GW-RAK-ROOF",
+  name="TEST-GW",
   description="Gateway Building 9",
   tenant_id=tenant_id
 )
@@ -220,52 +243,90 @@ print("[STEP4] CREATE ALL LORAWAN DEVICES described in the blueprint")
 #STEP4 create Device:
 #EXAMPLE FOR ONE DEVICE
 print(CreateDevice(
-    dev_eui="629b560f15ed4565",
-    name="FMS-001",
-    application_id=application_id,
-    device_profile_id=device_profile_id,
-    application_key="56a31fdf2a92f61bbc3c0e07bbd0f7d3",
-    skip_fcnt_check=False,
-    is_disabled=False
-))
-
-print(CreateDevice(
-    dev_eui="96b18ec6b841f6b6",
+    dev_eui="14c3a79eed93ec98",
     name="SMS-001",
     application_id=application_id,
     device_profile_id=device_profile_id,
-    application_key="5d43d73ea0b4095ca8162c3633fe498",
+    application_key="8BD59A2C514C9EBDAF7E335E78A5E5B5",
     skip_fcnt_check=False,
     is_disabled=False
 ))
 
-print(CreateDevice(
-    dev_eui="4af31c0e9fa1d5de",
-    name="WS-001",
-    application_id=application_id,
-    device_profile_id=device_profile_id,
-    application_key="36ad40bd675a8a68ad887c15bee482c4",
-    skip_fcnt_check=False,
-    is_disabled=False
-))
+        TEST BLUEPRINT:
 
-print(CreateDevice(
-    dev_eui="197ba985d7822c4a",
-    name="IC-001",
-    application_id=application_id,
-    device_profile_id=device_profile_id,
-    application_key="962d281e76f988fc326bd30c6f617535",
-    skip_fcnt_check=False,
-    is_disabled=False
-))
+        {
+  "name": "Smart Home",
+  "description": "A network blueprint for a smart home with various automated devices.",
+  "experiment_duration":"1 hour",
+  "wifi_ap":
+  [
+    {
+      "id":"AP-001",
+      "ssid":"SmartHomeAPMyExperiment",
+      "wpa_passphrase":12345678,
+      "wpa_key_mgmt":"WPA-PSK",
+      "wlan_IP":"192.168.1.1",
+      "eth_IP":"10.8.8.16"
+    }
+  ],
+  "wifi_stations":[
+    {
+      "id":"ST-001",
+      "ssid":"SmartHomeAPMyExperiment",
+      "activity": "UDP trasmission at maximum throughput of 30 minutes, start at 0",
+      "wpa_passphrase":12345678,
+      "wpa_key_mgmt":"WPA-PSK",
+      "wlan_IP":"192.168.1.103",
+      "wlan_MAC_ADDR":"61:5F:64:5E:90:EB",
+      "distance":"10 meter far from AP",
+      "eth_IP":"10.8.8.17",
+      "user":"root",
+      "password":123456
+    },
+    {
+      "id":"SLB-001",
+      "ssid":"SmartHomeAPMyExperiment",
+      "activity": "TCP trasmission at maximum throughput of 30 minutes, start at 0",
+      "wpa_passphrase":12345678,
+      "wpa_key_mgmt":"WPA-PSK",
+      "wlan_IP":"192.168.1.102",
+      "distance":"5 meter far from AP",
+      "wlan_MAC_ADDR":"60:36:1E:9A:0A:0C",
+      "eth_IP":"10.8.8.18",
+      "user":"root",
+      "password":123456
+    },
+    {
+      "id":"SDL-001",
+      "ssid":"SmartHomeAPMyExperiment",
+      "activity": "UDP trasmission at 1Mbps of 10 minutes, start at 10sec",
+      "wpa_passphrase":12345678,
+      "wpa_key_mgmt":"WPA-PSK",
+      "wlan_IP":"192.168.1.101",
+      "distance":"1 meter far from AP",
+      "wlan_MAC_ADDR":"39:9F:51:CD:F7:08",
+      "eth_IP":"10.8.8.19",
+      "user":"root",
+      "password":123456
+    },
+    {
+      "id":"SSC-001",
+      "ssid":"SmartHomeAPMyExperiment",
+      "activity": "UDP trasmission at 2Mbps of 10 minutes, start at 5sec",
+      "wpa_passphrase":12345678,
+      "wpa_key_mgmt":"WPA-PSK",
+      "wlan_IP":"192.168.1.100",
+      "distance":"15 meter far from AP",
+      "wlan_MAC_ADDR":"0B:E3:41:0A:33:B7",
+      "eth_IP":"10.8.8.20",
+      "user":"root",
+      "password":123456
+    }
+  ]
+}
 
-print(CreateDevice(
-    dev_eui="7c3142d87f67a1f3",
-    name="DR-001",
-    application_id=application_id,
-    device_profile_id=device_profile_id,
-    application_key="dc7063e10207358949a771e7053f598",
-    skip_fcnt_check=False,
-    is_disabled=False
-))
-```
+    
+        
+        PYTHON CODE:
+
+        
