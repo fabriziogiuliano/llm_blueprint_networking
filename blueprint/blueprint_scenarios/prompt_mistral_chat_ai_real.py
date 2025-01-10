@@ -5,20 +5,20 @@ from mistralai import Mistral
 from dotenv import load_dotenv
 load_dotenv()
 model = "mistral-large-latest"
-client = Mistral(api_key=os.getenv('API_KEY'))
+client = Mistral(api_key=os.getenv('MISTRAL_API_KEY'))
 
 from datetime import datetime 
 with open("sample_real_scenario_setup_lorawan.py") as f:
         sample_real = f.read()
 
-blueprint_scenario_filenames=["smart_home","smart_agriculture","smart_city"]
-#blueprint_scenario_filenames=["smart_city"]
+#blueprint_scenario_filenames=["smart_home","smart_agriculture","smart_city"]
+blueprint_scenario_filenames=["smart_home"]
 for blueprint_scenario_filename in blueprint_scenario_filenames:
     print(f"OPEN: {blueprint_scenario_filename}...")
-    with open(f"blueprints/{blueprint_scenario_filename}.json") as f:
+    with open(f"blueprints/{blueprint_scenario_filename}_complete.json") as f:
             test_blueprint = f.read()
-    with open(f"blueprints/{blueprint_scenario_filename}_network_configuration.json") as f:
-            network_configuration = f.read()
+    #with open(f"blueprints/{blueprint_scenario_filename}_network_configuration.json") as f:
+    #        network_configuration = f.read()
             
     #- for WiFi Access Point and Stations, you must use Fabric framework to manage connections        
     #- for WiFi Stations, DHCP configiuration must match wlan_MAC with wlan_IP 
@@ -29,10 +29,9 @@ for blueprint_scenario_filename in blueprint_scenario_filenames:
     - if no WiFi nodes or AP, do not use any code for that;
     - if there are no LoRa devices, do not use any gRPC code and ignore any function definitions;
     - configure all devices described in TEST BLUEPRINT;
-    - for WiFi Access Point, you must use Fabric framework to manage connections;
+    - for WiFi ACCESS POINT, you must use Fabric framework to manage connections;
     - configure the AP through hostapd.conf and dnsmasq.conf;
     - For each station add fixed IP  configuration for host=<wlan_MAC_ADDR>,<wlan_IP> in dnsmaq.conf;
-    - for WiFi Stations, fabric connection must be provided using ETH_IP;
     
     """
     
@@ -48,10 +47,6 @@ for blueprint_scenario_filename in blueprint_scenario_filenames:
     TEST BLUEPRINT:
 
     {test_blueprint}
-
-    NETWORK CONFIGURATION 
-    
-    {network_configuration}
     
     PYTHON CODE:
 

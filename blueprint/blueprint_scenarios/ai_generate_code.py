@@ -121,6 +121,23 @@ def generatePrompt(sample_blueprint,sample_code,test_blueprint,prompt_version="2
                 NS3 CODE:
 
                 """
+    
+    if prompt_version=="3.0-ns3":
+        prompt = f"""
+        Given the following TEST BLUEPRINT provide me the corresponding NS-3 code. Use the follwing SAMPLE NS-3 as reference.    
+        Not add description, just return cpp code.
+                TEST BLUEPRINT:
+
+                {test_blueprint}                
+
+                SAMPLE NS3 CODE:
+
+                {sample_code}
+
+                NS3 CODE:
+
+                """
+    
     if prompt_version=="2.0-real":
         fine_options =f"""
         
@@ -211,7 +228,7 @@ def main():
                     with open("sample_ns3_code.cc") as f:
                             sample_ns3_code = f.read()    
                             
-                    prompt = generatePrompt(sample_blueprint,sample_ns3_code,test_blueprint,prompt_version=f"2.0-{environment}")
+                    prompt = generatePrompt(sample_blueprint,sample_ns3_code,test_blueprint,prompt_version=f"3.0-{environment}")
                 
                     if not os.path.isdir("prompt_output"):                                
                         os.mkdir("prompt_output")
@@ -226,7 +243,7 @@ def main():
                     
                     if not os.path.isdir("ns3_output_code"):                                
                         os.mkdir("ns3_output_code")
-                    output_filename = f"ns3_output_code/{blueprint_scenario_filename}_{select_model}.cc"
+                    output_filename = f"ns3_output_code/{blueprint_scenario_filename}_{select_model}-prompt_version=3.0-{environment}.cc"
                     with open(output_filename, 'w') as file:
                         file.write(response.replace("```cpp","").replace("```",""))
                     logger.info(f"[{datetime.now()}][{select_model}][{blueprint_scenario_filename}][{environment}] create prompt file to {output_filename}")    
