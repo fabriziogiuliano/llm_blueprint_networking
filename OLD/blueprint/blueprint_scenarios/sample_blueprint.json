@@ -1,0 +1,60 @@
+{
+  "name": "Smart Home",
+  "description": "A network blueprint for a smart home with various automated devices.",
+  "components": [
+
+    {"type": "WiFi AP",
+      "id": "AP-001",
+      "application": "WiFi Access Point",
+      "location": "City Hall",      
+      "protocol": "WiFi",
+      "ip_address":"192.168.1.1",        
+      "latitude": 38.10351066811091,
+      "longitude": 13.3459399220741
+    },
+    {
+      "type": "Smart Thermostat",
+      "id": "ST-001",
+      "location": "Hallway",
+      "temperature_range": "18-25°C",
+      "energy_efficiency": "A+" ,     
+      "protocol":"Wi-Fi",
+      "latitude": 38.10863528672426,
+      "longitude": 13.34050633101243,
+      "ip_address":"192.168.1.2"
+    },
+    {
+      "type": "Smart Light Bulb",
+      "id": "SLB-001",
+      "location": "Kitchen",
+      "brightness": "Adjustable",
+      "color_temperature": "2700K-6500K", 
+      "protocol":"Wi-Fi",
+      "latitude": 38.10863528672436,
+      "longitude": 13.34050633101243,     
+      "ip_address":"192.168.1.3"
+    },
+    {
+      "type": "LoRaWAN Gateway",
+      "id": "GW-001",
+      "description":"WiFi device for with LoRa GW",
+      "ip_address":"192.168.1.110",
+      "latitude": 38.10863528672477,
+      "longitude": 13.34050633101244
+    },  
+    {
+      "type": "IoT Sensor",
+      "id": "WM-001",
+      "application": "Water meter",
+      "location": "Intersection A",
+      "sensor_type": "Water sensor",
+      "protocol": "LoRaWAN",
+      "SF": 7,
+      "latitude": 38.10863528672466,
+      "longitude": 13.34050633101243,
+      "data_flow":"constant transmission each 1 hour"
+    }
+  ],
+  "network_type": "Heterogeneous",
+  "protocols": ["Wi-Fi","LoRaWAN"]
+}
