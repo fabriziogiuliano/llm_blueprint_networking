@@ -1,0 +1,145 @@
+{
+  "scenario_name": "Extended Smart Home Network",
+  "description": "An expanded network blueprint for a smart home with various WiFi devices and defined traffic patterns.",
+  "test_duration": "1 hour",
+  "network_devices": {
+    "wifi_access_points": [
+      {
+        "ap_id": "AP-001",
+        "ssid": "SmartHomeAPMyExperiment",
+        "wpa_passphrase": 12345678,
+        "wpa_key_mgmt": "WPA-PSK",
+        "wlan_IP": "192.168.1.1",
+        "eth_IP": "10.8.8.16"
+      }
+    ],
+    "wifi_stations": [
+      {
+        "station_id": "ST-001",
+        "ssid": "SmartHomeAPMyExperiment",
+        "activity": {
+          "protocol": "UDP",
+          "throughput": "maximum",
+          "duration": 1800,
+          "start_time": 0
+        },
+        "wpa_passphrase": 12345678,
+        "wpa_key_mgmt": "WPA-PSK",
+        "wlan_IP": "192.168.1.103",
+        "wlan_MAC_ADDR": "61:5F:64:5E:90:EB",
+        "distance_meters": 10,
+        "eth_IP": "10.8.8.17",
+        "user": "root",
+        "password": 123456
+      },
+      {
+        "station_id": "SLB-001",
+        "ssid": "SmartHomeAPMyExperiment",
+         "activity": {
+          "protocol": "TCP",
+           "throughput": "maximum",
+           "duration": 1800,
+           "start_time": 0
+         },
+        "wpa_passphrase": 12345678,
+        "wpa_key_mgmt": "WPA-PSK",
+        "wlan_IP": "192.168.1.102",
+        "distance_meters": 5,
+        "wlan_MAC_ADDR": "60:36:1E:9A:0A:0C",
+        "eth_IP": "10.8.8.18",
+        "user": "root",
+        "password": 123456
+      },
+      {
+        "station_id": "SDL-001",
+        "ssid": "SmartHomeAPMyExperiment",
+         "activity": {
+           "protocol": "UDP",
+           "throughput": 1000000,
+           "duration": 600,
+           "start_time": 10
+          },
+        "wpa_passphrase": 12345678,
+        "wpa_key_mgmt": "WPA-PSK",
+        "wlan_IP": "192.168.1.101",
+        "distance_meters": 1,
+        "wlan_MAC_ADDR": "39:9F:51:CD:F7:08",
+        "eth_IP": "10.8.8.19",
+        "user": "root",
+        "password": 123456
+      },
+      {
+        "station_id": "SSC-001",
+        "ssid": "SmartHomeAPMyExperiment",
+         "activity": {
+          "protocol": "UDP",
+           "throughput": 2000000,
+           "duration": 600,
+           "start_time": 5
+          },
+        "wpa_passphrase": 12345678,
+        "wpa_key_mgmt": "WPA-PSK",
+        "wlan_IP": "192.168.1.100",
+        "distance_meters": 15,
+        "wlan_MAC_ADDR": "0B:E3:41:0A:33:B7",
+        "eth_IP": "10.8.8.20",
+        "user": "root",
+        "password": 123456
+      },
+      {
+        "station_id": "SRT-001",
+        "ssid": "SmartHomeAPMyExperiment",
+        "activity": {
+            "protocol": "TCP",
+            "throughput": 500000,
+            "duration": 900,
+            "start_time": 30
+          },
+          "wpa_passphrase": 12345678,
+          "wpa_key_mgmt": "WPA-PSK",
+          "wlan_IP": "192.168.1.104",
+          "distance_meters": 7,
+           "wlan_MAC_ADDR": "A1:B2:C3:D4:E5:F6",
+           "eth_IP": "10.8.8.21",
+           "user": "user1",
+           "password": 987654
+      },
+       {
+        "station_id": "SMS-001",
+        "ssid": "SmartHomeAPMyExperiment",
+        "activity": {
+             "protocol": "UDP",
+            "throughput": 1500000,
+            "duration": 300,
+            "start_time": 45
+          },
+         "wpa_passphrase": 12345678,
+          "wpa_key_mgmt": "WPA-PSK",
+           "wlan_IP": "192.168.1.105",
+          "distance_meters": 12,
+          "wlan_MAC_ADDR": "F1:E2:D3:C4:B5:A6",
+          "eth_IP": "10.8.8.22",
+         "user": "user2",
+          "password": 456789
+      },
+        {
+         "station_id": "SVC-001",
+         "ssid": "SmartHomeAPMyExperiment",
+          "activity": {
+            "protocol": "TCP",
+            "throughput": "maximum",
+            "duration": 1200,
+            "start_time": 15
+           },
+          "wpa_passphrase": 12345678,
+          "wpa_key_mgmt": "WPA-PSK",
+          "wlan_IP": "192.168.1.106",
+          "distance_meters": 3,
+           "wlan_MAC_ADDR": "1A:2B:3C:4D:5E:6F",
+           "eth_IP": "10.8.8.23",
+         "user": "admin",
+           "password": 123321
+         }
+    ]
+  }
+}

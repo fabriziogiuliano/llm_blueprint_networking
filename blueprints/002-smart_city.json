@@ -1,0 +1,167 @@
+{
+  "scenario_name": "Extended Smart City Network",
+  "description": "An expanded network blueprint for a small smart city with LoRa and WiFi IoT devices.",
+  "test_duration": "2 hours",
+  "network_devices": {
+    "lora_gateways": [
+      {
+        "gateway_name": "GW-001",
+        "gateway_description": "Main Gateway at City Hall",
+        "geo_latitude": 38.10351066811096,
+        "geo_longitude": 13.3459399220741,
+        "unique_id": "05b0da50148fd6b1",
+        "radio_protocol": "LoRaWAN",
+         "device_application": "LoRa Gateway",
+        "deployment_location": "City Hall"
+      }
+    ],
+    "lora_endpoints": [
+      {
+        "device_eui": "81a63bce0927e700",
+        "device_name": "IOT-001",
+        "security_key": "4ba2162e111f9c2c216b7d68e09f43a8",
+        "device_type": "IoT Sensor",
+         "device_application": "Traffic Management",
+        "deployment_location": "Intersection A",
+        "sensor_type": "Traffic Camera Sensor",
+        "radio_protocol": "LoRaWAN",
+        "spreading_factor": 7,
+        "geo_latitude": 38.10863528672466,
+        "geo_longitude": 13.34050633101243,
+        "data_transmission": "constant transmission each 1 minute"
+      },
+      {
+        "device_eui": "89697aa089cc3005",
+        "device_name": "IOT-002",
+        "security_key": "a1ac00d450efb7facb46a243cbf7731f",
+        "device_type": "IoT Sensor",
+         "device_application": "Waste Management",
+        "deployment_location": "Bin Area B",
+        "sensor_type": "Ultrasonic Sensor",
+        "radio_protocol": "LoRaWAN",
+        "spreading_factor": 7,
+        "geo_latitude": 38.0998337384608,
+        "geo_longitude": 13.337136092765382,
+        "data_transmission": "constant transmission each 1 minute"
+      },
+      {
+          "device_eui": "123b4c5d6e7f8a9b",
+          "device_name": "IOT-003",
+          "security_key": "9876543210abcdef9876543210abcdef",
+          "device_type": "Environmental Sensor",
+          "device_application": "Air Quality Monitoring",
+          "deployment_location": "Park D",
+          "sensor_type": "Gas Sensor",
+          "radio_protocol": "LoRaWAN",
+          "spreading_factor": 9,
+         "geo_latitude": 38.1055555555555,
+          "geo_longitude": 13.3444444444444,
+          "data_transmission": "periodic transmission every 2 minutes"
+      },
+       {
+          "device_eui": "abcdef1234567890",
+          "device_name": "IOT-004",
+          "security_key": "0123456789abcdef0123456789abcdef",
+          "device_type": "Smart Parking Sensor",
+          "device_application": "Parking Management",
+          "deployment_location": "Parking Lot E",
+           "sensor_type": "Magnetic Sensor",
+          "radio_protocol": "LoRaWAN",
+          "spreading_factor": 8,
+          "geo_latitude": 38.1012345678901,
+          "geo_longitude": 13.3387654321098,
+           "data_transmission": "event-based transmission"
+      }
+    ],
+    "wifi_access_points": [
+      {
+        "ap_type": "WiFi AP",
+        "ap_id": "AP-001",
+        "ssid": "SmartCityAP",
+        "wpa_passphrase": 12345678,
+        "wpa_key_mgmt": "WPA-PSK",
+        "wlan_IP": "192.168.1.1",
+        "eth_IP": "10.8.8.16",
+        "device_application": "WiFi Access Point",
+        "deployment_location": "City Hall",
+         "radio_protocol": "WiFi",
+        "geo_latitude": 38.10351066811096,
+        "geo_longitude": 13.3459399220741
+      },
+        {
+          "ap_type":"WiFi AP",
+          "ap_id":"AP-002",
+            "ssid":"SmartParkAP",
+          "wpa_passphrase":87654321,
+          "wpa_key_mgmt":"WPA2-PSK",
+          "wlan_IP":"192.168.2.1",
+          "eth_IP":"10.8.9.10",
+             "device_application": "WiFi Access Point",
+          "deployment_location":"Park Area F",
+           "radio_protocol": "WiFi",
+           "geo_latitude":38.1022222222222,
+            "geo_longitude":13.3433333333333
+        }
+    ],
+    "wifi_stations": [
+      {
+        "station_id": "STA-001",
+        "ssid": "SmartCityAP",
+        "wpa_passphrase": 12345678,
+        "wpa_key_mgmt": "WPA-PSK",
+        "wlan_IP": "192.168.1.101",
+        "wlan_MAC_ADDR": "08:5B:28:2B:9E:74",
+        "eth_IP": "10.8.8.17",
+        "user": "root",
+        "password": 123456,
+        "device_type": "Camera",
+        "device_application": "Camera Monitoring",
+        "deployment_location": "Park C",
+         "sensor_type": "Survelliance camera",
+        "radio_protocol": "Wi-Fi",
+        "data_transmission": "UDP flow at 1Mbps",
+        "ip_address": "192.168.1.100",
+       "geo_latitude": 38.10351066811096,
+        "geo_longitude": 13.3459399220741
+      },
+       {
+          "station_id":"STA-002",
+          "ssid":"SmartCityAP",
+           "wpa_passphrase":12345678,
+          "wpa_key_mgmt":"WPA-PSK",
+           "wlan_IP":"192.168.1.102",
+          "wlan_MAC_ADDR":"00:1A:2B:3C:4D:5E",
+          "eth_IP":"10.8.8.18",
+          "user":"admin",
+            "password":654321,
+          "device_type":"Smart Light",
+          "device_application": "Street Lighting",
+          "deployment_location": "Street G",
+           "radio_protocol":"Wi-Fi",
+          "data_transmission": "TCP flow with control commands",
+           "ip_address":"192.168.1.102",
+            "geo_latitude":38.1044444444444,
+             "geo_longitude":13.3422222222222
+        },
+        {
+            "station_id":"STA-003",
+            "ssid":"SmartParkAP",
+            "wpa_passphrase":87654321,
+            "wpa_key_mgmt":"WPA2-PSK",
+            "wlan_IP":"192.168.2.100",
+            "wlan_MAC_ADDR":"FF:EE:DD:CC:BB:AA",
+            "eth_IP":"10.8.9.11",
+            "user":"park_user",
+              "password":11112222,
+            "device_type":"Public Information Kiosk",
+            "device_application":"Park Information",
+            "deployment_location":"Park Area F",
+             "radio_protocol":"Wi-Fi",
+             "data_transmission": "HTTP requests for information",
+              "ip_address":"192.168.2.101",
+                "geo_latitude":38.1011111111111,
+                "geo_longitude":13.3411111111111
+        }
+    ]
+  }
+}

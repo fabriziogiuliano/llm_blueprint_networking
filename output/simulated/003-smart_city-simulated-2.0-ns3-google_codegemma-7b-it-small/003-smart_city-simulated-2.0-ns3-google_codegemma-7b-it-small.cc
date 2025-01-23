@@ -1,0 +1,1 @@
+The provided code does not contain any output. It is a C++ code that simulates a smart city network using the NS3 simulator.

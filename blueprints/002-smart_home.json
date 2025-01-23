@@ -1,0 +1,168 @@
+{
+  "scenario_name": "Advanced Smart Home Network",
+  "description": "A diverse smart home network with multiple WiFi devices and varied traffic patterns for simulation.",
+  "test_duration": "1.5 hours",
+  "network_devices": {
+    "wifi_access_points": [
+      {
+        "ap_id": "AP-001",
+        "ssid": "HomeNet_Extended",
+        "wpa_passphrase": "secure_password",
+        "wpa_key_mgmt": "WPA2-PSK",
+        "wlan_IP": "192.168.2.1",
+        "eth_IP": "10.8.8.1"
+      },
+      {
+          "ap_id": "AP-002",
+          "ssid": "Guest_Network",
+          "wpa_passphrase": "guest_pass",
+          "wpa_key_mgmt": "WPA2-PSK",
+          "wlan_IP": "192.168.3.1",
+          "eth_IP": "10.8.9.1"
+      }
+    ],
+    "wifi_stations": [
+      {
+        "station_id": "ST-001",
+        "ssid": "HomeNet_Extended",
+        "device_type": "Laptop",
+        "activity": {
+          "protocol": "TCP",
+          "throughput": "maximum",
+          "duration": 2700,
+          "start_time": 0
+        },
+        "wpa_passphrase": "secure_password",
+        "wpa_key_mgmt": "WPA2-PSK",
+        "wlan_IP": "192.168.2.101",
+        "wlan_MAC_ADDR": "A1:B2:C3:D4:E5:01",
+        "distance_meters": 3,
+          "location": "Living Room",
+        "eth_IP": "10.8.8.10",
+        "user": "user1",
+        "password": "user1pass"
+      },
+      {
+        "station_id": "ST-002",
+        "ssid": "HomeNet_Extended",
+        "device_type": "Smart TV",
+          "activity": {
+            "protocol": "UDP",
+          "throughput": 5000000,
+            "duration": 2700,
+            "start_time": 10
+          },
+        "wpa_passphrase": "secure_password",
+          "wpa_key_mgmt": "WPA2-PSK",
+          "wlan_IP": "192.168.2.102",
+        "wlan_MAC_ADDR": "A1:B2:C3:D4:E5:02",
+        "distance_meters": 8,
+          "location": "Family Room",
+          "eth_IP": "10.8.8.11",
+          "user": "user2",
+          "password": "user2pass"
+        },
+        {
+        "station_id": "ST-003",
+        "ssid": "HomeNet_Extended",
+        "device_type": "Tablet",
+         "activity": {
+           "protocol": "TCP",
+           "throughput": 1000000,
+           "duration": 1800,
+           "start_time": 60
+         },
+        "wpa_passphrase": "secure_password",
+        "wpa_key_mgmt": "WPA2-PSK",
+          "wlan_IP": "192.168.2.103",
+         "wlan_MAC_ADDR": "A1:B2:C3:D4:E5:03",
+        "distance_meters": 5,
+        "location": "Bedroom 1",
+        "eth_IP": "10.8.8.12",
+        "user": "user3",
+        "password": "user3pass"
+      },
+      {
+        "station_id": "SLB-001",
+          "device_type": "Smart Speaker",
+          "ssid": "HomeNet_Extended",
+         "activity": {
+          "protocol": "UDP",
+           "throughput": 1500000,
+           "duration": 1500,
+           "start_time": 120
+         },
+        "wpa_passphrase": "secure_password",
+        "wpa_key_mgmt": "WPA2-PSK",
+        "wlan_IP": "192.168.2.104",
+          "wlan_MAC_ADDR": "A1:B2:C3:D4:E5:04",
+        "distance_meters": 7,
+          "location": "Kitchen",
+        "eth_IP": "10.8.8.13",
+        "user": "user4",
+        "password": "user4pass"
+      },
+      {
+        "station_id": "SDL-001",
+          "device_type": "Smartphone",
+          "ssid": "HomeNet_Extended",
+         "activity": {
+           "protocol": "TCP",
+           "throughput": "maximum",
+           "duration": 300,
+           "start_time": 300
+          },
+        "wpa_passphrase": "secure_password",
+         "wpa_key_mgmt": "WPA2-PSK",
+        "wlan_IP": "192.168.2.105",
+          "wlan_MAC_ADDR": "A1:B2:C3:D4:E5:05",
+        "distance_meters": 12,
+          "location": "Office",
+         "eth_IP": "10.8.8.14",
+        "user": "user5",
+        "password": "user5pass"
+      },
+      {
+        "station_id": "SSC-001",
+          "device_type":"Security Camera",
+          "ssid": "HomeNet_Extended",
+         "activity": {
+           "protocol": "UDP",
+           "throughput": 2000000,
+            "duration": 1800,
+           "start_time": 50
+          },
+        "wpa_passphrase": "secure_password",
+         "wpa_key_mgmt": "WPA2-PSK",
+        "wlan_IP": "192.168.2.106",
+         "wlan_MAC_ADDR": "A1:B2:C3:D4:E5:06",
+        "distance_meters": 10,
+        "location": "Backyard",
+         "eth_IP": "10.8.8.15",
+        "user": "user6",
+        "password": "user6pass"
+      },
+      {
+        "station_id":"STG-001",
+          "device_type": "Guest Device",
+        "ssid": "Guest_Network",
+         "activity": {
+            "protocol": "TCP",
+             "throughput": 1000000,
+            "duration": 1200,
+            "start_time": 180
+          },
+          "wpa_passphrase": "guest_pass",
+         "wpa_key_mgmt": "WPA2-PSK",
+        "wlan_IP":"192.168.3.101",
+          "wlan_MAC_ADDR":"A1:B2:C3:D4:E5:07",
+         "distance_meters": 2,
+          "location": "Guest Room",
+         "eth_IP":"10.8.9.10",
+          "user": "guest",
+          "password":"guestpass"
+
+      }
+    ]
+  }
+}
