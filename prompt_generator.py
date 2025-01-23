@@ -1,50 +1,13 @@
-OUTPUT_LABEL="****** OUTPUT CODE ******"
-
-def generatePrompt(scenario,environment,prompt_version="2.0-ns3"):
-    prompt_version="2.0-ns3"
-    if scenario in ["smart_city","smart_agriculture","smart_home"]:
-        if environment in ["real","simulated"]:
-            with open("1-shot-samples/sample_real_scenario.py") as f:
-                    sample_real = f.read()
-            with open(f"blueprints/{scenario}.json") as f:
-                    test_blueprint = f.read()
-            with open("1-shot-samples/sample_ns3_code.cc") as f:
-                        sample_ns3_code = f.read()                              
-            if environment == "real":                        
-                fine_options =f"""
-
-It is mandatory that:
-- for WiFi ACCESS POINT, you must use Fabric framework to manage connections;
-- configure the AP through hostapd.conf and dnsmasq.conf;
-- if no WiFi nodes or AP, do not use any code for that;
-- ignore any gRPC code if there are no LoRa devices in TEST BLUEPRINT;
-- configure all LoRa devices described in TEST BLUEPRINT;
-- For each station add fixed IP  configuration for host=<wlan_MAC_ADDR>,<wlan_IP> in dnsmaq.conf;
-
-"""
-
-                prompt = f"""
-Write a PYTHON CODE to set up the network described in TEST BLUEPRINT. Refer to the example code in SAMPLE PYTHON CODE.
-{fine_options}
-given output has just python code, no additional description or explaination
-
-SAMPLE PYTHON CODE:
-
-{sample_real}
-
-TEST BLUEPRINT:
-
-{test_blueprint}
-
-PYTHON CODE:
-
-{OUTPUT_LABEL}
-
-"""
-            if environment == "simulated":
-                if prompt_version=="1.0-ns3": 
-
-                    fine_options="""
+OUTPUT_LABEL="****** OUTPUT LLM ******"
+def generatePromptSimEnv(scenario,prompt_version):
+    with open("1-shot-samples/sample_real_scenario.py") as f:
+        sample_real = f.read()
+    with open(f"blueprints/{scenario}.json") as f:
+        test_blueprint = f.read()
+    with open("1-shot-samples/sample_ns3_code.cc") as f:
+        sample_ns3_code = f.read()                              
+    if prompt_version=="1.0-ns3": 
+        fine_options="""
 Do Not use WiFi is not used in the TEST BLUEPRINT
 Do Not use LoRa is not used in the TEST BLUEPRINT
 
@@ -82,10 +45,10 @@ FOR SCENARIOS WITH WIFI NODES:
     
     If <height> not given set 1.5 meters
 
-Generate only the code without "```cpp" quote it will be saved to a .cc file
 """
-                    prompt = f"""
+        prompt = f"""
 Given the following SAMPLE BLUEPRINT and the corresponding SAMPLE NS-3 code, use them as a sample to generate the NS3 code for the TEST BLUEPRINT. 
+No, Explanation just python code and eventually comments
 
 {fine_options}                    
 
@@ -99,10 +62,10 @@ TEST BLUEPRINT:
 
 NS3 CODE:
 
-{OUTPUT_LABEL}
+****** OUTPUT LLM ******
 """
-                if prompt_version=="2.0-ns3": 
-                    prompt = f"""
+    if prompt_version=="2.0-ns3": 
+        prompt = f"""
 Given the following TEST BLUEPRINT provide me the corresponding NS-3 code. Use the follwing SAMPLE NS-3 code and SAMPLE BLUEPRINT as reference.    
 Not add description, just return cpp code.
 TEST BLUEPRINT:
@@ -116,13 +79,57 @@ SAMPLE NS3 CODE:
 
 NS3 CODE:
 
-{OUTPUT_LABEL}
-"""
-        else: 
-            logger.info("Wrong Environment, exit.")
-            return 0
-    else:
-        logger.info("Wrong scenario, exit.")
-        return 0
+****** OUTPUT LLM ******
 
+"""
     return prompt
+
+def generatePromptRealEnv(scenario):
+    with open("1-shot-samples/sample_real_scenario.py") as f:
+        sample_real = f.read()
+    with open(f"blueprints/{scenario}.json") as f:
+        test_blueprint = f.read()
+    with open("1-shot-samples/sample_ns3_code.cc") as f:
+        sample_ns3_code = f.read()                              
+    fine_options =f"""
+
+It is mandatory that:
+- for WiFi ACCESS POINT, you must use Fabric framework to manage connections;
+- configure the AP through hostapd.conf and dnsmasq.conf;
+- if no WiFi nodes or AP, do not use any code for that;
+- ignore any gRPC code if there are no LoRa devices in TEST BLUEPRINT;
+- configure all LoRa devices described in TEST BLUEPRINT;
+- For each station add fixed IP  configuration for host=<wlan_MAC_ADDR>,<wlan_IP> in dnsmaq.conf;
+
+"""
+
+    prompt = f"""
+Write a PYTHON CODE to set up the network from input json file TEST BLUEPRINT. Refer to the example code in SAMPLE PYTHON CODE.
+{fine_options}
+
+SAMPLE PYTHON CODE:
+
+{sample_real}
+
+TEST BLUEPRINT:
+
+{test_blueprint}
+
+PYTHON CODE:
+
+{OUTPUT_LABEL}
+
+"""
+    return prompt
+
+def generatePrompt(scenario,environment,prompt_version="2.0-ns3"):
+    prompt_version="2.0-ns3"
+    
+    if environment in ["real","simulated"]:        
+        if environment == "real":                        
+            return generatePromptRealEnv(scenario)
+        if environment == "simulated":
+            return generatePromptSimEnv(scenario,prompt_version)
+    else:         
+        return -1
+    
