@@ -19,6 +19,7 @@ if not os.path.exists(output_dir):
 
 # --- Overall Model Performance ---
 
+palette=None
 # 1. Average Score per Model (Bar Chart)
 plt.figure(figsize=figsize)
 avg_score_per_model = df.groupby("model_name")["score"].mean()
@@ -26,7 +27,7 @@ sns.barplot(
     x=avg_score_per_model.index,
     y=avg_score_per_model.values,
     hue=avg_score_per_model.index,
-    palette="viridis",
+    palette=palette,
     legend=False,
 )
 plt.title("Average Score per Model")
@@ -45,7 +46,7 @@ sns.barplot(
     y="score",
     hue="model_size",
     data=df,
-    palette="viridis",
+    palette=palette,
     errorbar=("ci", False),
 )
 plt.title("Average Score per Model (Grouped by Model Size)")
@@ -67,7 +68,7 @@ sns.boxplot(
     y="score",
     data=df,
     hue="model_name",
-    palette="viridis",
+    palette=palette,
     legend=False,
 )
 plt.title("Distribution of Scores per Model")
@@ -100,7 +101,7 @@ sns.barplot(
     y="score",
     hue="feature_description",
     data=df,
-    palette="viridis",
+    palette=palette,
     errorbar=('ci', False)
 )
 plt.title("Average Score per Feature per Model")
@@ -140,7 +141,7 @@ sns.barplot(
     y="score",
     hue="scenario",
     data=df,
-    palette="viridis",
+    palette=palette,
     errorbar=('ci', False)
 )
 plt.title("Average Score per Scenario per Model")
@@ -164,7 +165,7 @@ sns.boxplot(
     y="score",
     data=df,
     hue="model_name_understanding",
-    palette="viridis",
+    palette=palette,
     legend=False
 )
 plt.title("Distribution of Model Name Understanding Scores")

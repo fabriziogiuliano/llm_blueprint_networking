@@ -1,25 +1,14 @@
-To set up the network from the input JSON file `TEST BLUEPRINT` while adhering to the given requirements, we need to follow these steps:
-
-1. Parse the JSON file to extract the necessary information.
-2. Configure the WiFi Access Point using the Fabric framework, `hostapd.conf`, and `dnsmasq.conf`.
-3. Configure all LoRa devices described in the `TEST BLUEPRINT`.
-4. Add fixed IP configurations for each station in `dnsmasq.conf`.
-
-Below is the Python code that accomplishes these tasks:
-
 
 import os
-import sys
 import json
-import traceback
 import grpc
 from chirpstack_api import api
 from dotenv import load_dotenv
 
 load_dotenv()
-server = os.getenv('CHIRPSTACK_URL')  # Adjust this to your ChirpStack instance
-api_token = os.getenv('CHIRPSTACK_API_TOKEN')  # Obtain from ChirpStack
-tenant_id = os.getenv('CHIRPSTACK_TENANT_ID')  # This is a tenant ID for fabrizio.giuliano@unipa.it
+server = os.getenv('CHIRPSTACK_URL')
+api_token = os.getenv('CHIRPSTACK_API_TOKEN')
+tenant_id = os.getenv('CHIRPSTACK_TENANT_ID')
 
 channel = grpc.insecure_channel(server)
 auth_token = [("authorization", "Bearer %s" % api_token)]
@@ -78,7 +67,6 @@ def CreateDevice(dev_eui, name, application_id, device_profile_id, application_k
     req.device.skip_fcnt_check = skip_fcnt_check
     req.device.is_disabled = is_disabled
     resp = client.Create(req, metadata=auth_token)
-
     req = api.CreateDeviceKeysRequest()
     req.device_keys.dev_eui = dev_eui
     req.device_keys.nwk_key = application_key
@@ -102,12 +90,11 @@ def get_dict(str_application_id):
     v = v.replace('"', '').strip("\n")
     return {k: v}
 
-def configure_wifi_ap(ssid, password):
-    # Configure hostapd.conf
+def configure_hostapd(ap):
     hostapd_conf = f"""
     interface=wlan0
     driver=nl80211
-    ssid={ssid}
+    ssid={ap['ssid']}
     hw_mode=g
     channel=7
     wmm_enabled=0
@@ -115,88 +102,61 @@ def configure_wifi_ap(ssid, password):
     auth_algs=1
     ignore_broadcast_ssid=0
     wpa=2
-    wpa_passphrase={password}
-    wpa_key_mgmt=WPA-PSK
+    wpa_passphrase={ap['wpa_passphrase']}
+    wpa_key_mgmt={ap['wpa_key_mgmt']}
     rsn_pairwise=CCMP
     """
-    with open('/etc/hostapd/hostapd.conf', 'w') as f:
-        f.write(hostapd_conf)
+    with open('/etc/hostapd/hostapd.conf', 'w') as file:
+        file.write(hostapd_conf)
 
-    # Configure dnsmasq.conf
+def configure_dnsmasq(aps, stations):
     dnsmasq_conf = """
     interface=wlan0
-    dhcp-range=192.168.1.10,192.168.1.50,12h
+    dhcp-range=192.168.1.10,192.168.1.250,12h
     """
-    with open('/etc/dnsmasq.conf', 'w') as f:
-        f.write(dnsmasq_conf)
+    for sta in stations:
+        dnsmasq_conf += f"dhcp-host={sta['wlan_MAC_ADDR']},{sta['wlan_IP']}\n"
+    with open('/etc/dnsmasq.conf', 'w') as file:
+        file.write(dnsmasq_conf)
 
-def add_fixed_ip_configurations(stations):
-    with open('/etc/dnsmasq.conf', 'a') as f:
-        for station in stations:
-            f.write(f"dhcp-host={station['wlan_MAC_ADDR']},{station['wlan_IP']}\n")
-
-def main():
-    with open('TEST_BLUEPRINT.json', 'r') as f:
-        blueprint = json.load(f)
-
-    # Step 1: Create Application
+def setup_network(blueprint):
     print("[STEP1] CREATE APPLICATION")
-    dict_application_id = get_dict(str(CreateApplication(name=blueprint['name'], tenant_id=tenant_id)))
+    dict_application_id = get_dict(str(CreateApplication(name="TEST-BLUEPRINT", tenant_id=tenant_id)))
     application_id = dict_application_id["id"]
 
-    # Step 2: Create Gateway
-    print("[STEP2] CREATE GATEWAY")
-    for gateway in blueprint['components']['lora_gateways']:
+    print("[STEP2] CREATE GATEWAYS")
+    for gw in blueprint['network_devices']['lora_gateways']:
         CreateGateway(
-            gateway_id=gateway['gateway_id'],
-            name=gateway['name'],
-            description=gateway['description'],
+            gateway_id=gw['unique_id'],
+            name=gw['gateway_name'],
+            description=gw['gateway_description'],
             tenant_id=tenant_id
         )
 
-    # Step 3: Create Device Profile
     print("[STEP3] CREATE DEVICE PROFILE")
     dict_device_profile_id = get_dict(str(CreateDeviceProfile(name="TEST_OTAA_EU868_1.1.0", mac_version="LORAWAN_1_1_0", revision="RP002_1_0_3", tenant_id=tenant_id)))
     device_profile_id = dict_device_profile_id["id"]
 
-    # Step 4: Create All LoRaWAN Devices described in the blueprint
     print("[STEP4] CREATE ALL LORAWAN DEVICES described in the blueprint")
-    for device in blueprint['components']['lora_devices']:
+    for device in blueprint['network_devices']['lora_endpoints']:
         CreateDevice(
-            dev_eui=device['dev_eui'],
-            name=device['name'],
+            dev_eui=device['device_eui'],
+            name=device['device_name'],
             application_id=application_id,
             device_profile_id=device_profile_id,
-            application_key=device['application_key'],
+            application_key=device['security_key'],
             skip_fcnt_check=False,
             is_disabled=False
         )
 
-    # Step 5: Configure WiFi Access Point if there are WiFi nodes or AP
-    if 'wifi_nodes' in blueprint['components'] or 'wifi_ap' in blueprint['components']:
-        configure_wifi_ap(ssid="SmartAgriculture", password="smartagri123")
+    if 'wifi_access_points' in blueprint['network_devices']:
+        for ap in blueprint['network_devices']['wifi_access_points']:
+            configure_hostapd(ap)
 
-    # Step 6: Add fixed IP configurations for each station
-    stations = [
-        {"wlan_MAC_ADDR": "00:11:22:33:44:55", "wlan_IP": "192.168.1.10"},
-        {"wlan_MAC_ADDR": "00:11:22:33:44:66", "wlan_IP": "192.168.1.11"}
-    ]
-    add_fixed_ip_configurations(stations)
+    if 'wifi_stations' in blueprint['network_devices']:
+        configure_dnsmasq(blueprint['network_devices']['wifi_access_points'], blueprint['network_devices']['wifi_stations'])
 
 if __name__ == "__main__":
-    main()
-
-
-### Explanation:
-1. **Parsing the JSON File**: The JSON file `TEST_BLUEPRINT.json` is read and parsed to extract the necessary information.
-2. **Creating the Application**: The application is created using the `CreateApplication` function.
-3. **Creating the Gateway**: The gateway is created using the `CreateGateway` function.
-4. **Creating the Device Profile**: The device profile is created using the `CreateDeviceProfile` function.
-5. **Creating LoRaWAN Devices**: All LoRaWAN devices described in the blueprint are created using the `CreateDevice` function.
-6. **Configuring WiFi Access Point**: If there are WiFi nodes or AP, the WiFi Access Point is configured using the `configure_wifi_ap` function.
-7. **Adding Fixed IP Configurations**: Fixed IP configurations for each station are added to `dnsmasq.conf` using the `add_fixed_ip_configurations` function.
-
-### Note:
-- Ensure that the `TEST_BLUEPRINT.json` file is in the same directory as the script.
-- Adjust the SSID and password in the `configure_wifi_ap` function as needed.
-- The `stations` list should be populated with the actual MAC addresses and IPs of the stations in your network.
+    with open('TEST_BLUEPRINT.json', 'r') as file:
+        blueprint = json.load(file)
+    setup_network(blueprint)

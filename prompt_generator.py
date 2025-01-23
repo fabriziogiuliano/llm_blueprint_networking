@@ -101,6 +101,7 @@ It is mandatory that:
 - configure all LoRa devices described in TEST BLUEPRINT;
 - For each station add fixed IP  configuration for host=<wlan_MAC_ADDR>,<wlan_IP> in dnsmaq.conf;
 
+Not add explaination, just python code.
 """
 
     prompt = f"""

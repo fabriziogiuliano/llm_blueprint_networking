@@ -33,6 +33,8 @@ def runLLMSmall(model_name,prompt):
     logger.info("run generate... ")
     outputs = model.generate(**input_ids,max_new_tokens=5500, pad_token_id = tokenizer.eos_token_id)
     output = tokenizer.decode(outputs[0])
+    print(output)
+    input()
     return output
 
 
@@ -134,8 +136,14 @@ def run_experiment(blueprint_id, scenario,environment,model_name,model_size,prom
                 file.write(output)
         return 0
     if experiment_label == "understanding":
-        src_filename=f"{curr_scenario}-{environment}-{prompt_version}-{model_name_str}-{model_size}"
-        generated_code_filename = f"output/{environment}/{src_filename}/{src_filename}.cc"
+
+        if environment=="simulated":
+            src_filename=f"{curr_scenario}-{environment}-{prompt_version}-{model_name_str}-{model_size}"
+            generated_code_filename = f"output/{environment}/{src_filename}/{src_filename}.cc"
+        if environment=="real":
+            src_filename=f"{curr_scenario}-{environment}-{model_name_str}-{model_size}"
+            generated_code_filename = f"output/{environment}/{src_filename}.py"
+            
         prompt_understanding = generatePromptUnderstanding(scenario=curr_scenario, environment=environment, generated_code_filename=generated_code_filename)
                 
         
@@ -160,12 +168,12 @@ def main():
     
     
     model_names_all=[
-            {"name":"codestral-2501","size":"large"}, #{"name":"mistralai/Mamba-Codestral-7B-v0.1","size":"small"},
-            {"name":"google/codegemma-7b-it","size":"small"},
+            #{"name":"codestral-2501","size":"large"}, #{"name":"mistralai/Mamba-Codestral-7B-v0.1","size":"small"},
+            #{"name":"google/codegemma-7b-it","size":"small"},
             {"name":"codellama/CodeLlama-7b-Instruct-hf","size":"small"},
-            {"name":"mistral-large-2411","size":"large"},
-            {"name":"gemini-exp-1206","size":"large"},
-            {"name":"gemini-2.0-flash-exp","size":"large"}
+            #{"name":"mistral-large-2411","size":"large"},
+            #{"name":"gemini-exp-1206","size":"large"},
+            #{"name":"gemini-2.0-flash-exp","size":"large"}
         ]
     model_name_understanding={"name":"gemini-2.0-flash-exp","size":"large"}
     print(model_name_understanding)
@@ -176,13 +184,14 @@ def main():
     
     prompt_version="2.0-ns3"
     
-    #scenarios = ["smart_home"]
     environments = ["simulated"]
+    scenarios = ["smart_city"]
 
-    experiment_label="understanding"
-    #experiment_label="generate_code"
+    #experiment_label="understanding"
+    experiment_label="generate_code"
 
     df_validator = pd.DataFrame()
+
     for environment in environments:                
         for scenario in scenarios:                    
             for model_name in model_names:                                
@@ -209,9 +218,10 @@ def main():
                         traceback.print_exc()
                 logging.info("SLEEP...")
                 time.sleep(10)
-                        
-        print(df_validator)
-        Path(f"output/validator/").mkdir(parents=True, exist_ok=True)
-        df_validator.to_pickle(f"output/validator/{environment}-results.pkl")
+                
+        if experiment_label=="understanding":
+            print(df_validator)
+            Path(f"output/validator/").mkdir(parents=True, exist_ok=True)
+            df_validator.to_pickle(f"output/validator/{environment}-results.pkl")
 if __name__ == "__main__":
         main()

@@ -7,7 +7,6 @@ from chirpstack_api import api
 import random
 import json
 from fabric import Connection
-from fabric import Config
 
 # URL API CHIRPSTACK: https://www.chirpstack.io/docs/chirpstack/api/api.html
 
@@ -188,47 +187,6 @@ def ListDeviceProfiles(tenant_id):
     resp = client.List(req, metadata=auth_token)
     return resp
 
-def configure_wifi_ap(ap_config, stations):
-    
-    
-    hostapd_conf_path = "/etc/hostapd/hostapd.conf"
-    dnsmasq_conf_path = "/etc/dnsmasq.conf"
-
-    hostapd_conf_content = f"""
-interface={ap_config['interface']}
-ssid={ap_config['ssid']}
-hw_mode=g
-channel={ap_config['channel']}
-macaddr_acl=0
-auth_algs=1
-ignore_broadcast_ssid=0
-wpa=2
-wpa_passphrase={ap_config['password']}
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP
-rsn_pairwise=CCMP
-    """
-
-    dnsmasq_conf_content = f"""
-interface={ap_config['interface']}
-dhcp-range={ap_config['dhcp_range_start']},{ap_config['dhcp_range_end']},12h
-    """
-    
-    for station in stations:
-      dnsmasq_conf_content += f"\ndhcp-host={station['mac']},{station['ip']}"
-
-    
-    fabric_config = Config(overrides={'sudo': {'password': ap_config['password']}})
-    with Connection(host=ap_config['hostname'], user=ap_config['username'], config=fabric_config) as c:        
-        
-        
-        with c.sudo():  
-            
-            c.put(hostapd_conf_content, hostapd_conf_path)
-            c.put(dnsmasq_conf_content, dnsmasq_conf_path)
-            c.run("systemctl restart hostapd")
-            c.run("systemctl restart dnsmasq")
-
 # print(ListGateways(tenant_id='52f14cd4-c6f1-4fbd-8f87-4025e1d49242'))
 
 # print(ListApplications(tenant_id))
@@ -238,66 +196,86 @@ dhcp-range={ap_config['dhcp_range_start']},{ap_config['dhcp_range_end']},12h
 
 # print()
 
-# Load Blueprint from JSON file
-blueprint_file = "test_blueprint.json"  # Replace with your blueprint file
-
-try:
-    with open(blueprint_file, "r") as f:
-        blueprint = json.load(f)
-except FileNotFoundError:
-    print(f"Error: Blueprint file '{blueprint_file}' not found.")
-    sys.exit(1)
+with open("TEST_BLUEPRINT.json", "r") as f:
+    blueprint = json.load(f)
 
 # STEP1 create the application
 print("[STEP1] CREATE APPLICATION")
 
-dict_application_id = get_dict(
-    str(CreateApplication(name=blueprint["name"], tenant_id=tenant_id)))
+dict_application_id = get_dict(str(CreateApplication(name=blueprint["scenario_name"], tenant_id=tenant_id)))
 application_id = dict_application_id["id"]
 
-# STEP2 Create Gateway (if present in the blueprint)
-if "lora_gateways" in blueprint["components"]:
-    print("[STEP2] CREATE GATEWAY")
-    for gw in blueprint["components"]["lora_gateways"]:
-        print(DeleteGateway(gw["gateway_id"]))
-        CreateGateway(
-            gateway_id=gw["gateway_id"],
-            name=gw["name"],
-            description=gw["description"],
-            tenant_id=tenant_id
-        )
+# STEP2 Create Gateway
+print("[STEP2] CREATE GATEWAY")
+print(DeleteGateway("05b0da50148fd6b1"))
+CreateGateway(
+    gateway_id="05b0da50148fd6b1",
+    name="TEST-GW",
+    description="Gateway Building 9",
+    tenant_id=tenant_id
+)
 
 # STEP3 create Device profile:
 print("[STEP3] CREATE DEVICE PROFILE")
 
 dict_device_profile_id = get_dict(
     str(CreateDeviceProfile(name="TEST_OTAA_EU868_1.1.0", mac_version="LORAWAN_1_1_0", revision="RP002_1_0_3",
-                            tenant_id=tenant_id)))
+                             tenant_id=tenant_id)))
 device_profile_id = dict_device_profile_id["id"]
 print(device_profile_id)
 
 print("[STEP4] CREATE ALL LORAWAN DEVICES described in the blueprint")
 
 # STEP4 create Device:
-if "lora_devices" in blueprint["components"]:
-    for device in blueprint["components"]["lora_devices"]:
-        print(CreateDevice(
-            dev_eui=device["dev_eui"],
-            name=device["name"],
-            application_id=application_id,
-            device_profile_id=device_profile_id,
-            application_key=device["application_key"],
-            skip_fcnt_check=False,
-            is_disabled=False
-        ))
+# EXAMPLE FOR ONE DEVICE
+print(CreateDevice(
+    dev_eui="14c3a79eed93ec98",
+    name="SMS-001",
+    application_id=application_id,
+    device_profile_id=device_profile_id,
+    application_key="8BD59A2C514C9EBDAF7E335E78A5E5B5",
+    skip_fcnt_check=False,
+    is_disabled=False
+))
 
-# STEP5 Configure WiFi AP (if present in the blueprint)
-if "wifi_access_point" in blueprint["components"]:
-    print("[STEP5] CONFIGURE WIFI ACCESS POINT")
-    ap_config = blueprint["components"]["wifi_access_point"]
+# Wi-Fi Access Point and Station Configuration
+if "wifi_access_points" in blueprint["network_devices"] and blueprint["network_devices"]["wifi_access_points"]:
+    ap_config = blueprint["network_devices"]["wifi_access_points"][0]
     
-    stations = []
-    if "wifi_stations" in blueprint["components"]:
-        stations = blueprint["components"]["wifi_stations"]
-        
-    configure_wifi_ap(ap_config, stations)
+    hostapd_conf = f"""
+interface=wlan0
+driver=nl80211
+ssid={ap_config['ssid']}
+hw_mode=g
+channel=6
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+wpa=2
+wpa_passphrase={ap_config['wpa_passphrase']}
+wpa_key_mgmt={ap_config['wpa_key_mgmt']}
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+    """
+
+    dnsmasq_conf = f"""
+interface=wlan0
+dhcp-range={ap_config['wlan_IP'].rsplit('.', 1)[0]}.100,{ap_config['wlan_IP'].rsplit('.', 1)[0]}.250,12h
+    """
+    
+    if "wifi_stations" in blueprint["network_devices"] and blueprint["network_devices"]["wifi_stations"]:
+      for station in blueprint["network_devices"]["wifi_stations"]:
+          dnsmasq_conf += f"\ndhcp-host={station['wlan_MAC_ADDR']},{station['wlan_IP']}"
+
+    with open("hostapd.conf", "w") as f:
+        f.write(hostapd_conf)
+    with open("dnsmasq.conf", "w") as f:
+        f.write(dnsmasq_conf)
+
+    # Example connection to AP (replace with actual connection details)
+    #c = Connection(host=ap_config["eth_IP"], user="your_user", connect_kwargs={"password": "your_password"})
+
+    #c.put("hostapd.conf", "/etc/hostapd/hostapd.conf")
+    #c.put("dnsmasq.conf", "/etc/dnsmasq.conf")
+    #c.sudo("systemctl restart hostapd")
+    #c.sudo("systemctl restart dnsmasq")
