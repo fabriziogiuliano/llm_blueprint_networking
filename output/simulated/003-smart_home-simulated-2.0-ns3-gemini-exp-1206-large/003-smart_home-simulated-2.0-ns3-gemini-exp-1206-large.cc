@@ -1,244 +1,303 @@
 
-#include "ns3/core-module.h"
+#include "ns3/building-allocator.h"
+#include "ns3/building-penetration-loss.h"
+#include "ns3/buildings-helper.h"
+#include "ns3/command-line.h"
+#include "ns3/constant-position-mobility-model.h"
+#include "ns3/correlated-shadowing-propagation-loss-model.h"
+#include "ns3/double.h"
+#include "ns3/log.h"
+#include "ns3/mobility-helper.h"
+#include "ns3/node-container.h"
+#include "ns3/pointer.h"
+#include "ns3/position-allocator.h"
+#include "ns3/random-variable-stream.h"
+#include "ns3/simulator.h"
+#include "ns3/yans-wifi-helper.h"
+#include "ns3/on-off-helper.h"
+#include "ns3/inet-socket-address.h"
+#include "ns3/packet-sink-helper.h"
+#include "ns3/ssid.h"
+#include "ns3/internet-stack-helper.h"
+#include "ns3/ipv4-address-helper.h"
+#include "ns3/string.h"
+#include "ns3/config.h"
 #include "ns3/network-module.h"
 #include "ns3/mobility-module.h"
+#include "ns3/config-store-module.h"
 #include "ns3/wifi-module.h"
 #include "ns3/internet-module.h"
-#include "ns3/applications-module.h"
+
+#include <algorithm>
+#include <ctime>
 
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE("ExtendedSmartHomeNetwork");
 
-int main(int argc, char* argv[]) {
-    // Configuration
-    double simulationTime = 3600; // 1 hour
+int
+main(int argc, char* argv[])
+{
+    CommandLine cmd(__FILE__);
+    cmd.Parse(argc, argv);
 
-    // WiFi Configuration
-    NodeContainer wifiApNodes;
-    wifiApNodes.Create(1);
+    // Set up logging
+    LogComponentEnable("ExtendedSmartHomeNetwork", LOG_LEVEL_ALL);
+
+    /***********
+     *  Setup  *
+     ***********/
+    NS_LOG_DEBUG("Setup...");
+
+    // Parameters from the blueprint
+    double simulationTimeSeconds = 3600; // 1 hour
+    
+    int nWiFiAPNodes = 1;
+    int nWiFiStaNodes = 7;
+
+    /************************
+     *  Create WiFi Nodes  *
+     ************************/
+    NS_LOG_DEBUG("Create WiFi Nodes...");
 
     NodeContainer wifiStaNodes;
-    wifiStaNodes.Create(7);
+    wifiStaNodes.Create(nWiFiStaNodes);
+
+    NodeContainer wifiApNode;
+    wifiApNode.Create(nWiFiAPNodes);
 
     YansWifiChannelHelper channel = YansWifiChannelHelper::Default();
     YansWifiPhyHelper phy;
     phy.SetChannel(channel.Create());
 
     WifiHelper wifi;
-    wifi.SetStandard(WIFI_STANDARD_80211a);
+    wifi.SetStandard(WIFI_STANDARD_80211a); // Or another standard as needed
     wifi.SetRemoteStationManager("ns3::AarfWifiManager");
 
     WifiMacHelper mac;
     Ssid ssid = Ssid("SmartHomeAPMyExperiment");
 
-    // AP Configuration
+    // Configure AP
     mac.SetType("ns3::ApWifiMac",
-                "Ssid", SsidValue(ssid));
-    NetDeviceContainer apDevices;
-    apDevices = wifi.Install(phy, mac, wifiApNodes);
-    Ptr<WifiNetDevice> apDevice = StaticCast<WifiNetDevice>(apDevices.Get(0));
-    apDevice->SetAddress(Mac48Address::Allocate());
-
-    // STA Configuration
+                "Ssid", SsidValue(ssid),
+                "QosSupported", BooleanValue(true));
+    NetDeviceContainer apDevice;
+    apDevice = wifi.Install(phy, mac, wifiApNode.Get(0));
+    
+    // Configure Stations
     mac.SetType("ns3::StaWifiMac",
                 "Ssid", SsidValue(ssid),
+                "QosSupported", BooleanValue(true),
                 "ActiveProbing", BooleanValue(false));
     NetDeviceContainer staDevices;
     staDevices = wifi.Install(phy, mac, wifiStaNodes);
-
+    
     // Mobility
     MobilityHelper mobility;
-    Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator>();
-    positionAlloc->Add(Vector(0.0, 0.0, 0.0));       // AP-001
-    positionAlloc->Add(Vector(10.0, 0.0, 0.0));      // ST-001
-    positionAlloc->Add(Vector(5.0, 0.0, 0.0));       // SLB-001
-    positionAlloc->Add(Vector(1.0, 0.0, 0.0));       // SDL-001
-    positionAlloc->Add(Vector(15.0, 0.0, 0.0));      // SSC-001
-    positionAlloc->Add(Vector(7.0, 0.0, 0.0));      // SRT-001
-    positionAlloc->Add(Vector(12.0, 0.0, 0.0));      // SMS-001
-    positionAlloc->Add(Vector(3.0, 0.0, 0.0));       // SVC-001
-
-    mobility.SetPositionAllocator(positionAlloc);
     mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
-    mobility.Install(wifiApNodes);
+    Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator>();
+
+    // Define positions for AP and stations based on the blueprint
+    positionAlloc->Add(Vector(0.0, 0.0, 0.0)); // AP-001
+    positionAlloc->Add(Vector(10.0, 0.0, 0.0)); // ST-001
+    positionAlloc->Add(Vector(5.0, 0.0, 0.0));  // SLB-001
+    positionAlloc->Add(Vector(1.0, 0.0, 0.0));  // SDL-001
+    positionAlloc->Add(Vector(15.0, 0.0, 0.0)); // SSC-001
+    positionAlloc->Add(Vector(7.0, 0.0, 0.0));  // SRT-001
+    positionAlloc->Add(Vector(12.0, 0.0, 0.0)); // SMS-001
+    positionAlloc->Add(Vector(3.0, 0.0, 0.0));  // SVC-001
+    
+    mobility.SetPositionAllocator(positionAlloc);
+    mobility.Install(wifiApNode);
     mobility.Install(wifiStaNodes);
 
-    // Internet Stack
+    // Internet stack
     InternetStackHelper stack;
-    stack.Install(wifiApNodes);
+    stack.Install(wifiApNode);
     stack.Install(wifiStaNodes);
 
-    // IP Addressing
     Ipv4AddressHelper address;
     address.SetBase("192.168.1.0", "255.255.255.0");
-    Ipv4InterfaceContainer apInterface;
-    apInterface = address.Assign(apDevices);
-    Ipv4InterfaceContainer staInterfaces;
-    staInterfaces = address.Assign(staDevices);
+    Ipv4InterfaceContainer apNodeInterface;
+    apNodeInterface = address.Assign(apDevice);
+    Ipv4InterfaceContainer staNodeInterfaces;
+    staNodeInterfaces = address.Assign(staDevices);
 
-    // Set STA IP Addresses
-    Ipv4AddressHelper::Assign(staDevices.Get(0), Ipv4Address("192.168.1.103"), Ipv4Mask("255.255.255.0"));
-    Ipv4AddressHelper::Assign(staDevices.Get(1), Ipv4Address("192.168.1.102"), Ipv4Mask("255.255.255.0"));
-    Ipv4AddressHelper::Assign(staDevices.Get(2), Ipv4Address("192.168.1.101"), Ipv4Mask("255.255.255.0"));
-    Ipv4AddressHelper::Assign(staDevices.Get(3), Ipv4Address("192.168.1.100"), Ipv4Mask("255.255.255.0"));
-    Ipv4AddressHelper::Assign(staDevices.Get(4), Ipv4Address("192.168.1.104"), Ipv4Mask("255.255.255.0"));
-    Ipv4AddressHelper::Assign(staDevices.Get(5), Ipv4Address("192.168.1.105"), Ipv4Mask("255.255.255.0"));
-    Ipv4AddressHelper::Assign(staDevices.Get(6), Ipv4Address("192.168.1.106"), Ipv4Mask("255.255.255.0"));
+    // Set AP IP
+    Names::Add ("AP-001", wifiApNode.Get (0));
+    Ptr<Ipv4> apIpv4 = wifiApNode.Get(0)->GetObject<Ipv4>();
+    apIpv4->SetAddress(1, Ipv4InterfaceAddress(Ipv4Address("192.168.1.1"), Ipv4Mask("255.255.255.0")));
     
-
-    // Set STA MAC Addresses
-    StaticCast<WifiNetDevice>(staDevices.Get(0))->SetAddress(Mac48Address("61:5F:64:5E:90:EB"));
-    StaticCast<WifiNetDevice>(staDevices.Get(1))->SetAddress(Mac48Address("60:36:1E:9A:0A:0C"));
-    StaticCast<WifiNetDevice>(staDevices.Get(2))->SetAddress(Mac48Address("39:9F:51:CD:F7:08"));
-    StaticCast<WifiNetDevice>(staDevices.Get(3))->SetAddress(Mac48Address("0B:E3:41:0A:33:B7"));
-    StaticCast<WifiNetDevice>(staDevices.Get(4))->SetAddress(Mac48Address("A1:B2:C3:D4:E5:F6"));
-    StaticCast<WifiNetDevice>(staDevices.Get(5))->SetAddress(Mac48Address("F1:E2:D3:C4:B5:A6"));
-    StaticCast<WifiNetDevice>(staDevices.Get(6))->SetAddress(Mac48Address("1A:2B:3C:4D:5E:6F"));
     
+    // Set station IPs and MAC addresses
+    Names::Add ("ST-001", wifiStaNodes.Get (0));
+    Ptr<Ipv4> st1Ipv4 = wifiStaNodes.Get(0)->GetObject<Ipv4>();
+    st1Ipv4->SetAddress(1, Ipv4InterfaceAddress(Ipv4Address("192.168.1.103"), Ipv4Mask("255.255.255.0")));
+    Config::Set ("/NodeList/1/DeviceList/0/$ns3::WifiNetDevice/Mac/Address", Mac48AddressValue (Mac48Address ("61:5F:64:5E:90:EB")));
 
-    // WPA2-PSK Security
-    std::string passphrase = "12345678";
-    Config::SetDefault("ns3::WifiNetDevice::HtSupported", BooleanValue(false));
-
-    // Applications
-    // ST-001 (UDP, maximum throughput)
-    uint16_t portSt001 = 9;
-    OnOffHelper onOffSt001("ns3::UdpSocketFactory",
-                           InetSocketAddress(apInterface.GetAddress(0), portSt001));
-    onOffSt001.SetAttribute("DataRate", DataRateValue(DataRate("100Mbps")));
-    onOffSt001.SetAttribute("PacketSize", UintegerValue(1024));
-    onOffSt001.SetAttribute("MaxBytes", UintegerValue(0));
-    onOffSt001.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=1800]"));
-    onOffSt001.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0]"));
-    ApplicationContainer clientAppsSt001 = onOffSt001.Install(wifiStaNodes.Get(0));
-    clientAppsSt001.Start(Seconds(0));
-    clientAppsSt001.Stop(Seconds(1800));
-
-    PacketSinkHelper sinkSt001("ns3::UdpSocketFactory",
-                               InetSocketAddress(Ipv4Address::GetAny(), portSt001));
-    ApplicationContainer sinkAppsSt001 = sinkSt001.Install(wifiApNodes.Get(0));
-    sinkAppsSt001.Start(Seconds(0));
-    sinkAppsSt001.Stop(Seconds(1800));
-
-    // SLB-001 (TCP, maximum throughput)
-    uint16_t portSlb001 = 10;
-    OnOffHelper onOffSlb001("ns3::TcpSocketFactory",
-                            InetSocketAddress(apInterface.GetAddress(0), portSlb001));
-    onOffSlb001.SetAttribute("DataRate", DataRateValue(DataRate("100Mbps")));
-    onOffSlb001.SetAttribute("PacketSize", UintegerValue(1024));
-    onOffSlb001.SetAttribute("MaxBytes", UintegerValue(0));
-    onOffSlb001.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=1800]"));
-    onOffSlb001.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0]"));
-    ApplicationContainer clientAppsSlb001 = onOffSlb001.Install(wifiStaNodes.Get(1));
-    clientAppsSlb001.Start(Seconds(0));
-    clientAppsSlb001.Stop(Seconds(1800));
-
-    PacketSinkHelper sinkSlb001("ns3::TcpSocketFactory",
-                                InetSocketAddress(Ipv4Address::GetAny(), portSlb001));
-    ApplicationContainer sinkAppsSlb001 = sinkSlb001.Install(wifiApNodes.Get(0));
-    sinkAppsSlb001.Start(Seconds(0));
-    sinkAppsSlb001.Stop(Seconds(1800));
-
-    // SDL-001 (UDP, 1 Mbps, 600 seconds)
-    uint16_t portSdl001 = 11;
-    OnOffHelper onOffSdl001("ns3::UdpSocketFactory",
-                            InetSocketAddress(apInterface.GetAddress(0), portSdl001));
-    onOffSdl001.SetAttribute("DataRate", DataRateValue(DataRate("1Mbps")));
-    onOffSdl001.SetAttribute("PacketSize", UintegerValue(1024));
-    onOffSdl001.SetAttribute("MaxBytes", UintegerValue(75000000));
-    onOffSdl001.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=600]"));
-    onOffSdl001.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0]"));
-    ApplicationContainer clientAppsSdl001 = onOffSdl001.Install(wifiStaNodes.Get(2));
-    clientAppsSdl001.Start(Seconds(10));
-    clientAppsSdl001.Stop(Seconds(610));
-
-    PacketSinkHelper sinkSdl001("ns3::UdpSocketFactory",
-                                InetSocketAddress(Ipv4Address::GetAny(), portSdl001));
-    ApplicationContainer sinkAppsSdl001 = sinkSdl001.Install(wifiApNodes.Get(0));
-    sinkAppsSdl001.Start(Seconds(10));
-    sinkAppsSdl001.Stop(Seconds(610));
-
-    // SSC-001 (UDP, 2 Mbps, 600 seconds)
-    uint16_t portSsc001 = 12;
-    OnOffHelper onOffSsc001("ns3::UdpSocketFactory",
-                            InetSocketAddress(apInterface.GetAddress(0), portSsc001));
-    onOffSsc001.SetAttribute("DataRate", DataRateValue(DataRate("2Mbps")));
-    onOffSsc001.SetAttribute("PacketSize", UintegerValue(1024));
-    onOffSsc001.SetAttribute("MaxBytes", UintegerValue(150000000));
-    onOffSsc001.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=600]"));
-    onOffSsc001.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0]"));
-    ApplicationContainer clientAppsSsc001 = onOffSsc001.Install(wifiStaNodes.Get(3));
-    clientAppsSsc001.Start(Seconds(5));
-    clientAppsSsc001.Stop(Seconds(605));
-
-    PacketSinkHelper sinkSsc001("ns3::UdpSocketFactory",
-                                InetSocketAddress(Ipv4Address::GetAny(), portSsc001));
-    ApplicationContainer sinkAppsSsc001 = sinkSsc001.Install(wifiApNodes.Get(0));
-    sinkAppsSsc001.Start(Seconds(5));
-    sinkAppsSsc001.Stop(Seconds(605));
-
-    // SRT-001 (TCP, 500 kbps, 900 seconds)
-    uint16_t portSrt001 = 13;
-    OnOffHelper onOffSrt001("ns3::TcpSocketFactory",
-                            InetSocketAddress(apInterface.GetAddress(0), portSrt001));
-    onOffSrt001.SetAttribute("DataRate", DataRateValue(DataRate("500kbps")));
-    onOffSrt001.SetAttribute("PacketSize", UintegerValue(1024));
-    onOffSrt001.SetAttribute("MaxBytes", UintegerValue(56250000));
-    onOffSrt001.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=900]"));
-    onOffSrt001.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0]"));
-    ApplicationContainer clientAppsSrt001 = onOffSrt001.Install(wifiStaNodes.Get(4));
-    clientAppsSrt001.Start(Seconds(30));
-    clientAppsSrt001.Stop(Seconds(930));
-
-    PacketSinkHelper sinkSrt001("ns3::TcpSocketFactory",
-                                InetSocketAddress(Ipv4Address::GetAny(), portSrt001));
-    ApplicationContainer sinkAppsSrt001 = sinkSrt001.Install(wifiApNodes.Get(0));
-    sinkAppsSrt001.Start(Seconds(30));
-    sinkAppsSrt001.Stop(Seconds(930));
-
-    // SMS-001 (UDP, 1.5 Mbps, 300 seconds)
-    uint16_t portSms001 = 14;
-    OnOffHelper onOffSms001("ns3::UdpSocketFactory",
-                            InetSocketAddress(apInterface.GetAddress(0), portSms001));
-    onOffSms001.SetAttribute("DataRate", DataRateValue(DataRate("1.5Mbps")));
-    onOffSms001.SetAttribute("PacketSize", UintegerValue(1024));
-    onOffSms001.SetAttribute("MaxBytes", UintegerValue(56250000));
-    onOffSms001.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=300]"));
-    onOffSms001.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0]"));
-    ApplicationContainer clientAppsSms001 = onOffSms001.Install(wifiStaNodes.Get(5));
-    clientAppsSms001.Start(Seconds(45));
-    clientAppsSms001.Stop(Seconds(345));
-
-    PacketSinkHelper sinkSms001("ns3::UdpSocketFactory",
-                                InetSocketAddress(Ipv4Address::GetAny(), portSms001));
-    ApplicationContainer sinkAppsSms001 = sinkSms001.Install(wifiApNodes.Get(0));
-    sinkAppsSms001.Start(Seconds(45));
-    sinkAppsSms001.Stop(Seconds(345));
-
-    // SVC-001 (TCP, maximum throughput, 1200 seconds)
-    uint16_t portSvc001 = 15;
-    OnOffHelper onOffSvc001("ns3::TcpSocketFactory",
-                            InetSocketAddress(apInterface.GetAddress(0), portSvc001));
-    onOffSvc001.SetAttribute("DataRate", DataRateValue(DataRate("100Mbps")));
-    onOffSvc001.SetAttribute("PacketSize", UintegerValue(1024));
-    onOffSvc001.SetAttribute("MaxBytes", UintegerValue(0));
-    onOffSvc001.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=1200]"));
-    onOffSvc001.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0]"));
-    ApplicationContainer clientAppsSvc001 = onOffSvc001.Install(wifiStaNodes.Get(6));
-    clientAppsSvc001.Start(Seconds(15));
-    clientAppsSvc001.Stop(Seconds(1215));
-
-    PacketSinkHelper sinkSvc001("ns3::TcpSocketFactory",
-                                InetSocketAddress(Ipv4Address::GetAny(), portSvc001));
-    ApplicationContainer sinkAppsSvc001 = sinkSvc001.Install(wifiApNodes.Get(0));
-    sinkAppsSvc001.Start(Seconds(15));
-    sinkAppsSvc001.Stop(Seconds(1215));
+    Names::Add ("SLB-001", wifiStaNodes.Get (1));
+    Ptr<Ipv4> st2Ipv4 = wifiStaNodes.Get(1)->GetObject<Ipv4>();
+    st2Ipv4->SetAddress(1, Ipv4InterfaceAddress(Ipv4Address("192.168.1.102"), Ipv4Mask("255.255.255.0")));
+    Config::Set ("/NodeList/2/DeviceList/0/$ns3::WifiNetDevice/Mac/Address", Mac48AddressValue (Mac48Address ("60:36:1E:9A:0A:0C")));
     
-    // Simulation
-    Simulator::Stop(Seconds(simulationTime));
+    Names::Add ("SDL-001", wifiStaNodes.Get (2));
+    Ptr<Ipv4> st3Ipv4 = wifiStaNodes.Get(2)->GetObject<Ipv4>();
+    st3Ipv4->SetAddress(1, Ipv4InterfaceAddress(Ipv4Address("192.168.1.101"), Ipv4Mask("255.255.255.0")));
+    Config::Set ("/NodeList/3/DeviceList/0/$ns3::WifiNetDevice/Mac/Address", Mac48AddressValue (Mac48Address ("39:9F:51:CD:F7:08")));
+
+    Names::Add ("SSC-001", wifiStaNodes.Get (3));
+    Ptr<Ipv4> st4Ipv4 = wifiStaNodes.Get(3)->GetObject<Ipv4>();
+    st4Ipv4->SetAddress(1, Ipv4InterfaceAddress(Ipv4Address("192.168.1.100"), Ipv4Mask("255.255.255.0")));
+    Config::Set ("/NodeList/4/DeviceList/0/$ns3::WifiNetDevice/Mac/Address", Mac48AddressValue (Mac48Address ("0B:E3:41:0A:33:B7")));
+
+    Names::Add ("SRT-001", wifiStaNodes.Get (4));
+    Ptr<Ipv4> st5Ipv4 = wifiStaNodes.Get(4)->GetObject<Ipv4>();
+    st5Ipv4->SetAddress(1, Ipv4InterfaceAddress(Ipv4Address("192.168.1.104"), Ipv4Mask("255.255.255.0")));
+    Config::Set ("/NodeList/5/DeviceList/0/$ns3::WifiNetDevice/Mac/Address", Mac48AddressValue (Mac48Address ("A1:B2:C3:D4:E5:F6")));
+
+    Names::Add ("SMS-001", wifiStaNodes.Get (5));
+    Ptr<Ipv4> st6Ipv4 = wifiStaNodes.Get(5)->GetObject<Ipv4>();
+    st6Ipv4->SetAddress(1, Ipv4InterfaceAddress(Ipv4Address("192.168.1.105"), Ipv4Mask("255.255.255.0")));
+    Config::Set ("/NodeList/6/DeviceList/0/$ns3::WifiNetDevice/Mac/Address", Mac48AddressValue (Mac48Address ("F1:E2:D3:C4:B5:A6")));
+
+    Names::Add ("SVC-001", wifiStaNodes.Get (6));
+    Ptr<Ipv4> st7Ipv4 = wifiStaNodes.Get(6)->GetObject<Ipv4>();
+    st7Ipv4->SetAddress(1, Ipv4InterfaceAddress(Ipv4Address("192.168.1.106"), Ipv4Mask("255.255.255.0")));
+    Config::Set ("/NodeList/7/DeviceList/0/$ns3::WifiNetDevice/Mac/Address", Mac48AddressValue (Mac48Address ("1A:2B:3C:4D:5E:6F")));
+    
+    //WPA2 PSK configuration
+    StringValue pskValue = StringValue("12345678");
+    Config::Set ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/ApMps/Ssid", SsidValue (ssid));
+    Config::Set ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/ApMps/Authentication/Psk", pskValue);
+    Config::Set ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/ApMps/Authentication/Wpa", StringValue ("WPA2"));
+    Config::Set ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/ApMps/Authentication/Wpa2Psk", BooleanValue (true));
+    
+    Config::Set ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/StaMps/Ssid", SsidValue (ssid));
+    Config::Set ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/StaMps/Authentication/Psk", pskValue);
+    Config::Set ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/StaMps/Authentication/Wpa", StringValue ("WPA2"));
+    Config::Set ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/StaMps/Authentication/Wpa2Psk", BooleanValue (true));
+
+    // Install applications for each station based on the blueprint
+    // ST-001
+    uint16_t st1Port = 9;
+    OnOffHelper onOffSt1("ns3::UdpSocketFactory", InetSocketAddress(apNodeInterface.GetAddress(0), st1Port));
+    onOffSt1.SetAttribute("DataRate", StringValue("500Mbps"));
+    onOffSt1.SetAttribute("PacketSize", UintegerValue(1024));
+    onOffSt1.SetAttribute("StartTime", TimeValue(Seconds(0)));
+    onOffSt1.SetAttribute("StopTime", TimeValue(Seconds(1800)));
+    ApplicationContainer st1ClientApp = onOffSt1.Install(wifiStaNodes.Get(0));
+
+    PacketSinkHelper sinkSt1("ns3::UdpSocketFactory", InetSocketAddress(Ipv4Address::GetAny(), st1Port));
+    ApplicationContainer st1SinkApp = sinkSt1.Install(wifiApNode.Get(0));
+    st1SinkApp.Start(Seconds(0.0));
+    st1SinkApp.Stop(Seconds(1800));
+
+    // SLB-001
+    uint16_t slb1Port = 10;
+    OnOffHelper onOffSlb1("ns3::TcpSocketFactory", InetSocketAddress(apNodeInterface.GetAddress(0), slb1Port));
+    onOffSlb1.SetAttribute("DataRate", StringValue("500Mbps"));
+    onOffSlb1.SetAttribute("PacketSize", UintegerValue(1024));
+    onOffSlb1.SetAttribute("StartTime", TimeValue(Seconds(0)));
+    onOffSlb1.SetAttribute("StopTime", TimeValue(Seconds(1800)));
+    ApplicationContainer slb1ClientApp = onOffSlb1.Install(wifiStaNodes.Get(1));
+
+    PacketSinkHelper sinkSlb1("ns3::TcpSocketFactory", InetSocketAddress(Ipv4Address::GetAny(), slb1Port));
+    ApplicationContainer slb1SinkApp = sinkSlb1.Install(wifiApNode.Get(0));
+    slb1SinkApp.Start(Seconds(0.0));
+    slb1SinkApp.Stop(Seconds(1800));
+
+    // SDL-001
+    uint16_t sdl1Port = 11;
+    OnOffHelper onOffSdl1("ns3::UdpSocketFactory", InetSocketAddress(apNodeInterface.GetAddress(0), sdl1Port));
+    onOffSdl1.SetAttribute("DataRate", StringValue("1Mbps"));
+    onOffSdl1.SetAttribute("PacketSize", UintegerValue(1024));
+    onOffSdl1.SetAttribute("StartTime", TimeValue(Seconds(10)));
+    onOffSdl1.SetAttribute("StopTime", TimeValue(Seconds(610)));
+    ApplicationContainer sdl1ClientApp = onOffSdl1.Install(wifiStaNodes.Get(2));
+
+    PacketSinkHelper sinkSdl1("ns3::UdpSocketFactory", InetSocketAddress(Ipv4Address::GetAny(), sdl1Port));
+    ApplicationContainer sdl1SinkApp = sinkSdl1.Install(wifiApNode.Get(0));
+    sdl1SinkApp.Start(Seconds(0.0));
+    sdl1SinkApp.Stop(Seconds(610));
+
+    // SSC-001
+    uint16_t ssc1Port = 12;
+    OnOffHelper onOffSsc1("ns3::UdpSocketFactory", InetSocketAddress(apNodeInterface.GetAddress(0), ssc1Port));
+    onOffSsc1.SetAttribute("DataRate", StringValue("2Mbps"));
+    onOffSsc1.SetAttribute("PacketSize", UintegerValue(1024));
+    onOffSsc1.SetAttribute("StartTime", TimeValue(Seconds(5)));
+    onOffSsc1.SetAttribute("StopTime", TimeValue(Seconds(605)));
+    ApplicationContainer ssc1ClientApp = onOffSsc1.Install(wifiStaNodes.Get(3));
+
+    PacketSinkHelper sinkSsc1("ns3::UdpSocketFactory", InetSocketAddress(Ipv4Address::GetAny(), ssc1Port));
+    ApplicationContainer ssc1SinkApp = sinkSsc1.Install(wifiApNode.Get(0));
+    ssc1SinkApp.Start(Seconds(0.0));
+    ssc1SinkApp.Stop(Seconds(605));
+
+    // SRT-001
+    uint16_t srt1Port = 13;
+    OnOffHelper onOffSrt1("ns3::TcpSocketFactory", InetSocketAddress(apNodeInterface.GetAddress(0), srt1Port));
+    onOffSrt1.SetAttribute("DataRate", StringValue("500Kbps"));
+    onOffSrt1.SetAttribute("PacketSize", UintegerValue(1024));
+    onOffSrt1.SetAttribute("StartTime", TimeValue(Seconds(30)));
+    onOffSrt1.SetAttribute("StopTime", TimeValue(Seconds(930)));
+    ApplicationContainer srt1ClientApp = onOffSrt1.Install(wifiStaNodes.Get(4));
+
+    PacketSinkHelper sinkSrt1("ns3::TcpSocketFactory", InetSocketAddress(Ipv4Address::GetAny(), srt1Port));
+    ApplicationContainer srt1SinkApp = sinkSrt1.Install(wifiApNode.Get(0));
+    srt1SinkApp.Start(Seconds(0.0));
+    srt1SinkApp.Stop(Seconds(930));
+
+    // SMS-001
+    uint16_t sms1Port = 14;
+    OnOffHelper onOffSms1("ns3::UdpSocketFactory", InetSocketAddress(apNodeInterface.GetAddress(0), sms1Port));
+    onOffSms1.SetAttribute("DataRate", StringValue("1.5Mbps"));
+    onOffSms1.SetAttribute("PacketSize", UintegerValue(1024));
+    onOffSms1.SetAttribute("StartTime", TimeValue(Seconds(45)));
+    onOffSms1.SetAttribute("StopTime", TimeValue(Seconds(345)));
+    ApplicationContainer sms1ClientApp = onOffSms1.Install(wifiStaNodes.Get(5));
+
+    PacketSinkHelper sinkSms1("ns3::UdpSocketFactory", InetSocketAddress(Ipv4Address::GetAny(), sms1Port));
+    ApplicationContainer sms1SinkApp = sinkSms1.Install(wifiApNode.Get(0));
+    sms1SinkApp.Start(Seconds(0.0));
+    sms1SinkApp.Stop(Seconds(345));
+
+    // SVC-001
+    uint16_t svc1Port = 15;
+    OnOffHelper onOffSvc1("ns3::TcpSocketFactory", InetSocketAddress(apNodeInterface.GetAddress(0), svc1Port));
+    onOffSvc1.SetAttribute("DataRate", StringValue("500Mbps"));
+    onOffSvc1.SetAttribute("PacketSize", UintegerValue(1024));
+    onOffSvc1.SetAttribute("StartTime", TimeValue(Seconds(15)));
+    onOffSvc1.SetAttribute("StopTime", TimeValue(Seconds(1215)));
+    ApplicationContainer svc1ClientApp = onOffSvc1.Install(wifiStaNodes.Get(6));
+
+    PacketSinkHelper sinkSvc1("ns3::TcpSocketFactory", InetSocketAddress(Ipv4Address::GetAny(), svc1Port));
+    ApplicationContainer svc1SinkApp = sinkSvc1.Install(wifiApNode.Get(0));
+    svc1SinkApp.Start(Seconds(0.0));
+    svc1SinkApp.Stop(Seconds(1215));
+
+    // Tracing
+    phy.EnablePcap("wifi-ap", apDevice.Get(0));
+    phy.EnablePcap("wifi-st1", staDevices.Get(0));
+    phy.EnablePcap("wifi-slb1", staDevices.Get(1));
+    phy.EnablePcap("wifi-sdl1", staDevices.Get(2));
+    phy.EnablePcap("wifi-ssc1", staDevices.Get(3));
+    phy.EnablePcap("wifi-srt1", staDevices.Get(4));
+    phy.EnablePcap("wifi-sms1", staDevices.Get(5));
+    phy.EnablePcap("wifi-svc1", staDevices.Get(6));
+
+    /**********
+     *  Run    *
+     **********/
+
+    Simulator::Stop(Seconds(simulationTimeSeconds));
+
+    NS_LOG_INFO("*** Running simulation...");
     Simulator::Run();
+
     Simulator::Destroy();
+
+    NS_LOG_INFO("Done.");
 
     return 0;
 }

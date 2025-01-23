@@ -160,28 +160,28 @@ def main():
     
     
     model_names_all=[
-            #{"name":"codestral-2501","size":"large"}, #{"name":"mistralai/Mamba-Codestral-7B-v0.1","size":"small"},
-            #{"name":"google/codegemma-7b-it","size":"small"},
-            #{"name":"google/codegemma-7b-it","size":"small"},
-            #{"name":"codellama/CodeLlama-7b-Instruct-hf","size":"small"},
-            #{"name":"mistral-large-2411","size":"large"},
+            {"name":"codestral-2501","size":"large"}, #{"name":"mistralai/Mamba-Codestral-7B-v0.1","size":"small"},
+            {"name":"google/codegemma-7b-it","size":"small"},
+            {"name":"google/codegemma-7b-it","size":"small"},
+            {"name":"codellama/CodeLlama-7b-Instruct-hf","size":"small"},
+            {"name":"mistral-large-2411","size":"large"},
             {"name":"gemini-exp-1206","size":"large"},
             {"name":"gemini-2.0-flash-exp","size":"large"}
         ]
     model_name_understanding={"name":"gemini-2.0-flash-exp","size":"large"}
     print(model_name_understanding)
-    model_names=model_names_all#[model_names_all[5]]
+    model_names=model_names_all
     scenarios = ["smart_agriculture","smart_city","smart_home"]
     environments = ["simulated","real"]    
     
     
     prompt_version="2.0-ns3"
     
-    scenarios = ["smart_home"]
+    #scenarios = ["smart_home"]
     environments = ["simulated"]
 
-    #experiment_label="understanding"
-    experiment_label="generate_code"
+    experiment_label="understanding"
+    #experiment_label="generate_code"
 
     df_validator = pd.DataFrame()
     for environment in environments:                
@@ -211,8 +211,8 @@ def main():
                 logging.info("SLEEP...")
                 time.sleep(10)
                         
-    print(df_validator)
-    Path(f"output/validator/").mkdir(parents=True, exist_ok=True)
-    df_validator.to_pickle("output/validator/results.pkl")
+        print(df_validator)
+        Path(f"output/validator/").mkdir(parents=True, exist_ok=True)
+        df_validator.to_pickle(f"output/validator/{environment}-results.pkl")
 if __name__ == "__main__":
         main()

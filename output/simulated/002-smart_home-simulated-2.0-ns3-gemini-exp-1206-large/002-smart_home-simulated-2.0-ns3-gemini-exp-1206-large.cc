@@ -20,10 +20,8 @@
 #include "ns3/ssid.h"
 #include "ns3/internet-stack-helper.h"
 #include "ns3/ipv4-address-helper.h"
-#include "ns3/wifi-mac-helper.h"
-#include "ns3/config.h"
-#include "ns3/propagation-loss-model.h"
-#include "ns3/propagation-delay-model.h"
+#include "ns3/wifi-net-device.h"
+#include "ns3/tcp-socket-factory.h"
 
 #include <algorithm>
 #include <ctime>
@@ -48,287 +46,241 @@ main(int argc, char* argv[])
 
     // Simulation time
     double simulationTimeSeconds = 5400; // 1.5 hours
-
-    // Create WiFi Access Points
-    NodeContainer apNodes;
-    apNodes.Create(2);
-
-    // Create WiFi Stations
-    NodeContainer staNodes;
-    staNodes.Create(7);
+    Time simulationTime = Seconds(simulationTimeSeconds);
 
     /************************
-     *  Create WiFi Channel *
+     *  Create WiFi Nodes  *
      ************************/
-    NS_LOG_DEBUG("Create WiFi Channel...");
+    NS_LOG_DEBUG("Create WiFi Nodes...");
 
-    YansWifiChannelHelper wifiChannel = YansWifiChannelHelper::Default();
-    YansWifiPhyHelper wifiPhy;
-    wifiPhy.SetChannel(wifiChannel.Create());
+    NodeContainer wifiApNodes;
+    wifiApNodes.Create(2);
 
-    /************************
-     *  Install WiFi Devices *
-     ************************/
-    NS_LOG_DEBUG("Install WiFi Devices...");
+    NodeContainer wifiStaNodes;
+    wifiStaNodes.Create(7);
+
+    YansWifiChannelHelper channel = YansWifiChannelHelper::Default();
+    YansWifiPhyHelper phy;
+    phy.SetChannel(channel.Create());
 
     WifiHelper wifi;
-    wifi.SetStandard(WIFI_STANDARD_80211a);
+    wifi.SetStandard(WIFI_STANDARD_80211a); // You can change the standard if needed
     wifi.SetRemoteStationManager("ns3::AarfWifiManager");
 
-    // Configure APs
-    NetDeviceContainer apDevices;
+    WifiMacHelper mac;
     
-    WifiMacHelper apMac;
-    Ssid ssidAP1 = Ssid("HomeNet_Extended");
-    apMac.SetType("ns3::ApWifiMac",
-                  "Ssid", SsidValue(ssidAP1),
-                  "BeaconGeneration", BooleanValue(true));
-    apDevices.Add(wifi.Install(wifiPhy, apMac, apNodes.Get(0)));
-
-    Ssid ssidAP2 = Ssid("Guest_Network");
-    apMac.SetType("ns3::ApWifiMac",
-                  "Ssid", SsidValue(ssidAP2),
-                  "BeaconGeneration", BooleanValue(true));
-    apDevices.Add(wifi.Install(wifiPhy, apMac, apNodes.Get(1)));
-
-    // Configure Stations
-    NetDeviceContainer staDevices;
+    NetDeviceContainer apDevices[2];
+    NetDeviceContainer staDevices[7];
     
-    WifiMacHelper staMac;
-    staMac.SetType("ns3::StaWifiMac",
-                   "Ssid", SsidValue(ssidAP1),
-                   "ActiveProbing", BooleanValue(false));
-    staDevices.Add(wifi.Install(wifiPhy, staMac, staNodes.Get(0)));
-    staDevices.Add(wifi.Install(wifiPhy, staMac, staNodes.Get(1)));
-    staDevices.Add(wifi.Install(wifiPhy, staMac, staNodes.Get(2)));
-    staDevices.Add(wifi.Install(wifiPhy, staMac, staNodes.Get(3)));
-    staDevices.Add(wifi.Install(wifiPhy, staMac, staNodes.Get(4)));
-    staDevices.Add(wifi.Install(wifiPhy, staMac, staNodes.Get(5)));
+    //AP-001
+    Ssid ssid_ap1 = Ssid("HomeNet_Extended");
+    mac.SetType("ns3::ApWifiMac",
+                "Ssid", SsidValue(ssid_ap1),
+                 "BeaconGeneration", BooleanValue (true));
+
+    apDevices[0] = wifi.Install(phy, mac, wifiApNodes.Get(0));
+
+    //AP-002
+    Ssid ssid_ap2 = Ssid("Guest_Network");
+    mac.SetType("ns3::ApWifiMac",
+                "Ssid", SsidValue(ssid_ap2),
+                "BeaconGeneration", BooleanValue (true));
+
+    apDevices[1] = wifi.Install(phy, mac, wifiApNodes.Get(1));
+
+    //ST-001
+    Ssid ssid_st0 = Ssid("HomeNet_Extended");
+    mac.SetType("ns3::StaWifiMac",
+                "Ssid", SsidValue(ssid_st0),
+                "ActiveProbing", BooleanValue(false));
+    staDevices[0] = wifi.Install(phy, mac, wifiStaNodes.Get(0));
+
+    //ST-002
+    Ssid ssid_st1 = Ssid("HomeNet_Extended");
+    mac.SetType("ns3::StaWifiMac",
+                "Ssid", SsidValue(ssid_st1),
+                "ActiveProbing", BooleanValue(false));
+    staDevices[1] = wifi.Install(phy, mac, wifiStaNodes.Get(1));
+
+    //ST-003
+    Ssid ssid_st2 = Ssid("HomeNet_Extended");
+    mac.SetType("ns3::StaWifiMac",
+                 "Ssid", SsidValue(ssid_st2),
+                 "ActiveProbing", BooleanValue(false));
+    staDevices[2] = wifi.Install(phy, mac, wifiStaNodes.Get(2));
+
+    //SLB-001
+    Ssid ssid_st3 = Ssid("HomeNet_Extended");
+    mac.SetType("ns3::StaWifiMac",
+                 "Ssid", SsidValue(ssid_st3),
+                 "ActiveProbing", BooleanValue(false));
+    staDevices[3] = wifi.Install(phy, mac, wifiStaNodes.Get(3));
+
+    //SDL-001
+    Ssid ssid_st4 = Ssid("HomeNet_Extended");
+    mac.SetType("ns3::StaWifiMac",
+                 "Ssid", SsidValue(ssid_st4),
+                 "ActiveProbing", BooleanValue(false));
+    staDevices[4] = wifi.Install(phy, mac, wifiStaNodes.Get(4));
+
+    //SSC-001
+    Ssid ssid_st5 = Ssid("HomeNet_Extended");
+    mac.SetType("ns3::StaWifiMac",
+                 "Ssid", SsidValue(ssid_st5),
+                 "ActiveProbing", BooleanValue(false));
+    staDevices[5] = wifi.Install(phy, mac, wifiStaNodes.Get(5));
+
+    //STG-001
+    Ssid ssid_st6 = Ssid("Guest_Network");
+    mac.SetType("ns3::StaWifiMac",
+                 "Ssid", SsidValue(ssid_st6),
+                 "ActiveProbing", BooleanValue(false));
+    staDevices[6] = wifi.Install(phy, mac, wifiStaNodes.Get(6));
     
-    staMac.SetType("ns3::StaWifiMac",
-                   "Ssid", SsidValue(ssidAP2),
-                   "ActiveProbing", BooleanValue(false));
-    staDevices.Add(wifi.Install(wifiPhy, staMac, staNodes.Get(6)));
-
-    /*********************
-     *  Mobility Models *
-     *********************/
-    NS_LOG_DEBUG("Set Mobility Models...");
-
     MobilityHelper mobility;
     mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
-    mobility.Install(apNodes);
-    mobility.Install(staNodes);
 
-    // Set positions for APs (you can adjust these as needed)
-    Ptr<ConstantPositionMobilityModel> ap1Mobility = apNodes.Get(0)->GetObject<ConstantPositionMobilityModel>();
-    ap1Mobility->SetPosition(Vector(0.0, 0.0, 0.0));
-    Ptr<ConstantPositionMobilityModel> ap2Mobility = apNodes.Get(1)->GetObject<ConstantPositionMobilityModel>();
-    ap2Mobility->SetPosition(Vector(15.0, 0.0, 0.0)); 
+    Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator>();
+    positionAlloc->Add(Vector(0.0, 0.0, 0.0));   // AP-001
+    positionAlloc->Add(Vector(15.0, 0.0, 0.0));  // AP-002
+    positionAlloc->Add(Vector(3.0, 0.0, 0.0));   // ST-001
+    positionAlloc->Add(Vector(8.0, 0.0, 0.0));   // ST-002
+    positionAlloc->Add(Vector(5.0, 0.0, 0.0));   // ST-003
+    positionAlloc->Add(Vector(7.0, 0.0, 0.0));   // SLB-001
+    positionAlloc->Add(Vector(12.0, 0.0, 0.0));  // SDL-001
+    positionAlloc->Add(Vector(10.0, 0.0, 0.0));  // SSC-001
+    positionAlloc->Add(Vector(17.0, 0.0, 0.0));  // STG-001
 
-    // Set positions for STAs based on distance_meters
-    Ptr<ConstantPositionMobilityModel> staMobility;
-    staMobility = staNodes.Get(0)->GetObject<ConstantPositionMobilityModel>();
-    staMobility->SetPosition(Vector(3.0, 0.0, 0.0));
-    staMobility = staNodes.Get(1)->GetObject<ConstantPositionMobilityModel>();
-    staMobility->SetPosition(Vector(8.0, 0.0, 0.0));
-    staMobility = staNodes.Get(2)->GetObject<ConstantPositionMobilityModel>();
-    staMobility->SetPosition(Vector(5.0, 0.0, 0.0));
-    staMobility = staNodes.Get(3)->GetObject<ConstantPositionMobilityModel>();
-    staMobility->SetPosition(Vector(7.0, 0.0, 0.0));
-    staMobility = staNodes.Get(4)->GetObject<ConstantPositionMobilityModel>();
-    staMobility->SetPosition(Vector(12.0, 0.0, 0.0));
-    staMobility = staNodes.Get(5)->GetObject<ConstantPositionMobilityModel>();
-    staMobility->SetPosition(Vector(10.0, 0.0, 0.0));
-    staMobility = staNodes.Get(6)->GetObject<ConstantPositionMobilityModel>();
-    staMobility->SetPosition(Vector(17.0, 0.0, 0.0));
-
-    /*************************
-     *  Internet Stack & IPs *
-     *************************/
-    NS_LOG_DEBUG("Install Internet Stack & Assign IPs...");
-
-    InternetStackHelper internet;
-    internet.Install(apNodes);
-    internet.Install(staNodes);
-
-    Ipv4AddressHelper ipv4;
-
-    ipv4.SetBase("192.168.2.0", "255.255.255.0");
-    Ipv4InterfaceContainer ap1Interfaces = ipv4.Assign(apDevices.Get(0));
-    Ipv4InterfaceContainer staInterfaces1 = ipv4.Assign(staDevices.Get(0));
-    staInterfaces1.Add(ipv4.Assign(staDevices.Get(1)).Get(0));
-    staInterfaces1.Add(ipv4.Assign(staDevices.Get(2)).Get(0));
-    staInterfaces1.Add(ipv4.Assign(staDevices.Get(3)).Get(0));
-    staInterfaces1.Add(ipv4.Assign(staDevices.Get(4)).Get(0));
-    staInterfaces1.Add(ipv4.Assign(staDevices.Get(5)).Get(0));
-
-    ipv4.SetBase("192.168.3.0", "255.255.255.0");
-    Ipv4InterfaceContainer ap2Interfaces = ipv4.Assign(apDevices.Get(1));
-    Ipv4InterfaceContainer staInterfaces2 = ipv4.Assign(staDevices.Get(6));
-
-    /**********************
-    * Set MAC Addresses  *
-    **********************/
-    NS_LOG_DEBUG("Set MAC Addresses...");
-
-    Ptr<WifiNetDevice> wifiNetDevice;
-
-    wifiNetDevice = DynamicCast<WifiNetDevice>(staDevices.Get(0));
-    wifiNetDevice->SetAddress(Mac48Address("A1:B2:C3:D4:E5:01"));
-
-    wifiNetDevice = DynamicCast<WifiNetDevice>(staDevices.Get(1));
-    wifiNetDevice->SetAddress(Mac48Address("A1:B2:C3:D4:E5:02"));
+    mobility.SetPositionAllocator(positionAlloc);
+    mobility.Install(wifiApNodes);
+    mobility.Install(wifiStaNodes);
     
-    wifiNetDevice = DynamicCast<WifiNetDevice>(staDevices.Get(2));
-    wifiNetDevice->SetAddress(Mac48Address("A1:B2:C3:D4:E5:03"));
 
-    wifiNetDevice = DynamicCast<WifiNetDevice>(staDevices.Get(3));
-    wifiNetDevice->SetAddress(Mac48Address("A1:B2:C3:D4:E5:04"));
+    InternetStackHelper stack;
+    stack.Install(wifiApNodes);
+    stack.Install(wifiStaNodes);
 
-    wifiNetDevice = DynamicCast<WifiNetDevice>(staDevices.Get(4));
-    wifiNetDevice->SetAddress(Mac48Address("A1:B2:C3:D4:E5:05"));
+    Ipv4AddressHelper address;
+    address.SetBase("192.168.2.0", "255.255.255.0");
+    Ipv4InterfaceContainer apInterface_0 = address.Assign(apDevices[0]);
+    Ipv4InterfaceContainer stInterface_0 = address.Assign(staDevices[0]);
+    Ipv4InterfaceContainer stInterface_1 = address.Assign(staDevices[1]);
+    Ipv4InterfaceContainer stInterface_2 = address.Assign(staDevices[2]);
+    Ipv4InterfaceContainer stInterface_3 = address.Assign(staDevices[3]);
+    Ipv4InterfaceContainer stInterface_4 = address.Assign(staDevices[4]);
+    Ipv4InterfaceContainer stInterface_5 = address.Assign(staDevices[5]);
 
-    wifiNetDevice = DynamicCast<WifiNetDevice>(staDevices.Get(5));
-    wifiNetDevice->SetAddress(Mac48Address("A1:B2:C3:D4:E5:06"));
+    address.SetBase("192.168.3.0", "255.255.255.0");
+    Ipv4InterfaceContainer apInterface_1 = address.Assign(apDevices[1]);
+    Ipv4InterfaceContainer stInterface_6 = address.Assign(staDevices[6]);
     
-    wifiNetDevice = DynamicCast<WifiNetDevice>(staDevices.Get(6));
-    wifiNetDevice->SetAddress(Mac48Address("A1:B2:C3:D4:E5:07"));
 
-    /****************************
-     *  Configure Applications *
-     ****************************/
-    NS_LOG_DEBUG("Configure Applications...");
+    // ST-001 Application (Laptop - TCP)
+    uint16_t port_st0 = 9; 
+    OnOffHelper onOff_st0("ns3::TcpSocketFactory", InetSocketAddress(apInterface_0.GetAddress(0), port_st0));
+    onOff_st0.SetAttribute("DataRate", DataRateValue(DataRate("100Mbps")));
+    onOff_st0.SetAttribute("PacketSize", UintegerValue(1024));
+    onOff_st0.SetAttribute("StartTime", TimeValue(Seconds(0)));
+    onOff_st0.SetAttribute("StopTime", TimeValue(Seconds(2700)));
+    ApplicationContainer clientApps_st0 = onOff_st0.Install(wifiStaNodes.Get(0));
 
-    // Station ST-001 (Laptop) - TCP
-    uint16_t sinkPort1 = 5000;
-    Address sinkAddress1(InetSocketAddress(ap1Interfaces.GetAddress(0), sinkPort1));
-    PacketSinkHelper packetSinkHelper1("ns3::TcpSocketFactory", sinkAddress1);
-    ApplicationContainer sinkApps1 = packetSinkHelper1.Install(apNodes.Get(0));
-    sinkApps1.Start(Seconds(0.0));
-    sinkApps1.Stop(Seconds(simulationTimeSeconds));
+    PacketSinkHelper sink_st0("ns3::TcpSocketFactory", InetSocketAddress(Ipv4Address::GetAny(), port_st0));
+    ApplicationContainer sinkApps_st0 = sink_st0.Install(wifiApNodes.Get(0));
+    sinkApps_st0.Start(Seconds(0.0));
 
-    OnOffHelper client1("ns3::TcpSocketFactory", sinkAddress1);
-    client1.SetAttribute("MaxBytes", UintegerValue(0));
-    client1.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=2700]"));
-    client1.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0]"));
-    ApplicationContainer clientApps1 = client1.Install(staNodes.Get(0));
-    clientApps1.Start(Seconds(0.0));
-    clientApps1.Stop(Seconds(simulationTimeSeconds));
+    // ST-002 Application (Smart TV - UDP)
+    uint16_t port_st1 = 8000;
+    OnOffHelper onOff_st1("ns3::UdpSocketFactory", InetSocketAddress(apInterface_0.GetAddress(0), port_st1));
+    onOff_st1.SetConstantRate(DataRate(5000000));
+    onOff_st1.SetAttribute("PacketSize", UintegerValue(1024));
+    ApplicationContainer clientApps_st1 = onOff_st1.Install(wifiStaNodes.Get(1));
+    clientApps_st1.Start(Seconds(10));
+    clientApps_st1.Stop(Seconds(2700 + 10));
 
-    // Station ST-002 (Smart TV) - UDP
-    uint16_t sinkPort2 = 5001;
-    Address sinkAddress2(InetSocketAddress(ap1Interfaces.GetAddress(0), sinkPort2));
-    PacketSinkHelper packetSinkHelper2("ns3::UdpSocketFactory", sinkAddress2);
-    ApplicationContainer sinkApps2 = packetSinkHelper2.Install(apNodes.Get(0));
-    sinkApps2.Start(Seconds(0.0));
-    sinkApps2.Stop(Seconds(simulationTimeSeconds));
+    PacketSinkHelper sink_st1("ns3::UdpSocketFactory", InetSocketAddress(Ipv4Address::GetAny(), port_st1));
+    ApplicationContainer sinkApps_st1 = sink_st1.Install(wifiApNodes.Get(0));
+    sinkApps_st1.Start(Seconds(0));
 
-    OnOffHelper client2("ns3::UdpSocketFactory", sinkAddress2);
-    client2.SetAttribute("MaxBytes", UintegerValue(0));
-    client2.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=2700]"));
-    client2.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0]"));
-    client2.SetConstantRate(DataRate("5Mbps"));
-    ApplicationContainer clientApps2 = client2.Install(staNodes.Get(1));
-    clientApps2.Start(Seconds(10.0));
-    clientApps2.Stop(Seconds(simulationTimeSeconds));
+    // ST-003 Application (Tablet - TCP)
+    uint16_t port_st2 = 8001;
+    OnOffHelper onOff_st2("ns3::TcpSocketFactory", InetSocketAddress(apInterface_0.GetAddress(0), port_st2));
+    onOff_st2.SetConstantRate(DataRate(1000000));
+    onOff_st2.SetAttribute("PacketSize", UintegerValue(1024));
+    ApplicationContainer clientApps_st2 = onOff_st2.Install(wifiStaNodes.Get(2));
+    clientApps_st2.Start(Seconds(60));
+    clientApps_st2.Stop(Seconds(1800 + 60));
 
-    // Station ST-003 (Tablet) - TCP
-    uint16_t sinkPort3 = 5002;
-    Address sinkAddress3(InetSocketAddress(ap1Interfaces.GetAddress(0), sinkPort3));
-    PacketSinkHelper packetSinkHelper3("ns3::TcpSocketFactory", sinkAddress3);
-    ApplicationContainer sinkApps3 = packetSinkHelper3.Install(apNodes.Get(0));
-    sinkApps3.Start(Seconds(0.0));
-    sinkApps3.Stop(Seconds(simulationTimeSeconds));
+    PacketSinkHelper sink_st2("ns3::TcpSocketFactory", InetSocketAddress(Ipv4Address::GetAny(), port_st2));
+    ApplicationContainer sinkApps_st2 = sink_st2.Install(wifiApNodes.Get(0));
+    sinkApps_st2.Start(Seconds(0));
 
-    OnOffHelper client3("ns3::TcpSocketFactory", sinkAddress3);
-    client3.SetAttribute("MaxBytes", UintegerValue(0));
-    client3.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=1800]"));
-    client3.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0]"));
-    client3.SetConstantRate(DataRate("1Mbps"));
-    ApplicationContainer clientApps3 = client3.Install(staNodes.Get(2));
-    clientApps3.Start(Seconds(60.0));
-    clientApps3.Stop(Seconds(simulationTimeSeconds));
+    // SLB-001 Application (Smart Speaker - UDP)
+    uint16_t port_st3 = 8002;
+    OnOffHelper onOff_st3("ns3::UdpSocketFactory", InetSocketAddress(apInterface_0.GetAddress(0), port_st3));
+    onOff_st3.SetConstantRate(DataRate(1500000));
+    onOff_st3.SetAttribute("PacketSize", UintegerValue(1024));
+    ApplicationContainer clientApps_st3 = onOff_st3.Install(wifiStaNodes.Get(3));
+    clientApps_st3.Start(Seconds(120));
+    clientApps_st3.Stop(Seconds(1500 + 120));
 
-    // Station SLB-001 (Smart Speaker) - UDP
-    uint16_t sinkPort4 = 5003;
-    Address sinkAddress4(InetSocketAddress(ap1Interfaces.GetAddress(0), sinkPort4));
-    PacketSinkHelper packetSinkHelper4("ns3::UdpSocketFactory", sinkAddress4);
-    ApplicationContainer sinkApps4 = packetSinkHelper4.Install(apNodes.Get(0));
-    sinkApps4.Start(Seconds(0.0));
-    sinkApps4.Stop(Seconds(simulationTimeSeconds));
+    PacketSinkHelper sink_st3("ns3::UdpSocketFactory", InetSocketAddress(Ipv4Address::GetAny(), port_st3));
+    ApplicationContainer sinkApps_st3 = sink_st3.Install(wifiApNodes.Get(0));
+    sinkApps_st3.Start(Seconds(0));
 
-    OnOffHelper client4("ns3::UdpSocketFactory", sinkAddress4);
-    client4.SetAttribute("MaxBytes", UintegerValue(0));
-    client4.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=1500]"));
-    client4.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0]"));
-    client4.SetConstantRate(DataRate("1.5Mbps"));
-    ApplicationContainer clientApps4 = client4.Install(staNodes.Get(3));
-    clientApps4.Start(Seconds(120.0));
-    clientApps4.Stop(Seconds(simulationTimeSeconds));
+    // SDL-001 Application (Smartphone - TCP)
+    uint16_t port_st4 = 8003;
+    OnOffHelper onOff_st4("ns3::TcpSocketFactory", InetSocketAddress(apInterface_0.GetAddress(0), port_st4));
+    onOff_st4.SetAttribute("DataRate", DataRateValue(DataRate("100Mbps")));
+    onOff_st4.SetAttribute("PacketSize", UintegerValue(1024));
+    ApplicationContainer clientApps_st4 = onOff_st4.Install(wifiStaNodes.Get(4));
+    clientApps_st4.Start(Seconds(300));
+    clientApps_st4.Stop(Seconds(300 + 300));
 
-    // Station SDL-001 (Smartphone) - TCP
-    uint16_t sinkPort5 = 5004;
-    Address sinkAddress5(InetSocketAddress(ap1Interfaces.GetAddress(0), sinkPort5));
-    PacketSinkHelper packetSinkHelper5("ns3::TcpSocketFactory", sinkAddress5);
-    ApplicationContainer sinkApps5 = packetSinkHelper5.Install(apNodes.Get(0));
-    sinkApps5.Start(Seconds(0.0));
-    sinkApps5.Stop(Seconds(simulationTimeSeconds));
+    PacketSinkHelper sink_st4("ns3::TcpSocketFactory", InetSocketAddress(Ipv4Address::GetAny(), port_st4));
+    ApplicationContainer sinkApps_st4 = sink_st4.Install(wifiApNodes.Get(0));
+    sinkApps_st4.Start(Seconds(0));
 
-    OnOffHelper client5("ns3::TcpSocketFactory", sinkAddress5);
-    client5.SetAttribute("MaxBytes", UintegerValue(0));
-    client5.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=300]"));
-    client5.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0]"));
-    ApplicationContainer clientApps5 = client5.Install(staNodes.Get(4));
-    clientApps5.Start(Seconds(300.0));
-    clientApps5.Stop(Seconds(simulationTimeSeconds));
+    // SSC-001 Application (Security Camera - UDP)
+    uint16_t port_st5 = 8004;
+    OnOffHelper onOff_st5("ns3::UdpSocketFactory", InetSocketAddress(apInterface_0.GetAddress(0), port_st5));
+    onOff_st5.SetConstantRate(DataRate(2000000));
+    onOff_st5.SetAttribute("PacketSize", UintegerValue(1024));
+    ApplicationContainer clientApps_st5 = onOff_st5.Install(wifiStaNodes.Get(5));
+    clientApps_st5.Start(Seconds(50));
+    clientApps_st5.Stop(Seconds(1800 + 50));
 
-    // Station SSC-001 (Security Camera) - UDP
-    uint16_t sinkPort6 = 5005;
-    Address sinkAddress6(InetSocketAddress(ap1Interfaces.GetAddress(0), sinkPort6));
-    PacketSinkHelper packetSinkHelper6("ns3::UdpSocketFactory", sinkAddress6);
-    ApplicationContainer sinkApps6 = packetSinkHelper6.Install(apNodes.Get(0));
-    sinkApps6.Start(Seconds(0.0));
-    sinkApps6.Stop(Seconds(simulationTimeSeconds));
+    PacketSinkHelper sink_st5("ns3::UdpSocketFactory", InetSocketAddress(Ipv4Address::GetAny(), port_st5));
+    ApplicationContainer sinkApps_st5 = sink_st5.Install(wifiApNodes.Get(0));
+    sinkApps_st5.Start(Seconds(0));
 
-    OnOffHelper client6("ns3::UdpSocketFactory", sinkAddress6);
-    client6.SetAttribute("MaxBytes", UintegerValue(0));
-    client6.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=1800]"));
-    client6.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0]"));
-    client6.SetConstantRate(DataRate("2Mbps"));
-    ApplicationContainer clientApps6 = client6.Install(staNodes.Get(5));
-    clientApps6.Start(Seconds(50.0));
-    clientApps6.Stop(Seconds(simulationTimeSeconds));
+    // STG-001 Application (Guest Device - TCP)
+    uint16_t port_st6 = 8005;
+    OnOffHelper onOff_st6("ns3::TcpSocketFactory", InetSocketAddress(apInterface_1.GetAddress(0), port_st6));
+    onOff_st6.SetConstantRate(DataRate(1000000));
+    onOff_st6.SetAttribute("PacketSize", UintegerValue(1024));
+    ApplicationContainer clientApps_st6 = onOff_st6.Install(wifiStaNodes.Get(6));
+    clientApps_st6.Start(Seconds(180));
+    clientApps_st6.Stop(Seconds(1200 + 180));
 
-    // Station STG-001 (Guest Device) - TCP
-    uint16_t sinkPort7 = 5006;
-    Address sinkAddress7(InetSocketAddress(ap2Interfaces.GetAddress(0), sinkPort7));
-    PacketSinkHelper packetSinkHelper7("ns3::TcpSocketFactory", sinkAddress7);
-    ApplicationContainer sinkApps7 = packetSinkHelper7.Install(apNodes.Get(1));
-    sinkApps7.Start(Seconds(0.0));
-    sinkApps7.Stop(Seconds(simulationTimeSeconds));
+    PacketSinkHelper sink_st6("ns3::TcpSocketFactory", InetSocketAddress(Ipv4Address::GetAny(), port_st6));
+    ApplicationContainer sinkApps_st6 = sink_st6.Install(wifiApNodes.Get(1));
+    sinkApps_st6.Start(Seconds(0));
 
-    OnOffHelper client7("ns3::TcpSocketFactory", sinkAddress7);
-    client7.SetAttribute("MaxBytes", UintegerValue(0));
-    client7.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=1200]"));
-    client7.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0]"));
-    client7.SetConstantRate(DataRate("1Mbps"));
-    ApplicationContainer clientApps7 = client7.Install(staNodes.Get(6));
-    clientApps7.Start(Seconds(180.0));
-    clientApps7.Stop(Seconds(simulationTimeSeconds));
-
-    // Enable pcap tracing for APs and STAs
-    wifiPhy.EnablePcap("advanced_smart_home_ap1", apDevices.Get(0));
-    wifiPhy.EnablePcap("advanced_smart_home_ap2", apDevices.Get(1));
-    for (uint32_t i = 0; i < staDevices.GetN(); ++i) {
-      wifiPhy.EnablePcap("advanced_smart_home_sta" + std::to_string(i), staDevices.Get(i));
+    // Enable PCAP tracing on AP and STA devices
+    for (int i=0; i<2; i++) {
+        phy.EnablePcap("wifi-ap", apDevices[i]);
     }
+
+    for (int i=0; i<7; i++) {
+        phy.EnablePcap("wifi-sta", staDevices[i]);
+    }
+    
 
     /**********
      *  Run    *
      **********/
 
-    Simulator::Stop(Seconds(simulationTimeSeconds));
+    Simulator::Stop(simulationTime);
 
     NS_LOG_INFO("*** Running simulation...");
     Simulator::Run();
