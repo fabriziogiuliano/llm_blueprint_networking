@@ -162,7 +162,6 @@ def main():
     model_names_all=[
             {"name":"codestral-2501","size":"large"}, #{"name":"mistralai/Mamba-Codestral-7B-v0.1","size":"small"},
             {"name":"google/codegemma-7b-it","size":"small"},
-            {"name":"google/codegemma-7b-it","size":"small"},
             {"name":"codellama/CodeLlama-7b-Instruct-hf","size":"small"},
             {"name":"mistral-large-2411","size":"large"},
             {"name":"gemini-exp-1206","size":"large"},
