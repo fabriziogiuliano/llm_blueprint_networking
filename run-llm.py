@@ -168,15 +168,15 @@ def main():
     
     
     model_names_all=[
-            #{"name":"codestral-2501","size":"large"}, #{"name":"mistralai/Mamba-Codestral-7B-v0.1","size":"small"},
-            #{"name":"google/codegemma-7b-it","size":"small"},
+            {"name":"codestral-2501","size":"large"}, #{"name":"mistralai/Mamba-Codestral-7B-v0.1","size":"small"},
+            {"name":"google/codegemma-7b-it","size":"small"},
             {"name":"codellama/CodeLlama-7b-Instruct-hf","size":"small"},
-            #{"name":"mistral-large-2411","size":"large"},
-            #{"name":"gemini-exp-1206","size":"large"},
-            #{"name":"gemini-2.0-flash-exp","size":"large"}
+            {"name":"mistral-large-2411","size":"large"},
+            {"name":"gemini-exp-1206","size":"large"},
+            {"name":"gemini-2.0-flash-exp","size":"large"}
         ]
+    
     model_name_understanding={"name":"gemini-2.0-flash-exp","size":"large"}
-    print(model_name_understanding)
     model_names=model_names_all
     scenarios = ["smart_agriculture","smart_city","smart_home"]
     environments = ["simulated","real"]    
@@ -184,11 +184,10 @@ def main():
     
     prompt_version="2.0-ns3"
     
-    environments = ["simulated"]
-    scenarios = ["smart_city"]
+    environments = ["real"]
 
-    #experiment_label="understanding"
-    experiment_label="generate_code"
+    experiment_label="understanding"
+    #experiment_label="generate_code"
 
     df_validator = pd.DataFrame()
 

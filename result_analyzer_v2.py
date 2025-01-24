@@ -7,8 +7,27 @@ import os
 #Results analyzer
 
 figsize=(7,4)
+
 environment="simulated"
+#environment="real"
+feature_mapping={}
+if environment=="simulated":
+    feature_mapping = {
+        1: "LoRa Devices Detection",
+        2: "WiFi Devices Detection",
+        3: "Location Assignment",
+        4: "Traffic Duration/Type",
+    }
+
+if environment=="real":
+    feature_mapping = {
+        1: "LoRa code matching",
+        2: "WiFi code matching",        
+        3: "JSON fields match with code",
+    }
+
 df = pd.read_pickle(f"output/validator/{environment}-results.pkl")
+df["score"]=df["score"]*2/10*100
 df.to_csv(f"output/validator/{environment}-results.csv")
 df.to_excel(f"output/validator/{environment}-results.xlsx")
 
@@ -22,9 +41,9 @@ df = new_df
 palette=None
 # --- Configuration ---
 FIGURE_SIZE = (7,4)  # Define a consistent figure size (width, height)
-OUTPUT_DIR = "output/validator/model_performance_plots"
+OUTPUT_DIR = f"output/validator/model_performance_plots/{environment}"
 
-DEFAULT_X_LIMS = (0, 5) # Define a costant x lims
+DEFAULT_X_LIMS = (0, 100) # Define a costant x lims
 
 # Set a more visually appealing style
 sns.set_style("whitegrid")
@@ -56,7 +75,7 @@ def plot_average_score_per_model():
     )
     plt.title("Average Score per Model")
     plt.ylabel("Model Name")
-    plt.xlabel("Average Score")
+    plt.xlabel("Average Score [%]")
     plt.xlim(DEFAULT_X_LIMS)
     plt.tight_layout()
     save_plot_to_pdf("1_average_score_per_model.pdf")
@@ -70,12 +89,12 @@ def plot_average_score_per_model_and_size():
         hue="model_size",
         data=df,
         palette=palette,
-        errorbar=("ci", False),
+        errorbar=None,
         orient="h",
     )
     plt.title("Average Score per Model (Grouped by Model Size)")
     plt.ylabel("Model Name")
-    plt.xlabel("Average Score")
+    plt.xlabel("Average Score [%]")
     plt.xlim(DEFAULT_X_LIMS)
 
     plt.legend(title="Model Size", bbox_to_anchor=(1.05, 1), loc="upper left")
@@ -104,13 +123,9 @@ def plot_distribution_of_scores_per_model():
 
 # 4. Average Score per Feature per Model (Grouped Horizontal Bar Chart)
 def plot_average_score_per_feature_per_model():
-    feature_mapping = {
-        1: "LoRa Devices Count",
-        2: "WiFi Devices Count",
-        3: "Location Assignment",
-        4: "Traffic Duration/Type",
-    }
+
     df["feature_description"] = df["id_feature"].map(feature_mapping)
+
 
     plt.figure(figsize=FIGURE_SIZE)
     sns.barplot(
@@ -119,12 +134,12 @@ def plot_average_score_per_feature_per_model():
         hue="feature_description",
         data=df,
         palette=palette,
-        errorbar=("ci", False),
+        errorbar=None,
         orient="h",
     )
     plt.title("Average Score per Feature per Model")
     plt.ylabel("Model Name")
-    plt.xlabel("Average Score")
+    plt.xlabel("Average Score [%]")
     plt.xlim(DEFAULT_X_LIMS)
 
     #plt.legend(title="Feature", bbox_to_anchor=(1.05, 1), loc="upper left")
@@ -136,12 +151,7 @@ def plot_average_score_per_feature_per_model():
 
 # 5. Average Score per Feature per Model (Heatmap)
 def plot_average_score_per_feature_per_model_heatmap():
-    feature_mapping = {
-        1: "LoRa Devices Count",
-        2: "WiFi Devices Count",
-        3: "Location Assignment",
-        4: "Traffic Duration/Type",
-    }
+    
     df["feature_description"] = df["id_feature"].map(feature_mapping)
     
     plt.figure(figsize=FIGURE_SIZE)
@@ -155,6 +165,9 @@ def plot_average_score_per_feature_per_model_heatmap():
     plt.tight_layout()
     save_plot_to_pdf("5_average_score_per_feature_per_model_heatmap.pdf")
 
+
+
+
 # 6. Average Score per Scenario per Model (Grouped Horizontal Bar Chart)
 def plot_average_score_per_scenario_per_model():
     plt.figure(figsize=FIGURE_SIZE)
@@ -164,35 +177,60 @@ def plot_average_score_per_scenario_per_model():
         hue="scenario",
         data=df,
         palette=palette,
-        errorbar=("ci", False),
+        errorbar=None,
         orient="h",
     )
     plt.title("Average Score per Scenario per Model")
     plt.ylabel("Model Name")
-    plt.xlabel("Average Score")
+    plt.xlabel("Average Score [%]")
     plt.xlim(DEFAULT_X_LIMS)
-
-    #plt.legend(title="Scenario", bbox_to_anchor=(1.05, 1), loc="upper left")
-    
-    #plt.legend(loc='lower center', bbox_to_anchor=(0.5, -0.4), ncol=4)
-    #plt.legend(loc='lower center',  ncol=3)
-    
-    #plt.legend(title="Scenario", bbox_to_anchor=(1.05, -1), loc="lower center",ncol=4)
     
     plt.legend(loc='upper center', bbox_to_anchor=(0.3, -0.2), ncol=3, fontsize=8)
         
-
     plt.tight_layout()
     save_plot_to_pdf("6_average_score_per_scenario_per_model.pdf")
 
-# --- Main Execution ---
+
+
+def plot_average_score_per_grouped_scenario_per_model_2():  # Changed function name
+    # Create a new column for scenario groups
+    for i in range(0,4):
+        df["scenario"] = df["scenario"].str.replace(f"00{i}-", "")
+    
+    # Calculate the average score per scenario group and model
+
+
+    plt.figure(figsize=FIGURE_SIZE)
+    sns.barplot(
+        y="model_name",
+        x="score",
+        hue="scenario",
+        data=df,
+        palette=palette,
+        errorbar=None,
+        orient="h",
+    )
+    plt.title("Average Score per Scenario Group per Model")
+    plt.ylabel("Model Name")
+    plt.xlabel("Average Score [%]")
+    plt.xlim(DEFAULT_X_LIMS)
+
+    plt.legend(loc="upper center", bbox_to_anchor=(0.5, -0.15), ncol=3, fontsize=8)
+
+    plt.tight_layout()
+    save_plot_to_pdf("7_average_score_per_grouped_scenario_per_model.pdf")  # Changed file name
+
+
+
+# --- Main Execution ---scenario_group
 
 if __name__ == "__main__":
-    plot_average_score_per_model()
+    #plot_average_score_per_model()
     #plot_average_score_per_model_and_size()
     #plot_distribution_of_scores_per_model()
     plot_average_score_per_feature_per_model()
-    plot_average_score_per_feature_per_model_heatmap()
+    #plot_average_score_per_feature_per_model_heatmap()
     plot_average_score_per_scenario_per_model()
+    plot_average_score_per_grouped_scenario_per_model_2()
 
     print(f"Plots saved to individual PDF files in the '{OUTPUT_DIR}' directory.")
