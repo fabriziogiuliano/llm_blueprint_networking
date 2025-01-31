@@ -8,11 +8,14 @@ import os
 
 figsize=(7,4)
 
-environment="simulated"
-#environment="real"
+#environment="simulated"; prompt_version="1.0-ns3"
+environment="simulated"; prompt_version="2.0-ns3"
+#environment="real"; prompt_version=""
+
 feature_mapping={}
 if environment=="simulated":
     feature_mapping = {
+        0: "C++ Code generation",
         1: "LoRa Devices Detection",
         2: "WiFi Devices Detection",
         3: "Location Assignment",
@@ -25,11 +28,20 @@ if environment=="real":
         2: "WiFi code matching",        
         3: "JSON fields match with code",
     }
+    
+if prompt_version=="":
+    filename_output=f"output/validator/{environment}-results"    
+else:
+    filename_output=f"output/validator/{environment}-{prompt_version}-results"
 
-df = pd.read_pickle(f"output/validator/{environment}-results.pkl")
-df["score"]=df["score"]*2/10*100
-df.to_csv(f"output/validator/{environment}-results.csv")
-df.to_excel(f"output/validator/{environment}-results.xlsx")
+df = pd.read_pickle(f"{filename_output}.pkl")
+print(df)
+#print(len(df[df["scenario"=="001-smart_agriculture"]]))
+
+exit()
+df["score"]=df["score"]*2/10*100 #in percentage    
+df.to_csv(f"{filename_output}.csv")
+df.to_excel(f"{filename_output}.xlsx")
 
 new_df = df.copy()  # Create a copy to avoid modifying the original DataFrame
 for col in new_df.columns:
@@ -41,8 +53,11 @@ df = new_df
 palette=None
 # --- Configuration ---
 FIGURE_SIZE = (7,4)  # Define a consistent figure size (width, height)
-OUTPUT_DIR = f"output/validator/model_performance_plots/{environment}"
-
+if prompt_version=="":
+    OUTPUT_DIR = f"output/validator/model_performance_plots/{environment}"
+else:
+    OUTPUT_DIR = f"output/validator/model_performance_plots/{environment}-{prompt_version}"
+    
 DEFAULT_X_LIMS = (0, 100) # Define a costant x lims
 
 # Set a more visually appealing style
@@ -74,7 +89,7 @@ def plot_average_score_per_model():
         legend=False
     )
     plt.title("Average Score per Model")
-    plt.ylabel("Model Name")
+    #plt.ylabel("Model Name")
     plt.xlabel("Average Score [%]")
     plt.xlim(DEFAULT_X_LIMS)
     plt.tight_layout()

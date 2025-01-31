@@ -32,9 +32,7 @@ def runLLMSmall(model_name,prompt):
     input_ids = tokenizer(prompt, return_tensors="pt").to(device)
     logger.info("run generate... ")
     outputs = model.generate(**input_ids,max_new_tokens=5500, pad_token_id = tokenizer.eos_token_id)
-    output = tokenizer.decode(outputs[0])
-    print(output)
-    input()
+    output = tokenizer.decode(outputs[0])        
     return output
 
 
@@ -110,7 +108,9 @@ def run_experiment(blueprint_id, scenario,environment,model_name,model_size,prom
     logger.info("-------------------------------------")
     logger.info(f"MODEL: {model_name}")
     logger.info(f"scenario: {curr_scenario}")
-    logger.info(f"environments: {environment}")
+    logger.info(f"environments: {environment} {prompt_version}")
+    logger.info(f"experiment_label: {experiment_label} ")
+    
     logger.info("-------------------------------------")
 
     model_name_str=model_name.replace("/","_")
@@ -156,6 +156,14 @@ def run_experiment(blueprint_id, scenario,environment,model_name,model_size,prom
         except:
             pass
         return 0
+    
+    
+    
+    
+    
+    
+    
+    
 def main():
     
     #Choose Model (Small)
@@ -165,7 +173,6 @@ def main():
     #model_name ="mistralai/Mistral-Small-Instruct-2409"
     #model_name ="mistralai/Codestral-22B-v0.1"
     #model_name="mistralai/Mistral-Nemo-Instruct-2407" # Non genera codice Python per Fabric WiFi
-    
     
     model_names_all=[
             {"name":"codestral-2501","size":"large"}, #{"name":"mistralai/Mamba-Codestral-7B-v0.1","size":"small"},
@@ -177,50 +184,61 @@ def main():
         ]
     
     model_name_understanding={"name":"gemini-2.0-flash-exp","size":"large"}
+    #model_name_understanding={"name":"gemini-exp-1206","size":"large"}
+
     model_names=model_names_all
     scenarios = ["smart_agriculture","smart_city","smart_home"]
     environments = ["simulated","real"]    
     
     
-    prompt_version="2.0-ns3"
     
-    environments = ["real"]
-
-    experiment_label="understanding"
-    #experiment_label="generate_code"
+    #experiment_label="generate_code"; environments = ["simulated"]; prompt_version="2.0-ns3"
+    #experiment_label="generate_code"; environments = ["simulated"]; prompt_version="1.0-ns3"
+    #experiment_label="generate_code"; environments = ["real"]; prompt_version=""
+    
+    #experiment_label="understanding"; environments = ["simulated"]; prompt_version="1.0-ns3"
+    experiment_label="understanding"; environments = ["simulated"]; prompt_versions=["1.0-ns3","2.0-ns3"]
+    #experiment_label="understanding"; environments = ["real"]; prompt_version=""
+    
+    
 
     df_validator = pd.DataFrame()
 
     for environment in environments:                
-        for scenario in scenarios:                    
-            for model_name in model_names:                                
-                for blueprint_id in range(1,4):
-                    try:
-                        ret = run_experiment(
-                            blueprint_id=blueprint_id,
-                            scenario=scenario,
-                            environment=environment,
-                            model_name=model_name["name"],
-                            model_size=model_name["size"],
-                            prompt_version=prompt_version,
-                            model_name_understanding=model_name_understanding,
-                            experiment_label=experiment_label
-                        ) 
-                        if isinstance(ret, pd.DataFrame):
-                            ret["model_name"]=model_name["name"]
-                            ret["model_size"]=model_name["size"]
-                            ret["environment"]=environment
-                            ret["model_name_understanding"]=model_name_understanding["name"]
-                            ret["model_size_understanding"]=model_name_understanding["size"]
-                            df_validator = pd.concat([df_validator, ret], ignore_index=True)
-                    except Exception :
-                        traceback.print_exc()
-                logging.info("SLEEP...")
-                time.sleep(10)
-                
+        for prompt_version in prompt_versions:   
+            df_validator = pd.DataFrame()                               
+            for scenario in scenarios:  
+                for model_name in model_names:                                
+                    for blueprint_id in range(1,4):
+                        try:
+                            ret = run_experiment(
+                                blueprint_id=blueprint_id,
+                                scenario=scenario,
+                                environment=environment,
+                                model_name=model_name["name"],
+                                model_size=model_name["size"],
+                                prompt_version=prompt_version,
+                                model_name_understanding=model_name_understanding,
+                                experiment_label=experiment_label
+                            ) 
+                            if isinstance(ret, pd.DataFrame):
+                                ret["model_name"]=model_name["name"]
+                                ret["model_size"]=model_name["size"]
+                                ret["environment"]=environment
+                                ret["model_name_understanding"]=model_name_understanding["name"]
+                                ret["model_size_understanding"]=model_name_understanding["size"]
+                                df_validator = pd.concat([df_validator, ret], ignore_index=True)
+                        except Exception :
+                            traceback.print_exc()
+                    logging.info("SLEEP...")
+                    time.sleep(10)
+                    
         if experiment_label=="understanding":
             print(df_validator)
             Path(f"output/validator/").mkdir(parents=True, exist_ok=True)
-            df_validator.to_pickle(f"output/validator/{environment}-results.pkl")
+            if prompt_version=="":
+                df_validator.to_pickle(f"output/validator/{environment}-results.pkl")
+            else:
+                df_validator.to_pickle(f"output/validator/{environment}-{prompt_version}-results.pkl")
 if __name__ == "__main__":
         main()
