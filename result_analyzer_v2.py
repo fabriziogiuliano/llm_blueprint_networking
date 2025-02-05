@@ -8,14 +8,14 @@ import os
 
 figsize=(7,4)
 
-#environment="simulated"; prompt_version="1.0-ns3"
 environment="simulated"; prompt_version="2.0-ns3"
+#environment="simulated"; prompt_version="2.0-ns3"
 #environment="real"; prompt_version=""
 
 feature_mapping={}
 if environment=="simulated":
     feature_mapping = {
-        0: "C++ Code generation",
+        #0: "C++ Code generation",
         1: "LoRa Devices Detection",
         2: "WiFi Devices Detection",
         3: "Location Assignment",
@@ -35,10 +35,7 @@ else:
     filename_output=f"output/validator/{environment}-{prompt_version}-results"
 
 df = pd.read_pickle(f"{filename_output}.pkl")
-print(df)
-#print(len(df[df["scenario"=="001-smart_agriculture"]]))
 
-exit()
 df["score"]=df["score"]*2/10*100 #in percentage    
 df.to_csv(f"{filename_output}.csv")
 df.to_excel(f"{filename_output}.xlsx")
@@ -87,6 +84,7 @@ def plot_average_score_per_model():
         palette=palette,
         orient="h",
         legend=False
+        
     )
     plt.title("Average Score per Model")
     #plt.ylabel("Model Name")
@@ -153,7 +151,7 @@ def plot_average_score_per_feature_per_model():
         orient="h",
     )
     plt.title("Average Score per Feature per Model")
-    plt.ylabel("Model Name")
+    plt.ylabel("")
     plt.xlabel("Average Score [%]")
     plt.xlim(DEFAULT_X_LIMS)
 
@@ -176,7 +174,7 @@ def plot_average_score_per_feature_per_model_heatmap():
     sns.heatmap(heatmap_data, annot=True, cmap="viridis", linewidths=0.5, vmin=0, vmax=5)
     plt.title("Average Score per Feature per Model (Heatmap)")
     plt.xlabel("Feature")
-    plt.ylabel("Model Name")
+    plt.ylabel("")
     plt.tight_layout()
     save_plot_to_pdf("5_average_score_per_feature_per_model_heatmap.pdf")
 
@@ -196,7 +194,7 @@ def plot_average_score_per_scenario_per_model():
         orient="h",
     )
     plt.title("Average Score per Scenario per Model")
-    plt.ylabel("Model Name")
+    plt.ylabel("")
     plt.xlabel("Average Score [%]")
     plt.xlim(DEFAULT_X_LIMS)
     
@@ -206,7 +204,7 @@ def plot_average_score_per_scenario_per_model():
     save_plot_to_pdf("6_average_score_per_scenario_per_model.pdf")
 
 
-
+#plot 7
 def plot_average_score_per_grouped_scenario_per_model_2():  # Changed function name
     # Create a new column for scenario groups
     for i in range(0,4):
@@ -216,7 +214,7 @@ def plot_average_score_per_grouped_scenario_per_model_2():  # Changed function n
 
 
     plt.figure(figsize=FIGURE_SIZE)
-    sns.barplot(
+    ax = sns.barplot(
         y="model_name",
         x="score",
         hue="scenario",
@@ -226,11 +224,20 @@ def plot_average_score_per_grouped_scenario_per_model_2():  # Changed function n
         orient="h",
     )
     plt.title("Average Score per Scenario Group per Model")
-    plt.ylabel("Model Name")
+    plt.ylabel("")
     plt.xlabel("Average Score [%]")
     plt.xlim(DEFAULT_X_LIMS)
 
     plt.legend(loc="upper center", bbox_to_anchor=(0.5, -0.15), ncol=3, fontsize=8)
+    for container in ax.containers:
+        for bar in container:
+            width = bar.get_width()
+            ax.annotate(f'{width:.1f}%',
+                        xy=(width, bar.get_y() + bar.get_height()/2),
+                        xytext=(5, 0),  # Sposta il testo leggermente a destra
+                        textcoords='offset points',
+                        ha='left', va='center')
+
 
     plt.tight_layout()
     save_plot_to_pdf("7_average_score_per_grouped_scenario_per_model.pdf")  # Changed file name

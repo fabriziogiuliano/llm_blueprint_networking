@@ -27,23 +27,30 @@ def generatePromptSimEnvUnderstanding(scenario, generated_code_filename):
 Given LLM generated "NS-3 SOURCE CODE" from "JSON BLUEPRINT" check features. If features not match the score is LOW:
 
 # Feature n.0
-    "NS-3 SOURCE" CODE is C++/NS-3. If not, consider it UNMATCH and set score=0 to all other features.
-# Feature n.1 
-    Feature n.0 MUST MATCH AND LoRa COUNTS MUST MATCH. If "JSON BLUEPRINT" does not explicitly declare LoRa devices and "NS-3 SOURCE-CODE" use LoRa, consider it UNMATCH (score=0).
-    Count LoRa Devices are defined in "JSON BLUEPRINT" and write in the motivation;
+    "NS-3 SOURCE" CODE is C++/NS-3 with a main function. If not, consider it UNMATCH and set score=0 to all other features.
     
+# Feature n.1 
+    Count many LoRa Devices are defined in "JSON BLUEPRINT" and write in the motivation;
+    All "NS-3 SOURCE CODE" must be a valid c++ NS3 code, if not, consider ALL FOLLOWING FEATURES as score=0 and finish the analysis;
+    LoRa COUNTS MUST MATCH. If "JSON BLUEPRINT" does not explicitly declare LoRa devices and "NS-3 SOURCE-CODE" use LoRa, consider it UNMATCH (score=0);
+    if Feature n.0 score == 0 set this feature score=0.
     
 # Feature n.2 
-    Feature n.0 MUST MATCH if not set score = 0 AND wiFi COUNTS MUST MATCH. If "JSON BLUEPRINT" does not explicitly declare WiFi devices and "NS-3 SOURCE-CODE" use WiFi, consider it UNMATCH (score=0).
+    Count WiFi Devices are defined in "JSON BLUEPRINT" and write in the motivation;
+    All "NS-3 SOURCE CODE" must be a valid c++ NS3 code, if not, consider ALL FOLLOWING FEATURES as score=0 and finish the analysis;
+    wiFi COUNTS MUST MATCH. If "JSON BLUEPRINT" does not explicitly declare WiFi devices and "NS-3 SOURCE-CODE" use WiFi, consider it UNMATCH (score=0);
+    if Feature n.0 score == 0 set this feature score=0.
     
 # Feature n.3 
-    Feature n.0 MUST MATCH if not set score = 0 AND Location coordinates for devices in the "NS-3 SOURCE-CODE" MUST perfectly match the coordinates of the corresponding devices in the "JSON BLUEPRINT". 
+    Location coordinates for devices in the "NS-3 SOURCE-CODE" MUST perfectly match the coordinates of the corresponding devices in the "JSON BLUEPRINT". 
     All "NS-3 SOURCE CODE" must be a valid c++ NS3 code, if not, consider ALL FOLLOWING FEATURES as score=0 and finish the analysis;
-    Any discrepancy in coordinates or the absence of assigned coordinates in the "NS-3 SOURCE-CODE" for devices with coordinates in the "JSON BLUEPRINT" is considered a mismatch (score=0).
+    Any discrepancy in coordinates or the absence of assigned coordinates in the "NS-3 SOURCE-CODE" for devices with coordinates in the "JSON BLUEPRINT" is considered a mismatch (score=0);
+    if Feature n.0 score == 0 set this feature score=0.
     
 # Feature n.4 
-    Feature n.0 MUST MATCH if not set score = 0 AND All "NS-3 SOURCE CODE" must be a valid c++ NS3 code, if not, consider ALL FOLLOWING FEATURES as score=0 and finish the analysis;
-    Traffic duration and type in "JSON BLUEPRINT" MUST match with "NS-3 SOURCE-CODE". Any discrepancy in the "NS-3 SOURCE-CODE" for devices with coordinates in the "JSON BLUEPRINT" is considered a mismatch (score=0).
+    All "NS-3 SOURCE CODE" must be a valid c++ NS3 code, if not, consider ALL FOLLOWING FEATURES as score=0 and finish the analysis;
+    Traffic duration and type in "JSON BLUEPRINT" MUST match with "NS-3 SOURCE-CODE". Any discrepancy in the "NS-3 SOURCE-CODE" for devices with coordinates in the "JSON BLUEPRINT" is considered a mismatch (score=0);
+    if Feature n.0 score == 0 set this feature score=0.
 
 
 for all features give a score between 0 and 5, where score 0 means totally unmatch, score 5 means fully match.

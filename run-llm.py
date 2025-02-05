@@ -192,8 +192,8 @@ def main():
     
     
     
-    #experiment_label="generate_code"; environments = ["simulated"]; prompt_version="2.0-ns3"
-    #experiment_label="generate_code"; environments = ["simulated"]; prompt_version="1.0-ns3"
+    #experiment_label="generate_code"; environments = ["simulated"]; prompt_versions=["1.0-ns3"]
+    #experiment_label="generate_code"; environments = ["simulated"]; prompt_versions=["1.0-ns3"]
     #experiment_label="generate_code"; environments = ["real"]; prompt_version=""
     
     #experiment_label="understanding"; environments = ["simulated"]; prompt_version="1.0-ns3"
@@ -232,13 +232,16 @@ def main():
                             traceback.print_exc()
                     logging.info("SLEEP...")
                     time.sleep(10)
-                    
-        if experiment_label=="understanding":
-            print(df_validator)
-            Path(f"output/validator/").mkdir(parents=True, exist_ok=True)
-            if prompt_version=="":
-                df_validator.to_pickle(f"output/validator/{environment}-results.pkl")
-            else:
-                df_validator.to_pickle(f"output/validator/{environment}-{prompt_version}-results.pkl")
+            
+            print("--------------------------")
+            print(f"SAVE {environment}-{prompt_version}")
+            print("--------------------------")
+            if experiment_label=="understanding":
+                print(df_validator)
+                Path(f"output/validator/").mkdir(parents=True, exist_ok=True)
+                if prompt_version=="":
+                    df_validator.to_pickle(f"output/validator/{environment}-results.pkl")
+                else:
+                    df_validator.to_pickle(f"output/validator/{environment}-{prompt_version}-results.pkl")
 if __name__ == "__main__":
         main()
