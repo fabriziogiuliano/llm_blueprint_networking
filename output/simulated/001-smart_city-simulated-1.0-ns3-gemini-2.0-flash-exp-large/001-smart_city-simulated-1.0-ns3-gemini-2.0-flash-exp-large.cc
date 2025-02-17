@@ -35,11 +35,11 @@
 using namespace ns3;
 using namespace lorawan;
 
-NS_LOG_COMPONENT_DEFINE("SmartCityExample");
+NS_LOG_COMPONENT_DEFINE("SmallSmartCity");
 
 // Network settings
-int nDevices = 2;                 //!< Number of end device nodes to create
-int nGateways = 1;                  //!< Number of gateway nodes to create
+int nLoraGateways = 1;
+int nLoraDevices = 2;
 int nWiFiAPNodes = 1;
 int nWiFiStaNodes = 1;
 double radiusMeters = 1000;         //!< Radius (m) of the deployment
@@ -58,17 +58,11 @@ int
 main(int argc, char* argv[])
 {
     CommandLine cmd(__FILE__);
-    cmd.AddValue("nDevices", "Number of end devices to include in the simulation", nDevices);
-    cmd.AddValue("radius", "The radius (m) of the area to simulate", radiusMeters);
     cmd.AddValue("simulationTime", "The time (s) for which to simulate", simulationTimeSeconds);
-    cmd.AddValue("appPeriod",
-                 "The period in seconds to be used by periodically transmitting applications",
-                 appPeriodSeconds);
-    cmd.AddValue("print", "Whether or not to print building information", printBuildingInfo);
     cmd.Parse(argc, argv);
 
     // Set up logging
-    LogComponentEnable("SmartCityExample", LOG_LEVEL_ALL);
+    LogComponentEnable("SmallSmartCity", LOG_LEVEL_ALL);
 
     /***********
      *  Setup  *
@@ -79,13 +73,6 @@ main(int argc, char* argv[])
 
     // Mobility
     MobilityHelper loramobility;
-    loramobility.SetPositionAllocator("ns3::UniformDiscPositionAllocator",
-                                  "rho",
-                                  DoubleValue(radiusMeters),
-                                  "X",
-                                  DoubleValue(0.0),
-                                  "Y",
-                                  DoubleValue(0.0));
     loramobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
 
     /************************
@@ -145,20 +132,15 @@ main(int argc, char* argv[])
     NS_LOG_DEBUG("LoRa - Create End Devices...");
 
     // Create a set of nodes
-    NodeContainer endDevices;
-    endDevices.Create(nDevices);
+    NodeContainer loraEndDevices;
+    loraEndDevices.Create(nLoraDevices);
 
     // Assign a mobility model to each node
-    loramobility.Install(endDevices);
-
-    // Make it so that nodes are at a certain height > 0
-    for (auto j = endDevices.Begin(); j != endDevices.End(); ++j)
-    {
-        Ptr<MobilityModel> mobility = (*j)->GetObject<MobilityModel>();
-        Vector position = mobility->GetPosition();
-        position.z = 1.2;
-        mobility->SetPosition(position);
-    }
+    Ptr<ListPositionAllocator> allocatorLoraDev = CreateObject<ListPositionAllocator>();
+    allocatorLoraDev->Add(Vector(38.10863528672466, 13.34050633101243, 1.2)); // IOT-001
+    allocatorLoraDev->Add(Vector(38.0998337384608, 13.337136092765382, 1.2)); // IOT-002
+    loramobility.SetPositionAllocator(allocatorLoraDev);
+    loramobility.Install(loraEndDevices);
 
     // Create the LoraNetDevices of the end devices
     uint8_t nwkId = 54;
@@ -170,12 +152,12 @@ main(int argc, char* argv[])
     macHelper.SetAddressGenerator(addrGen);
     phyHelper.SetDeviceType(LoraPhyHelper::ED);
     macHelper.SetDeviceType(LorawanMacHelper::ED_A);
-    helper.Install(phyHelper, macHelper, endDevices);
+    helper.Install(phyHelper, macHelper, loraEndDevices);
 
     // Now end devices are connected to the channel
 
     // Connect trace sources
-    for (auto j = endDevices.Begin(); j != endDevices.End(); ++j)
+    for (auto j = loraEndDevices.Begin(); j != loraEndDevices.End(); ++j)
     {
         Ptr<Node> node = *j;
         Ptr<LoraNetDevice> loraNetDevice = node->GetDevice(0)->GetObject<LoraNetDevice>();
@@ -188,19 +170,18 @@ main(int argc, char* argv[])
     NS_LOG_DEBUG("LoRa - Create Gateways...");
 
     // Create the gateway nodes (allocate them uniformly on the disc)
-    NodeContainer gateways;
-    gateways.Create(nGateways);
+    NodeContainer loraGateways;
+    loraGateways.Create(nLoraGateways);
 
-    Ptr<ListPositionAllocator> allocator = CreateObject<ListPositionAllocator>();
-    // Make it so that nodes are at a certain height > 0
-    allocator->Add(Vector(38.10351066811096, 13.3459399220741, 15.0));
-    loramobility.SetPositionAllocator(allocator);
-    loramobility.Install(gateways);
+    Ptr<ListPositionAllocator> allocatorLoraGw = CreateObject<ListPositionAllocator>();
+    allocatorLoraGw->Add(Vector(38.10351066811096, 13.3459399220741, 15.0));
+    loramobility.SetPositionAllocator(allocatorLoraGw);
+    loramobility.Install(loraGateways);
 
     // Create a netdevice for each gateway
     phyHelper.SetDeviceType(LoraPhyHelper::GW);
     macHelper.SetDeviceType(LorawanMacHelper::GW);
-    helper.Install(phyHelper, macHelper, gateways);
+    helper.Install(phyHelper, macHelper, loraGateways);
 
     /**********************
      *  Handle buildings  *
@@ -237,8 +218,8 @@ main(int argc, char* argv[])
         DoubleValue(-gridHeight * (yLength + deltaY) / 2 + deltaY / 2));
     BuildingContainer bContainer = gridBuildingAllocator->Create(gridWidth * gridHeight);
 
-    BuildingsHelper::Install(endDevices);
-    BuildingsHelper::Install(gateways);
+    BuildingsHelper::Install(loraEndDevices);
+    BuildingsHelper::Install(loraGateways);
 
     // Print the buildings
     if (printBuildingInfo)
@@ -262,7 +243,7 @@ main(int argc, char* argv[])
      **********************************************/
     NS_LOG_DEBUG("LoRa - Set up the end device's spreading factor...");
 
-    LorawanMacHelper::SetSpreadingFactorsUp(endDevices, gateways, channel);
+    LorawanMacHelper::SetSpreadingFactorsUp(loraEndDevices, loraGateways, channel);
 
     NS_LOG_DEBUG("Completed configuration");
 
@@ -274,7 +255,7 @@ main(int argc, char* argv[])
     PeriodicSenderHelper appHelper = PeriodicSenderHelper();
     appHelper.SetPeriod(Seconds(appPeriodSeconds));
     appHelper.SetPacketSize(23);
-    ApplicationContainer appContainer = appHelper.Install(endDevices);
+    ApplicationContainer appContainer = appHelper.Install(loraEndDevices);
 
     appContainer.Start(Seconds(0));
     appContainer.Stop(appStopTime);
@@ -293,7 +274,7 @@ main(int argc, char* argv[])
     p2p.SetChannelAttribute("Delay", StringValue("2ms"));
     // Store network server app registration details for later
     P2PGwRegistration_t gwRegistration;
-    for (auto gw = gateways.Begin(); gw != gateways.End(); ++gw)
+    for (auto gw = loraGateways.Begin(); gw != loraGateways.End(); ++gw)
     {
         auto container = p2p.Install(networkServer, *gw);
         auto serverP2PNetDev = DynamicCast<PointToPointNetDevice>(container.Get(0));
@@ -302,11 +283,11 @@ main(int argc, char* argv[])
 
     // Create a network server for the network
     nsHelper.SetGatewaysP2P(gwRegistration);
-    nsHelper.SetEndDevices(endDevices);
+    nsHelper.SetEndDevices(loraEndDevices);
     nsHelper.Install(networkServer);
 
     // Create a forwarder for each gateway
-    forHelper.Install(gateways);
+    forHelper.Install(loraGateways);
 
     /************************
      *  Create WiFi Nodes  *
@@ -314,37 +295,37 @@ main(int argc, char* argv[])
     NS_LOG_DEBUG("Create WiFi Nodes...");
 
     NodeContainer wifiStaNodes;
-    wifiStaNodes.Create (nWiFiStaNodes);
+    wifiStaNodes.Create(nWiFiStaNodes);
 
     NodeContainer wifiApNode;
-    wifiApNode.Create (nWiFiAPNodes);
+    wifiApNode.Create(nWiFiAPNodes);
 
-    YansWifiChannelHelper wifichannel = YansWifiChannelHelper::Default ();
+    YansWifiChannelHelper wifichannel = YansWifiChannelHelper::Default();
     YansWifiPhyHelper phy;
-    phy.SetChannel (wifichannel.Create ());
+    phy.SetChannel(wifichannel.Create());
 
     WifiHelper wifi;
-    wifi.SetStandard (WIFI_STANDARD_80211a);
-    wifi.SetRemoteStationManager ("ns3::AarfWifiManager");
+    wifi.SetStandard(WIFI_STANDARD_80211a);
+    wifi.SetRemoteStationManager("ns3::AarfWifiManager");
 
     WifiMacHelper mac;
-    Ssid ssid = Ssid ("SmartCityAP");
+    Ssid ssid = Ssid("SmartCityAP");
 
-    mac.SetType ("ns3::StaWifiMac",
-                "Ssid", SsidValue (ssid),
-                "ActiveProbing", BooleanValue (false));
+    mac.SetType("ns3::StaWifiMac",
+                "Ssid", SsidValue(ssid),
+                "ActiveProbing", BooleanValue(false));
 
     NetDeviceContainer staDevices;
-    staDevices = wifi.Install (phy, mac, wifiStaNodes);
+    staDevices = wifi.Install(phy, mac, wifiStaNodes);
 
-    mac.SetType ("ns3::ApWifiMac",
-                "Ssid", SsidValue (ssid));
+    mac.SetType("ns3::ApWifiMac",
+                "Ssid", SsidValue(ssid));
 
     NetDeviceContainer apDevices;
-    apDevices = wifi.Install (phy, mac, wifiApNode);
+    apDevices = wifi.Install(phy, mac, wifiApNode);
 
     MobilityHelper wifimobility;
-    wifimobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+    wifimobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
 
     Ptr<ListPositionAllocator> allocatorAPWiFi = CreateObject<ListPositionAllocator>();
     allocatorAPWiFi->Add(Vector(38.10351066811096, 13.3459399220741, 1.5));
@@ -357,43 +338,43 @@ main(int argc, char* argv[])
     wifimobility.Install(wifiStaNodes);
 
     InternetStackHelper stack;
-    stack.Install (wifiApNode);
-    stack.Install (wifiStaNodes);
+    stack.Install(wifiApNode);
+    stack.Install(wifiStaNodes);
 
     Ipv4AddressHelper address;
-    address.SetBase ("192.168.1.0", "255.255.255.0");
+    address.SetBase("192.168.1.0", "255.255.255.0");
 
     Ipv4InterfaceContainer staNodeInterfaces;
-    staNodeInterfaces = address.Assign (staDevices);
+    staNodeInterfaces = address.Assign(staDevices);
     Ipv4InterfaceContainer apNodeInterface;
-    apNodeInterface = address.Assign (apDevices);
+    apNodeInterface = address.Assign(apDevices);
 
     // Print the IP addresses of the WiFi STA nodes
     for (uint32_t i = 0; i < staNodeInterfaces.GetN(); ++i)
     {
-        Ipv4Address addr = staNodeInterfaces.GetAddress (i);
+        Ipv4Address addr = staNodeInterfaces.GetAddress(i);
         std::cout << "IP address of wifiStaNode " << i << ": " << addr << std::endl;
     }
     NS_LOG_DEBUG("WiFi - Setup Udp");
 
     uint16_t sinkPort = 8080;
-    Address sinkAddress (InetSocketAddress (Ipv4Address::GetAny (), sinkPort));
-    PacketSinkHelper packetSinkHelper ("ns3::UdpSocketFactory", sinkAddress);
-    ApplicationContainer sinkApps = packetSinkHelper.Install (wifiStaNodes.Get (0));
-    sinkApps.Start (Seconds (0.0));
-    sinkApps.Stop (Seconds (simulationTimeSeconds));
+    Address sinkAddress(InetSocketAddress(Ipv4Address::GetAny(), sinkPort));
+    PacketSinkHelper packetSinkHelper("ns3::UdpSocketFactory", sinkAddress);
+    ApplicationContainer sinkApps = packetSinkHelper.Install(wifiStaNodes.Get(0));
+    sinkApps.Start(Seconds(0.0));
+    sinkApps.Stop(Seconds(simulationTimeSeconds));
 
-    OnOffHelper onoff ("ns3::UdpSocketFactory",
-                        InetSocketAddress (Ipv4Address ("192.168.1.1"), sinkPort));
-    onoff.SetConstantRate (DataRate ("1Mbps"));
-    onoff.SetAttribute ("PacketSize", UintegerValue (1024));
-    ApplicationContainer clientApps = onoff.Install (wifiStaNodes.Get (0));
-    clientApps.Start (Seconds (1.0));
-    clientApps.Stop (Seconds (simulationTimeSeconds));
+    OnOffHelper onoff("ns3::UdpSocketFactory",
+                        InetSocketAddress(Ipv4Address("192.168.1.1"), sinkPort));
+    onoff.SetConstantRate(DataRate("1Mbps"));
+    onoff.SetAttribute("PacketSize", UintegerValue(1024));
+    ApplicationContainer clientApps = onoff.Install(wifiApNode.Get(0));
+    clientApps.Start(Seconds(1.0));
+    clientApps.Stop(Seconds(simulationTimeSeconds));
 
-    //Tracing
-    phy.EnablePcap ("wifi-ap", apDevices);
-    phy.EnablePcap ("wifi-sta", staDevices);
+    // Tracing
+    phy.EnablePcap("wifi-ap", apDevices);
+    phy.EnablePcap("wifi-sta", staDevices);
 
     /**********
      *  Run    *
@@ -414,9 +395,9 @@ main(int argc, char* argv[])
     LoraPacketTracker& tracker = helper.GetPacketTracker();
     std::cout << tracker.CountMacPacketsGlobally(Seconds(0), appStopTime + Hours(1)) << std::endl;
     std::ofstream myfile;
-    myfile.open ("lora-packet-tracker.txt");
-    myfile << "Total MAC packets: " << tracker.CountMacPacketsGlobally (Seconds (0), appStopTime + Hours (1)) << std::endl;
-    myfile.close ();
+    myfile.open("lora-packet-tracker.txt");
+    myfile << "Total MAC packets: " << tracker.CountMacPacketsGlobally(Seconds(0), appStopTime + Hours(1)) << std::endl;
+    myfile.close();
 
     return 0;
 }

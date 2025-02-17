@@ -56,7 +56,7 @@ def runLLMLarge(model_name,prompt):
 
         response = chat_response.choices[0].message.content
         
-    if model_name=="gemini-exp-1206" or model_name=="gemini-2.0-flash-exp":
+    if model_name=="gemini-exp-1206" or model_name=="gemini-2.0-flash-exp" or model_name=="gemini-2.0-flash-thinking-exp-01-21":
         
         retries = 0
         max_retries = 5
@@ -110,11 +110,9 @@ def run_experiment(blueprint_id, scenario,environment,model_name,model_size,prom
     logger.info(f"scenario: {curr_scenario}")
     logger.info(f"environments: {environment} {prompt_version}")
     logger.info(f"experiment_label: {experiment_label} ")
-    
     logger.info("-------------------------------------")
 
     model_name_str=model_name.replace("/","_")
-
 
     if experiment_label == "generate_code":
         #GENERATE PROMPT
@@ -149,11 +147,11 @@ def run_experiment(blueprint_id, scenario,environment,model_name,model_size,prom
         
         output = runLLM(model_name_understanding["name"],model_name_understanding["size"],prompt_understanding)
         output=output.replace("csv","")
-        print(output)
         try:
             df = pd.read_csv(io.StringIO(output),sep=";")        
             return df
         except:
+            logger.error("Error in reading CSV")
             pass
         return 0
     
@@ -183,33 +181,46 @@ def main():
             {"name":"gemini-2.0-flash-exp","size":"large"}
         ]
     
-    model_name_understanding={"name":"gemini-2.0-flash-exp","size":"large"}
-    #model_name_understanding={"name":"gemini-exp-1206","size":"large"}
-
-    model_names=model_names_all
+    model_name_understanding={"name":"gemini-2.0-flash-exp","size":"large"}    
     scenarios = ["smart_agriculture","smart_city","smart_home"]
-    environments = ["simulated","real"]    
+    #model_name_understanding={"name":"gemini-exp-1206","size":"large"}
+    exp_id_list = range(1,4)    
+    environments = ["simulated","real"]        
+    model_names=model_names_all
+    
+    #scenarios = ["smart_home"]; exp_id_list = [1,2]
     
     
+    #experiment_label="understanding"; environments = ["simulated"]; prompt_version="1.0-ns3";think_label=""
+    #experiment_label="understanding"; environments = ["simulated"]; prompt_versions=["1.0-ns3","2.0-ns3"];think_label=""
+    #experiment_label="understanding"; environments = ["simulated"]; prompt_versions=["2.0-ns3"];think_label=""
+    experiment_label="understanding"; environments = ["simulated"]; prompt_versions=["1.0-ns3"];think_label="-think";model_name_understanding={"name":"gemini-2.0-flash-thinking-exp-01-21","size":"large"}
+    #experiment_label="understanding"; environments = ["real"]; prompt_versions=[""];think_label="-think";model_name_understanding={"name":"gemini-2.0-flash-thinking-exp-01-21","size":"large"}
+    #experiment_label="understanding"; environments = ["real"]; prompt_versions=[""];think_label="";model_name_understanding={"name":"gemini-2.0-flash-exp","size":"large"}
     
-    #experiment_label="generate_code"; environments = ["simulated"]; prompt_versions=["1.0-ns3"]
-    #experiment_label="generate_code"; environments = ["simulated"]; prompt_versions=["1.0-ns3"]
-    #experiment_label="generate_code"; environments = ["real"]; prompt_version=""
+    reset_label=True
     
-    #experiment_label="understanding"; environments = ["simulated"]; prompt_version="1.0-ns3"
-    experiment_label="understanding"; environments = ["simulated"]; prompt_versions=["1.0-ns3","2.0-ns3"]
-    #experiment_label="understanding"; environments = ["real"]; prompt_version=""
-    
-    
-
-    df_validator = pd.DataFrame()
+    if experiment_label=="understanding":
+        df_validator = pd.DataFrame()
 
     for environment in environments:                
         for prompt_version in prompt_versions:   
-            df_validator = pd.DataFrame()                               
+            
+            #OVERWRITE
+            if experiment_label=="understanding":
+                print("INIT LOG FILE")
+                if reset_label:
+                    df_validator = pd.DataFrame()  
+
+                    Path(f"output/validator/").mkdir(parents=True, exist_ok=True)                                                                
+                    if prompt_version=="":                        
+                        df_validator.to_pickle(f"output/validator/{environment}{think_label}-results.pkl")
+                    else:
+                        df_validator.to_pickle(f"output/validator/{environment}-{prompt_version}{think_label}-results.pkl")                       
+                                        
             for scenario in scenarios:  
                 for model_name in model_names:                                
-                    for blueprint_id in range(1,4):
+                    for blueprint_id in  exp_id_list:
                         try:
                             ret = run_experiment(
                                 blueprint_id=blueprint_id,
@@ -226,22 +237,29 @@ def main():
                                 ret["model_size"]=model_name["size"]
                                 ret["environment"]=environment
                                 ret["model_name_understanding"]=model_name_understanding["name"]
-                                ret["model_size_understanding"]=model_name_understanding["size"]
-                                df_validator = pd.concat([df_validator, ret], ignore_index=True)
+                                ret["model_size_understanding"]=model_name_understanding["size"]                            
+                                if experiment_label=="understanding":
+                                    
+                                    
+                                    if prompt_version=="":
+                                        df_validator = pd.read_pickle(f"output/validator/{environment}{think_label}-results.pkl")
+                                    else:
+                                        df_validator = pd.read_pickle(f"output/validator/{environment}-{prompt_version}{think_label}-results.pkl")
+                                    
+                                    df_validator = pd.concat([df_validator, ret], ignore_index=True)
+                                    
+                                    Path(f"output/validator/").mkdir(parents=True, exist_ok=True)
+                                    if prompt_version=="":
+                                        df_validator.to_pickle(f"output/validator/{environment}{think_label}-results.pkl")
+                                    else:
+                                        df_validator.to_pickle(f"output/validator/{environment}-{prompt_version}{think_label}-results.pkl")
+                                
+                                
                         except Exception :
                             traceback.print_exc()
                     logging.info("SLEEP...")
                     time.sleep(10)
             
-            print("--------------------------")
-            print(f"SAVE {environment}-{prompt_version}")
-            print("--------------------------")
-            if experiment_label=="understanding":
-                print(df_validator)
-                Path(f"output/validator/").mkdir(parents=True, exist_ok=True)
-                if prompt_version=="":
-                    df_validator.to_pickle(f"output/validator/{environment}-results.pkl")
-                else:
-                    df_validator.to_pickle(f"output/validator/{environment}-{prompt_version}-results.pkl")
+            
 if __name__ == "__main__":
         main()
