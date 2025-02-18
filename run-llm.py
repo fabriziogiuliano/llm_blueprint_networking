@@ -173,12 +173,13 @@ def main():
     #model_name="mistralai/Mistral-Nemo-Instruct-2407" # Non genera codice Python per Fabric WiFi
     
     model_names_all=[
-            {"name":"codestral-2501","size":"large"}, #{"name":"mistralai/Mamba-Codestral-7B-v0.1","size":"small"},
-            {"name":"google/codegemma-7b-it","size":"small"},
-            {"name":"codellama/CodeLlama-7b-Instruct-hf","size":"small"},
-            {"name":"mistral-large-2411","size":"large"},
-            {"name":"gemini-exp-1206","size":"large"},
-            {"name":"gemini-2.0-flash-exp","size":"large"}
+            #{"name":"codestral-2501","size":"large"}, 
+            {"name":"mistralai/Codestral-22B-v0.1","size":"small"},
+            #{"name":"google/codegemma-7b-it","size":"small"},
+            #{"name":"codellama/CodeLlama-7b-Instruct-hf","size":"small"},
+            #{"name":"mistral-large-2411","size":"large"},
+            #{"name":"gemini-exp-1206","size":"large"},
+            #{"name":"gemini-2.0-flash-exp","size":"large"}
         ]
     
     model_name_understanding={"name":"gemini-2.0-flash-exp","size":"large"}    
@@ -194,9 +195,11 @@ def main():
     #experiment_label="understanding"; environments = ["simulated"]; prompt_version="1.0-ns3";think_label=""
     #experiment_label="understanding"; environments = ["simulated"]; prompt_versions=["1.0-ns3","2.0-ns3"];think_label=""
     #experiment_label="understanding"; environments = ["simulated"]; prompt_versions=["2.0-ns3"];think_label=""
-    experiment_label="understanding"; environments = ["simulated"]; prompt_versions=["1.0-ns3"];think_label="-think";model_name_understanding={"name":"gemini-2.0-flash-thinking-exp-01-21","size":"large"}
+    #experiment_label="understanding"; environments = ["simulated"]; prompt_versions=["1.0-ns3"];think_label="-think";model_name_understanding={"name":"gemini-2.0-flash-thinking-exp-01-21","size":"large"}
     #experiment_label="understanding"; environments = ["real"]; prompt_versions=[""];think_label="-think";model_name_understanding={"name":"gemini-2.0-flash-thinking-exp-01-21","size":"large"}
     #experiment_label="understanding"; environments = ["real"]; prompt_versions=[""];think_label="";model_name_understanding={"name":"gemini-2.0-flash-exp","size":"large"}
+    
+    experiment_label="generate_code"; environments = ["simulated"]; prompt_versions=["1.0-ns3"]
     
     reset_label=True
     
