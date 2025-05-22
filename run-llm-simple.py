@@ -69,13 +69,9 @@ def run_simple_model(model_name: str, prompt: str, max_new_tokens: int = 100, te
 if __name__ == "__main__":
     # Scegli un modello Hugging Face da testare
     # Esempi di modelli piccoli e instruct-tuned:
-    # "mistralai/Mistral-7B-Instruct-v0.2"
-    # deepseek-ai/deepseek-coder-33b-instruct
-    # deepseek-ai/deepseek-coder-6.7b-instruct
 
     #model_to_use = "deepseek-ai/deepseek-coder-6.7b-instruct" # Esempio
     model_to_use ="deepseek-ai/deepseek-llm-7b-base"
-    model_to_use ="mistralai/Mistral-7B-Instruct-v0.2"
     # Definisci un prompt di test semplice
     test_prompt = "Scrivi una breve poesia sul mare."
 
