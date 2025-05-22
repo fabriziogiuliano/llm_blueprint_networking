@@ -75,6 +75,7 @@ if __name__ == "__main__":
 
     #model_to_use = "deepseek-ai/deepseek-coder-6.7b-instruct" # Esempio
     model_to_use ="deepseek-ai/deepseek-llm-7b-base"
+    model_to_use ="mistralai/Mistral-7B-Instruct-v0.2"
     # Definisci un prompt di test semplice
     test_prompt = "Scrivi una breve poesia sul mare."
 
